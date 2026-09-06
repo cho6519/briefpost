@@ -29,12 +29,12 @@ export default async function HomePage({ searchParams }: PageProps) {
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "AI Tech Brief",
+    name: "Brief Post",
     url: siteUrl,
-    description: "인공지능, 테크, 경제 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
+    description: "정책, 경제, 테크 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
     publisher: {
       "@type": "Organization",
-      name: "AI Tech Brief",
+      name: "Brief Post",
       url: siteUrl,
     },
   };

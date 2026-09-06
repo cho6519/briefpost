@@ -23,10 +23,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "AI Tech Brief - 1단 요약 뉴스레터",
-    template: "%s | AI Tech Brief",
+    default: "Brief Post - 1단 요약 뉴스레터",
+    template: "%s | Brief Post",
   },
-  description: "인공지능, 테크, 경제 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
+  description: "정책, 경제, 테크 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
   robots: {
     index: true,
     follow: true,
@@ -38,17 +38,17 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "AI Tech Brief - 1단 요약 뉴스레터",
-    description: "인공지능, 테크, 경제 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
+    title: "Brief Post - 1단 요약 뉴스레터",
+    description: "정책, 경제, 테크 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
     url: siteUrl,
-    siteName: "AI Tech Brief",
+    siteName: "Brief Post",
     locale: "ko_KR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Tech Brief - 1단 요약 뉴스레터",
-    description: "인공지능, 테크, 경제 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
+    title: "Brief Post - 1단 요약 뉴스레터",
+    description: "정책, 경제, 테크 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
   },
   verification: {
     google: "kQuFAyO0YE_YE_v2Hn2MPjHdG6HkXW_lAGPs-E2g0So",

@@ -71,7 +71,7 @@ async function handleFetchRss(request: NextRequest) {
             content: item.content || item.contentSnippet,
             summary,
             category: item.category,
-            metaTitle: `${item.title} | AI Tech Brief`,
+            metaTitle: `${item.title} | Brief Post`,
             metaDescription: item.contentSnippet.slice(0, 150),
             thumbnailUrl: item.thumbnailUrl,
             sourceUrl: item.link,

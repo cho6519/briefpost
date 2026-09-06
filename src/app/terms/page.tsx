@@ -1,6 +1,6 @@
 export const metadata = {
   title: "이용약관",
-  description: "AI Tech Brief 서비스의 이용약관 안내입니다.",
+  description: "Brief Post 서비스의 이용약관 안내입니다.",
 };
 
 export default function TermsPage() {
@@ -14,7 +14,7 @@ export default function TermsPage() {
           1. 목적 및 서비스 제공
         </h2>
         <p>
-          본 약관은 AI Tech Brief(이하 &apos;사이트&apos;)가 제공하는 기술 및 인공지능 관련 뉴스레터 요약 정보 서비스의 이용 조건을 규정합니다.
+          본 약관은 Brief Post(이하 &apos;사이트&apos;)가 제공하는 핵심 뉴스레터 요약 정보 서비스의 이용 조건을 규정합니다.
         </p>
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 pt-4">
           2. 콘텐츠 및 지식재산권

@@ -297,7 +297,7 @@ export async function rewriteArticleWithAI(raw: RawArticleInput): Promise<Rewrit
       summary: parsed.summary.trim(),
       content: parsed.content.trim(),
       category: normalizeCategory(parsed.category || raw.category),
-      metaTitle: parsed.metaTitle || `${parsed.title} | AI Tech Brief`,
+      metaTitle: parsed.metaTitle || `${parsed.title} | Brief Post`,
       metaDescription: parsed.metaDescription || parsed.summary.replace(/\n/g, " ").slice(0, 130),
     };
   } catch (error: unknown) {
@@ -358,7 +358,7 @@ ${p3}
     summary,
     content,
     category: normalizeCategory(raw.category),
-    metaTitle: `${title} | AI Tech Brief`,
+    metaTitle: `${title} | Brief Post`,
     metaDescription: `${p1.slice(0, 90)} 관련 최신 동향과 핵심 시사점을 3줄 요약과 함께 심층 분석합니다.`,
   };
 }

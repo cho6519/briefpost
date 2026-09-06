@@ -88,13 +88,13 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       title,
       description,
       url: canonicalUrl,
-      siteName: "AI Tech Brief",
+      siteName: "Brief Post",
       locale: "ko_KR",
       type: "article",
       publishedTime: article.createdAt,
       modifiedTime: article.updatedAt || article.createdAt,
       section: article.category,
-      authors: ["AI Tech Brief 편집팀"],
+      authors: ["Brief Post 편집팀"],
       images: [
         {
           url: imageUrl,
@@ -150,13 +150,13 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     author: [
       {
         "@type": "Organization",
-        name: "AI Tech Brief 편집팀",
+        name: "Brief Post 편집팀",
         url: siteUrl,
       },
     ],
     publisher: {
       "@type": "Organization",
-      name: "AI Tech Brief",
+      name: "Brief Post",
       url: siteUrl,
       logo: {
         "@type": "ImageObject",

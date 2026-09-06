@@ -10,11 +10,11 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="group flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-black text-lg tracking-tighter shadow-sm">
-              N
+              B
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                AI Tech Brief
+                Brief Post
               </span>
               <span className="text-[10px] text-zinc-500 font-medium tracking-wide">
                 1단 요약 뉴스레터

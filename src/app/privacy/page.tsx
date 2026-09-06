@@ -1,6 +1,6 @@
 export const metadata = {
   title: "개인정보처리방침",
-  description: "AI Tech Brief 서비스의 개인정보처리방침 안내입니다.",
+  description: "Brief Post 서비스의 개인정보처리방침 안내입니다.",
 };
 
 export default function PrivacyPage() {
@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       </h1>
       <div className="space-y-4 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
         <p>
-          AI Tech Brief(이하 &apos;사이트&apos;)는 이용자의 개인정보를 중요시하며, &apos;개인정보 보호법&apos; 등 관련 법령을 준수하고 있습니다.
+          Brief Post(이하 &apos;사이트&apos;)는 이용자의 개인정보를 중요시하며, &apos;개인정보 보호법&apos; 등 관련 법령을 준수하고 있습니다.
         </p>
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 pt-4">
           1. 수집하는 개인정보 항목 및 수집 방법
