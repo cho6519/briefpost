@@ -219,15 +219,32 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         </div>
       </header>
 
-      {/* 3줄 핵심 요약 박스 (모바일 화면 가독성 특화 디자인) */}
+      {/* 스티치(Stitch) 시그니처 3줄 핵심 요약 Bento 글로우 박스 */}
       {article.summary && (
-        <section className="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-gradient-to-b from-blue-50/70 to-blue-50/20 dark:from-blue-950/40 dark:to-zinc-900/40 p-5 sm:p-6 shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2.5">
-            <span>⚡ 3줄 핵심 요약</span>
+        <section className="glow-border inner-glow rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 p-5 sm:p-6 shadow-sm">
+          <div className="flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 pb-3 mb-3.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">
+              <span className="text-cyan-500 dark:text-cyan-400 text-sm">⚡</span>
+              <span>3줄 핵심 요약</span>
+            </div>
+            <span className="text-[10px] font-mono font-semibold tracking-wider text-cyan-600 dark:text-cyan-400 uppercase">
+              EXECUTIVE BRIEF
+            </span>
           </div>
-          <div className="whitespace-pre-line text-[15px] sm:text-base leading-[1.75] font-medium text-zinc-800 dark:text-zinc-200">
-            {article.summary}
-          </div>
+          <ul className="space-y-3">
+            {article.summary
+              .split("\n")
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .map((line, pIdx) => (
+                <li key={pIdx} className="flex items-start gap-3 text-sm sm:text-[15px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/10 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 mt-0.5">
+                    {pIdx + 1}
+                  </span>
+                  <span>{line.replace(/^[0-9]+[.)]\s*/, "").replace(/^[-*•]\s*/, "")}</span>
+                </li>
+              ))}
+          </ul>
         </section>
       )}
 

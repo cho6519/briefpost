@@ -76,7 +76,7 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body className={`${inter.className} min-h-screen flex flex-col bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 selection:bg-blue-500 selection:text-white`}>
+      <body className={`${inter.className} min-h-screen flex flex-col bg-white text-zinc-900 dark:bg-[#09090b] dark:text-zinc-100 selection:bg-cyan-500 selection:text-white`}>
         <Header />
         <main className="flex-1 w-full mx-auto max-w-3xl px-4 sm:px-6 py-8">
           {children}
