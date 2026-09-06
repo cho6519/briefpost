@@ -11,7 +11,7 @@ export default function Header() {
         {/* 상단 1단: 로고 & 사이트 타이틀 */}
         <div className="flex items-center justify-between pt-3 sm:pt-4 pb-2">
           <Link href="/" className="group flex items-center gap-2.5 shrink-0">
-            <div className="relative flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-zinc-900 text-white font-serif font-black text-base sm:text-lg shadow-sm transition-transform group-hover:scale-105">
+            <div className="relative flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-serif font-black text-base sm:text-lg shadow-sm shadow-blue-500/25 transition-transform group-hover:scale-105">
               B
             </div>
             <div className="flex flex-col">

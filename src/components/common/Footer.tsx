@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-900 text-white font-serif font-black text-xs">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-serif font-black text-xs shadow-xs shadow-blue-500/20">
               B
             </div>
             <div className="flex flex-col items-center sm:items-start">
