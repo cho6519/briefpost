@@ -123,24 +123,23 @@ export function createArticle(input: CreateArticleInput): Article {
 import { ALLOWED_CATEGORIES } from "./ai";
 
 /**
- * 등록된 모든 카테고리 목록 조회 (5대 공식 카테고리 순서 보장)
+ * 등록된 모든 카테고리 목록 조회 (5대 공식 카테고리 항상 메뉴 노출 보장)
  */
 export function getAllCategories(): string[] {
   const stmt = db.prepare("SELECT DISTINCT category FROM articles ORDER BY category ASC");
   const rows = stmt.all() as { category: string }[];
-  const existingCats = new Set(rows.map((r) => r.category));
 
-  // 5대 표준 카테고리 순서대로 필터링 및 정렬
-  const ordered = ALLOWED_CATEGORIES.filter((c) => existingCats.has(c));
+  // 5대 표준 카테고리를 항상 기본 목록으로 포함
+  const ordered: string[] = [...ALLOWED_CATEGORIES];
 
-  // 기타 기존 카테고리가 남아있을 경우 뒤에 보존
+  // 혹시 DB에 저장된 다른 카테고리가 있다면 뒤에 추가
   rows.forEach((r) => {
-    if (!ordered.includes(r.category as (typeof ALLOWED_CATEGORIES)[number])) {
-      ordered.push(r.category as (typeof ALLOWED_CATEGORIES)[number]);
+    if (!ordered.includes(r.category)) {
+      ordered.push(r.category);
     }
   });
 
-  return ordered.length > 0 ? ordered : [...ALLOWED_CATEGORIES];
+  return ordered;
 }
 
 /**

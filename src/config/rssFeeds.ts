@@ -85,6 +85,14 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     enabled: true,
     description: "AI 및 디지털 신기술 산업 속보 피드",
   },
+  {
+    id: "google-news-society",
+    name: "구글 뉴스 (사회/문화)",
+    category: "사회·문화",
+    url: "https://news.google.com/rss/headlines/section/topic/NATION?hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    description: "사회 복지, 교육, 문화 트렌드 종합 피드",
+  },
 ];
 
 /**
