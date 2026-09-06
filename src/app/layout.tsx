@@ -50,6 +50,9 @@ export const metadata: Metadata = {
     title: "AI Tech Brief - 1단 요약 뉴스레터",
     description: "인공지능, 테크, 경제 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
   },
+  verification: {
+    google: "kQuFAyO0YE_YE_v2Hn2MPjHdG6HkXW_lAGPs-E2g0So",
+  },
 };
 
 export default function RootLayout({
