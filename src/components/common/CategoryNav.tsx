@@ -18,8 +18,8 @@ function CategoryNavList({ categories }: CategoryNavProps) {
         href="/"
         className={`whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 text-[12px] sm:text-xs font-semibold transition-all duration-200 shrink-0 ${
           !currentCategory
-            ? "bg-zinc-900 text-white shadow-xs"
-            : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100"
+            ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/25"
+            : "text-zinc-600 hover:text-blue-600 hover:bg-blue-50/70"
         }`}
       >
         전체
@@ -32,8 +32,8 @@ function CategoryNavList({ categories }: CategoryNavProps) {
             href={`/?category=${encodeURIComponent(category)}`}
             className={`whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 text-[12px] sm:text-xs font-semibold transition-all duration-200 shrink-0 ${
               isActive
-                ? "bg-zinc-900 text-white shadow-xs"
-                : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100"
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/25"
+                : "text-zinc-600 hover:text-blue-600 hover:bg-blue-50/70"
             }`}
           >
             {category}
@@ -49,7 +49,7 @@ export default function CategoryNav({ categories }: CategoryNavProps) {
     <Suspense
       fallback={
         <nav className="flex items-center justify-between sm:justify-start gap-1 sm:gap-2 overflow-x-auto scrollbar-none w-full py-0.5">
-          <span className="whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 text-[12px] sm:text-xs font-semibold bg-zinc-900 text-white">
+          <span className="whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 text-[12px] sm:text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/25">
             전체
           </span>
           {categories.map((cat) => (
