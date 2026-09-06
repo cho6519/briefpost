@@ -181,13 +181,13 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       <div className="flex items-center justify-between pt-1">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-950 transition-colors"
         >
           <span className="text-sm">←</span> 피드로 돌아가기
         </Link>
         <Link
           href={`/?category=${encodeURIComponent(article.category)}`}
-          className="rounded-full bg-blue-50 dark:bg-blue-950/60 px-3 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40 hover:bg-blue-100 transition-colors"
+          className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200/80 hover:bg-blue-100 transition-colors"
         >
           {article.category}
         </Link>
@@ -195,22 +195,22 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
 
       {/* 기사 헤더 (H1 제목, 작성일, 출처 링크) */}
       <header className="space-y-3 sm:space-y-4">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.3] sm:leading-[1.25]">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-950 leading-[1.3] sm:leading-[1.25]">
           {article.title}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-2.5 text-xs text-zinc-500 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-4">
+        <div className="flex flex-wrap items-center gap-2.5 text-xs text-zinc-500 border-b border-zinc-200 pb-4">
           <time dateTime={article.createdAt} className="font-medium">
             발행: {formattedDate}
           </time>
           {article.sourceUrl && (
             <>
-              <span className="text-zinc-300 dark:text-zinc-700">•</span>
+              <span className="text-zinc-300">•</span>
               <a
                 href={article.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 font-medium"
+                className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1 font-semibold"
               >
                 원문 보기 ↗
               </a>
@@ -219,15 +219,15 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         </div>
       </header>
 
-      {/* 스티치(Stitch) 시그니처 3줄 핵심 요약 Bento 글로우 박스 */}
+      {/* 가독성 특화: 3줄 핵심 요약 블루 틴트 박스 */}
       {article.summary && (
-        <section className="glow-border inner-glow rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 p-5 sm:p-6 shadow-sm">
-          <div className="flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 pb-3 mb-3.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">
-              <span className="text-cyan-500 dark:text-cyan-400 text-sm">⚡</span>
+        <section className="summary-box rounded-2xl p-5 sm:p-6 shadow-2xs">
+          <div className="flex items-center justify-between border-b border-blue-200/70 pb-3 mb-3.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
+              <span className="text-blue-600 text-sm">⚡</span>
               <span>3줄 핵심 요약</span>
             </div>
-            <span className="text-[10px] font-mono font-semibold tracking-wider text-cyan-600 dark:text-cyan-400 uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-wider text-blue-700 uppercase bg-blue-100/80 px-2.5 py-0.5 rounded-full">
               EXECUTIVE BRIEF
             </span>
           </div>
@@ -237,8 +237,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
               .map((line) => line.trim())
               .filter(Boolean)
               .map((line, pIdx) => (
-                <li key={pIdx} className="flex items-start gap-3 text-sm sm:text-[15px] leading-relaxed text-zinc-800 dark:text-zinc-200">
-                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/10 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 mt-0.5">
+                <li key={pIdx} className="flex items-start gap-3 text-sm sm:text-[15px] leading-relaxed text-zinc-800 font-medium">
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold shadow-2xs mt-0.5">
                     {pIdx + 1}
                   </span>
                   <span>{line.replace(/^[0-9]+[.)]\s*/, "").replace(/^[-*•]\s*/, "")}</span>
@@ -272,10 +272,10 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       />
 
       {/* 본문 텍스트 영역 (가독성 높은 폰트와 행간 적용) */}
-      <div className="text-[17px] sm:text-[18px] leading-[1.85] text-zinc-800 dark:text-zinc-200 tracking-[-0.01em]">
+      <div className="text-[17px] sm:text-[18px] leading-[1.85] text-zinc-800 tracking-[-0.01em]">
         {/* 본문 전반부 (50% 이전) */}
         <div
-          className="space-y-5 [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-900 dark:[&>h2]:text-zinc-50 [&>h2]:pt-4 [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-bold [&>h3]:pt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2"
+          className="space-y-5 [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-950 [&>h2]:pt-4 [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-bold [&>h3]:pt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2"
           dangerouslySetInnerHTML={{ __html: firstHalfHtml }}
         />
 
@@ -291,7 +291,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         {/* 본문 후반부 (50% 이후) */}
         {secondHalfHtml && (
           <div
-            className="space-y-5 [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-900 dark:[&>h2]:text-zinc-50 [&>h2]:pt-4 [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-bold [&>h3]:pt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2"
+            className="space-y-5 [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-950 [&>h2]:pt-4 [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-bold [&>h3]:pt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2"
             dangerouslySetInnerHTML={{ __html: secondHalfHtml }}
           />
         )}
@@ -299,14 +299,14 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
 
       {/* 원문 출처 및 면책 안내 박스 */}
       {article.sourceUrl && (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 p-4 text-xs text-zinc-600 dark:text-zinc-400">
-          <span className="font-semibold text-zinc-900 dark:text-zinc-100">출처 안내: </span>
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 text-xs text-zinc-600 shadow-2xs">
+          <span className="font-semibold text-zinc-900">출처 안내: </span>
           본 기사는 다음 원문 보도를 바탕으로 요약 및 재구성되었습니다:{" "}
           <a
             href={article.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline break-all font-medium"
+            className="text-blue-600 hover:underline break-all font-medium"
           >
             {article.sourceUrl}
           </a>
@@ -323,15 +323,15 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       />
 
       {/* 댓글 영역 (하단 슬롯 바로 뒤) */}
-      <section className="border-t border-zinc-200 dark:border-zinc-800 pt-8 mt-10">
+      <section className="border-t border-zinc-200 pt-8 mt-10">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+          <h3 className="text-base font-bold text-zinc-900">
             의견 남기기
           </h3>
           <span className="text-xs text-zinc-500">클린 뉴스레터 커뮤니티</span>
         </div>
-        <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 p-6 text-center bg-zinc-50/50 dark:bg-zinc-900/30">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
+        <div className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center bg-white shadow-2xs">
+          <p className="text-sm text-zinc-600 font-medium">
             이 기사에 대한 의견을 자유롭게 나눠보세요.
           </p>
           <div className="mt-4 flex gap-2">
@@ -339,16 +339,16 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
               type="text"
               placeholder="댓글을 작성해 주세요..."
               disabled
-              className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-xs text-zinc-500 focus:outline-none"
+              className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs text-zinc-500 focus:outline-none"
             />
             <button
               disabled
-              className="rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2.5 text-xs font-bold opacity-60 cursor-not-allowed"
+              className="rounded-xl bg-zinc-200 px-4 py-2.5 text-xs font-semibold text-zinc-500 cursor-not-allowed"
             >
               등록
             </button>
           </div>
-          <span className="text-[11px] text-zinc-600 dark:text-zinc-500 mt-2 block">
+          <span className="text-[11px] text-zinc-500 mt-2 block">
             현재 댓글 기능은 준비 중입니다.
           </span>
         </div>

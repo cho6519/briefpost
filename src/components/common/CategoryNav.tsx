@@ -18,8 +18,8 @@ function CategoryNavList({ categories }: CategoryNavProps) {
         href="/"
         className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
           !currentCategory
-            ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm font-semibold"
-            : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+            ? "bg-zinc-900 text-white shadow-sm font-semibold"
+            : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
         }`}
       >
         전체
@@ -32,8 +32,8 @@ function CategoryNavList({ categories }: CategoryNavProps) {
             href={`/?category=${encodeURIComponent(category)}`}
             className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
               isActive
-                ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm font-semibold"
-                : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+                ? "bg-zinc-900 text-white shadow-sm font-semibold"
+                : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
             }`}
           >
             {category}
@@ -49,13 +49,13 @@ export default function CategoryNav({ categories }: CategoryNavProps) {
     <Suspense
       fallback={
         <nav className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
-          <span className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
+          <span className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold bg-zinc-900 text-white">
             전체
           </span>
           {categories.map((cat) => (
             <span
               key={cat}
-              className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs text-zinc-500 dark:text-zinc-400"
+              className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs text-zinc-600"
             >
               {cat}
             </span>
