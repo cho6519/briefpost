@@ -163,7 +163,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                       </div>
 
                       {/* 헤드라인 */}
-                      <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-zinc-900 leading-snug group-hover:text-blue-600 transition-colors">
+                      <h2 className="text-[20px] sm:text-2xl font-extrabold tracking-tight text-zinc-950 leading-snug group-hover:text-blue-600 transition-colors">
                         <Link href={`/news/${article.slug}`} className="focus:outline-none">
                           {article.title}
                         </Link>
@@ -173,18 +173,18 @@ export default async function HomePage({ searchParams }: PageProps) {
                       {summaryPoints.length > 0 && (
                         <div className="summary-box rounded-xl p-4 sm:p-5 shadow-2xs">
                           <div className="mb-3 flex items-center justify-between border-b border-blue-200/70 pb-2.5">
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                            <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-900">
                               <span className="text-blue-600">⚡</span>
                               <span>3줄 핵심 요약</span>
                             </div>
-                            <span className="text-[10px] font-mono font-bold tracking-wider text-blue-700 uppercase bg-blue-100/80 px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] sm:text-[11px] font-mono font-bold tracking-wider text-blue-700 uppercase bg-blue-100/80 px-2.5 py-0.5 rounded-full">
                               EXECUTIVE BRIEF
                             </span>
                           </div>
-                          <ul className="space-y-2.5">
+                          <ul className="space-y-3">
                             {summaryPoints.map((point, pIdx) => (
-                              <li key={pIdx} className="flex items-start gap-2.5 text-xs sm:text-[13px] leading-relaxed text-zinc-800 font-medium">
-                                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold shadow-2xs mt-0.5">
+                              <li key={pIdx} className="flex items-start gap-2.5 text-[14px] sm:text-[15px] leading-[1.65] text-zinc-800 font-medium">
+                                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold shadow-2xs mt-0.5">
                                   {pIdx + 1}
                                 </span>
                                 <span>{point}</span>
@@ -202,7 +202,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
                         <Link
                           href={`/news/${article.slug}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 group-hover:translate-x-0.5 transition-transform"
+                          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 group-hover:translate-x-0.5 transition-transform"
                         >
                           <span>전문 보기</span>
                           <span className="text-sm">→</span>
@@ -259,7 +259,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                     )}
 
                     {/* 헤드라인 */}
-                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 leading-snug group-hover:text-blue-600 transition-colors">
+                    <h2 className="text-[17px] sm:text-lg font-bold tracking-tight text-zinc-950 leading-snug group-hover:text-blue-600 transition-colors">
                       <Link href={`/news/${article.slug}`} className="focus:outline-none">
                         {article.title}
                       </Link>
@@ -268,9 +268,9 @@ export default async function HomePage({ searchParams }: PageProps) {
                     {/* 3줄 요약 목록 */}
                     {summaryPoints.length > 0 && (
                       <div className="rounded-xl border border-zinc-200/70 bg-zinc-50/80 p-3.5 sm:p-4 text-xs leading-relaxed text-zinc-800">
-                        <ul className="space-y-2">
+                        <ul className="space-y-2.5">
                           {summaryPoints.map((point, pIdx) => (
-                            <li key={pIdx} className="flex items-start gap-2 text-xs sm:text-[13px] text-zinc-700 font-medium">
+                            <li key={pIdx} className="flex items-start gap-2.5 text-[14px] sm:text-[14.5px] leading-[1.65] text-zinc-800 font-medium">
                               <span className="text-blue-600 font-bold shrink-0 mt-0.5">•</span>
                               <span className="line-clamp-2">{point}</span>
                             </li>
@@ -287,7 +287,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
                       <Link
                         href={`/news/${article.slug}`}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 group-hover:translate-x-0.5 transition-transform"
+                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 group-hover:translate-x-0.5 transition-transform"
                       >
                         <span>전문 보기</span>
                         <span className="text-sm">→</span>

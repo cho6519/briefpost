@@ -195,11 +195,11 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
 
       {/* 기사 헤더 (H1 제목, 작성일, 출처 링크) */}
       <header className="space-y-3 sm:space-y-4">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-950 leading-[1.3] sm:leading-[1.25]">
+        <h1 className="text-[22px] sm:text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-950 leading-[1.35] sm:leading-[1.25]">
           {article.title}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-2.5 text-xs text-zinc-500 border-b border-zinc-200 pb-4">
+        <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-[13px] text-zinc-500 border-b border-zinc-200 pb-4">
           <time dateTime={article.createdAt} className="font-medium">
             발행: {formattedDate}
           </time>
@@ -223,11 +223,11 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       {article.summary && (
         <section className="summary-box rounded-2xl p-5 sm:p-6 shadow-2xs">
           <div className="flex items-center justify-between border-b border-blue-200/70 pb-3 mb-3.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-900">
               <span className="text-blue-600 text-sm">⚡</span>
               <span>3줄 핵심 요약</span>
             </div>
-            <span className="text-[10px] font-mono font-bold tracking-wider text-blue-700 uppercase bg-blue-100/80 px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-mono font-bold tracking-wider text-blue-700 uppercase bg-blue-100/80 px-2.5 py-0.5 rounded-full">
               EXECUTIVE BRIEF
             </span>
           </div>
@@ -237,8 +237,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
               .map((line) => line.trim())
               .filter(Boolean)
               .map((line, pIdx) => (
-                <li key={pIdx} className="flex items-start gap-3 text-sm sm:text-[15px] leading-relaxed text-zinc-800 font-medium">
-                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold shadow-2xs mt-0.5">
+                <li key={pIdx} className="flex items-start gap-3 text-[15px] sm:text-base leading-[1.75] text-zinc-800 font-medium">
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold shadow-2xs mt-0.5">
                     {pIdx + 1}
                   </span>
                   <span>{line.replace(/^[0-9]+[.)]\s*/, "").replace(/^[-*•]\s*/, "")}</span>
