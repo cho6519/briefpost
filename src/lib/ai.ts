@@ -148,7 +148,7 @@ export async function rewriteArticleWithAI(raw: RawArticleInput): Promise<Rewrit
     if (geminiKey) {
       const preferredModel = process.env.AI_MODEL || "gemini-3.6-flash";
       const candidateModels = Array.from(
-        new Set([preferredModel, "gemini-3.6-flash"])
+        new Set([preferredModel, "gemini-3.6-flash", "gemini-2.5-flash", "gemini-flash-latest"])
       );
 
       let lastError: Error | null = null;
@@ -158,7 +158,7 @@ export async function rewriteArticleWithAI(raw: RawArticleInput): Promise<Rewrit
         const reqTimeout = setTimeout(() => reqController.abort(), 35000);
 
         try {
-          console.log(`[AI] Google Gemini API 호출 중 (Model: ${model})...`);
+          console.log(`[AI GEMINI] API 호출 시작 - 모델: ${model} | 대상 기사: "${raw.title}"`);
           const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
 
           const response = await fetch(geminiEndpoint, {
@@ -187,18 +187,26 @@ export async function rewriteArticleWithAI(raw: RawArticleInput): Promise<Rewrit
             const data = await response.json();
             rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
             if (rawContent) {
-              console.log(`[AI] Google Gemini API 호출 성공 (Model: ${model})`);
+              console.log(`[AI GEMINI SUCCESS] API 응답 수신 성공 (모델: ${model})`);
               break;
             }
           } else {
             const errText = await response.text();
-            console.warn(`[AI Warning] ${model} 응답 실패 (${response.status}): ${errText.slice(0, 100)}... 다음 모델로 전환합니다.`);
+            console.error(
+              `[AI GEMINI ERROR] API 호출 실패 (모델: ${model}) -> 상태 코드: ${response.status} | 오류: ${errText.slice(0, 150)}`
+            );
             lastError = new Error(`Google Gemini API error (${response.status}): ${errText.slice(0, 150)}`);
+
+            // 503(과부하) 또는 429(속도제한) 시 잠시 대기 후 다음 모델 전환
+            if (response.status === 503 || response.status === 429) {
+              console.log(`[AI GEMINI] 일시적 과부하/속도제한(${response.status}) 감지: 1.5초 대기 후 대체 모델 전환`);
+              await new Promise((resolve) => setTimeout(resolve, 1500));
+            }
           }
         } catch (modelErr: unknown) {
           clearTimeout(reqTimeout);
           const msg = modelErr instanceof Error ? modelErr.message : String(modelErr);
-          console.warn(`[AI Warning] ${model} 호출 예외: ${msg}... 다음 모델로 전환합니다.`);
+          console.error(`[AI GEMINI ERROR] API 호출 예외 발생 (모델: ${model}) -> ${msg}`);
           lastError = modelErr instanceof Error ? modelErr : new Error(msg);
         }
       }
@@ -291,13 +299,20 @@ export async function rewriteArticleWithAI(raw: RawArticleInput): Promise<Rewrit
       throw new Error("AI 응답에 필수 필드(title, content, summary)가 누락되었습니다.");
     }
 
+    const finalCategory = normalizeCategory(parsed.category || raw.category);
+    const finalTitle = parsed.title.trim();
+
+    console.log(
+      `[AI GEMINI COMPLETED] 재가공 완료 -> 생성 카테고리: [${finalCategory}] | 생성 제목: "${finalTitle}"`
+    );
+
     return {
-      title: parsed.title.trim(),
-      slug: (parsed.slug || createEnglishSlug(parsed.title)).toLowerCase().trim(),
+      title: finalTitle,
+      slug: (parsed.slug || createEnglishSlug(finalTitle)).toLowerCase().trim(),
       summary: parsed.summary.trim(),
       content: parsed.content.trim(),
-      category: normalizeCategory(parsed.category || raw.category),
-      metaTitle: parsed.metaTitle || `${parsed.title} | Brief Post`,
+      category: finalCategory,
+      metaTitle: parsed.metaTitle || `${finalTitle} | Brief Post`,
       metaDescription: parsed.metaDescription || parsed.summary.replace(/\n/g, " ").slice(0, 130),
     };
   } catch (error: unknown) {

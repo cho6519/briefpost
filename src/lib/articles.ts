@@ -53,7 +53,7 @@ export function getArticles(options: GetArticlesOptions = {}): PaginatedArticles
     const selectStmt = db.prepare(`
       SELECT * FROM articles 
       WHERE category = ? 
-      ORDER BY createdAt DESC 
+      ORDER BY id DESC 
       LIMIT ? OFFSET ?
     `);
     articles = selectStmt.all(category, limit, offset) as Article[];
@@ -64,7 +64,7 @@ export function getArticles(options: GetArticlesOptions = {}): PaginatedArticles
 
     const selectStmt = db.prepare(`
       SELECT * FROM articles 
-      ORDER BY createdAt DESC 
+      ORDER BY id DESC 
       LIMIT ? OFFSET ?
     `);
     articles = selectStmt.all(limit, offset) as Article[];

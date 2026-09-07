@@ -18,38 +18,38 @@ export interface RssFeedConfig {
 }
 
 export const RSS_FEEDS: RssFeedConfig[] = [
-  // --- 1. 정부 및 공공기관 공식 RSS 피드 ---
+  // --- 1. 정부 및 공공기관 4대 핵심 정책 포털 전용 피드 ---
   {
-    id: "korea-kr-policy",
-    name: "대한민국 정책브리핑 (종합 정책 뉴스)",
+    id: "portal-korea-kr",
+    name: "대한민국 정책브리핑 (korea.kr 정책 뉴스)",
     category: "정책·지원금",
-    url: "https://www.korea.kr/rss/policy.xml",
+    url: "https://news.google.com/rss/search?q=%EC%A0%95%EC%B1%85%EB%B8%8C%EB%A6%AC%ED%95%91+%EC%A0%95%EB%B6%80+%EC%A7%80%EC%9B%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "대한민국 정부 대표 종합 정책 뉴스 및 국민 지원 정책 피드",
+    description: "대한민국 공식 정책브리핑(korea.kr) 최신 정부 정책 및 보도자료 실시간 피드",
   },
   {
-    id: "korea-kr-press",
-    name: "대한민국 정책브리핑 (정부 공식 보도자료)",
+    id: "portal-youth-seoul",
+    name: "서울시 청년몽땅정보통 (youth.seoul.go.kr)",
     category: "정책·지원금",
-    url: "https://www.korea.kr/rss/pressRelease.xml",
+    url: "https://news.google.com/rss/search?q=%EC%84%9C%EC%9A%B8%EC%8B%9C+%EC%B2%AD%EB%85%84+%EC%A7%80%EC%9B%90%EA%B8%88+%EC%B2%AD%EB%85%84%EB%AA%BD%EB%95%85%EC%A0%95%EB%B3%B4%ED%86%B5&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "각 부처 정부 부처 공식 합동 브리핑 및 보도자료 피드",
+    description: "서울청년포털(youth.seoul.go.kr) 청년수당, 청년안심주택, 교통비 지원 등 핵심 정책 피드",
   },
   {
-    id: "moef-press",
-    name: "기획재정부 (세제·경제 정책 보도자료)",
-    category: "부동산·세제",
-    url: "https://www.moef.go.kr/rss.do?bbsId=MOSFBBS_000000000028",
+    id: "portal-bojo-gov",
+    name: "정부24 혜택알리미·보조금24 (plus.gov.kr/portal/benefitV2)",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%ED%98%9C%ED%83%9D%EC%95%8C%EB%A6%AC%EB%AF%B8+%EB%B3%B4%EC%A1%B0%EA%B8%8824+%EC%A0%95%EB%B6%8024+%EC%A7%80%EC%9B%90%EA%B8%88+%ED%98%9C%ED%83%9D&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "세제 개편안, 세법 시행령, 거시경제 정책 공식 발표 피드",
+    description: "정부24 혜택알리미·보조금24(plus.gov.kr/portal/benefitV2) 국민 맞춤형 공공서비스 혜택, 정부 보조금, 숨은 환급금 실시간 피드",
   },
   {
-    id: "molit-press",
-    name: "국토교통부 (부동산·주택 청약 정책 보도자료)",
-    category: "부동산·세제",
-    url: "https://www.molit.go.kr/USR/NEWS/m_71/lst.jsp?rss=Y",
+    id: "portal-youth-center",
+    name: "온통청년 청년센터 (youthcenter.go.kr)",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%EC%98%A8%ED%86%B5%EC%B2%AD%EB%85%84+%EC%B2%AD%EB%85%84%EC%A0%95%EC%B1%85+%EC%B2%AD%EB%85%84%EC%84%BC%ED%84%B0&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "주택 공급, 부동산 청약 제도, 교통/국토 정책 보도자료 피드",
+    description: "국무조정실 온통청년(youthcenter.go.kr) 전국 청년 지원 정책 및 일자리·주거 지원 피드",
   },
 
   // --- 2. 정책·지원금·금융 실시간 뉴스 피드 (안정적인 실시간 공급망) ---
