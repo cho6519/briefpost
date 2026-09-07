@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchRssFeeds } from "@/lib/rss";
 import { createArticle } from "@/lib/articles";
 import { verifyCronAuth } from "@/lib/cronAuth";
+import { verifyAndSanitizeArticle, normalizeThreeLineSummary } from "@/lib/articleValidator";
 
 export const dynamic = "force-dynamic";
 
@@ -17,17 +18,6 @@ function generateSlug(title: string): string {
     .slice(0, 50);
 
   return `${cleanTitle}-${timestamp}`;
-}
-
-/**
- * 3줄 핵심 요약 생성 (자동 요약 fallback)
- */
-function createAutoSummary(snippet: string, title: string): string {
-  const sentences = snippet.split(/(?<=[.?!])\s+/).filter((s) => s.trim().length > 10);
-  if (sentences.length >= 3) {
-    return `1. ${sentences[0]}\n2. ${sentences[1]}\n3. ${sentences[2]}`;
-  }
-  return `1. ${title}\n2. ${snippet.slice(0, 100)}...\n3. 상세 내용은 기사 본문 및 원문 링크를 참고하세요.`;
 }
 
 /**
@@ -63,18 +53,43 @@ async function handleFetchRss(request: NextRequest) {
       for (const item of result.items) {
         try {
           const slug = generateSlug(item.title);
-          const summary = createAutoSummary(item.contentSnippet, item.title);
+          const rawContent = item.content || item.contentSnippet;
+          const { summary } = normalizeThreeLineSummary(
+            item.contentSnippet,
+            rawContent,
+            item.title
+          );
 
-          createArticle({
+          // 품질 및 태그 제거 검증 게이트
+          const validated = verifyAndSanitizeArticle({
             title: item.title,
             slug,
-            content: item.content || item.contentSnippet,
+            content: rawContent,
             summary,
             category: item.category,
             metaTitle: `${item.title} | Brief Post`,
             metaDescription: item.contentSnippet.slice(0, 150),
             thumbnailUrl: item.thumbnailUrl,
             sourceUrl: item.link,
+          });
+
+          if (!validated.isValid) {
+            console.warn(`[CRON fetch-rss] 유효성 검사 미통과 건너뜀: ${item.title}`);
+            continue;
+          }
+
+          const validItem = validated.sanitized;
+
+          createArticle({
+            title: validItem.title,
+            slug: validItem.slug,
+            content: validItem.content,
+            summary: validItem.summary,
+            category: validItem.category,
+            metaTitle: validItem.metaTitle ?? null,
+            metaDescription: validItem.metaDescription ?? null,
+            thumbnailUrl: validItem.thumbnailUrl ?? null,
+            sourceUrl: validItem.sourceUrl ?? null,
             createdAt: item.pubDate,
           });
           savedCount++;

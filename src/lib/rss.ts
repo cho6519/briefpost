@@ -106,20 +106,61 @@ function extractThumbnailUrl(item: RssItemLike): string | null {
 }
 
 /**
- * HTML 태그 제거 및 텍스트 정리
+ * HTML 태그 제거 및 텍스트 정리 (엔티티 복원 및 마크다운/HTML 태그 완전 정제)
  */
-function stripHtmlTags(html: string): string {
+export function stripHtmlTags(html: string): string {
   if (!html) return "";
   return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ")
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+    .replace(/https?:\/\/[^\s]+/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&middot;/gi, "·")
+    .replace(/&[a-z0-9#]+;/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Google News RSS 피드 및 일반 HTML 본문을 깨끗한 브리핑 텍스트로 정규화
+ * <ol><li><a href="...">제목</a><font>매체</font></li></ol> 형태를 "매체: 제목" 리스트 텍스트로 안전 변환
+ */
+export function sanitizeRssRawContent(rawHtmlOrText: string): string {
+  if (!rawHtmlOrText) return "";
+
+  // 1. Google News 식 <ol><li> 구조 감지
+  if (/<li[^>]*>/i.test(rawHtmlOrText)) {
+    const liMatches = Array.from(rawHtmlOrText.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi));
+    if (liMatches.length > 0) {
+      const extractedLines = liMatches
+        .map((match) => {
+          const innerHtml = match[1];
+          // 언론사 이름 추출 (<font color="...">매체명</font>)
+          const mediaMatch = innerHtml.match(/<font[^>]*>([\s\S]*?)<\/font>/i);
+          const media = mediaMatch ? stripHtmlTags(mediaMatch[1]).trim() : "";
+
+          // 기사 타이틀 추출
+          const text = stripHtmlTags(innerHtml.replace(/<font[^>]*>[\s\S]*?<\/font>/gi, "")).trim();
+          if (!text) return "";
+          return media ? `[${media}] ${text}` : text;
+        })
+        .filter((line) => line.length > 5);
+
+      if (extractedLines.length > 0) {
+        return extractedLines.join("\n");
+      }
+    }
+  }
+
+  // 2. 일반 HTML 본문인 경우 태그를 100% 제거하고 정갈한 텍스트로 변환
+  const cleaned = stripHtmlTags(rawHtmlOrText);
+  return cleaned;
 }
 
 /**
@@ -178,8 +219,8 @@ function extractItemDetails(
     item.contentSnippet ||
     "";
   const contentStr = typeof rawContent === "string" ? rawContent : "";
-  const rawSnippet = item.contentSnippet || item.description || item.summary || contentStr;
-  const cleanSnippet = stripHtmlTags(typeof rawSnippet === "string" ? rawSnippet : "").slice(0, 300);
+  const sanitizedContent = sanitizeRssRawContent(contentStr);
+  const cleanSnippet = stripHtmlTags(typeof rawContent === "string" ? rawContent : "").slice(0, 300);
 
   // 4. 날짜 추출 (pubDate, isoDate, dc:date 등 다형성 지원)
   const rawDate =
@@ -206,8 +247,8 @@ function extractItemDetails(
     title,
     link,
     pubDate,
-    content: contentStr || cleanSnippet,
-    contentSnippet: cleanSnippet,
+    content: sanitizedContent || cleanSnippet,
+    contentSnippet: cleanSnippet || sanitizedContent.slice(0, 300),
     thumbnailUrl,
     category: targetFeed.category,
     feedTitle: feedTitle || targetFeed.name,

@@ -6,6 +6,7 @@ import { marked } from "marked";
 import AdSlot from "@/components/ads/AdSlot";
 import { getArticleBySlug, getAllArticleSlugs } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { getSourceDisplayName } from "@/lib/sourceHelper";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -169,6 +170,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     },
   };
 
+  const sourceName = getSourceDisplayName(article.sourceUrl, article.title, article.category);
+
   return (
     <article className="mx-auto max-w-2xl px-1 sm:px-0 space-y-6 sm:space-y-8">
       {/* 구조화 데이터 주입 */}
@@ -212,7 +215,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1 font-semibold"
               >
-                원문 보기 ↗
+                출처: {sourceName} ↗
               </a>
             </>
           )}
@@ -233,15 +236,32 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
           </div>
           <ul className="space-y-3">
             {article.summary
-              .split("\n")
+              .split(/(?:^|\n|\s+)(?:[1-3][.)\-]\s+|[•\-*]\s+)/)
               .map((line) => line.trim())
               .filter(Boolean)
-              .map((line, pIdx) => (
+              .map((line) =>
+                line
+                  .replace(/^[0-9]+[.)]\s*/, "")
+                  .replace(/^[-*•]\s*/, "")
+                  .replace(/<[^>]+>/g, " ")
+                  .replace(/<\/?[a-z][a-z0-9]*\b[^>]*$/gi, " ")
+                  .replace(/https?:\/\/[^\s]+/g, " ")
+                  .replace(/&nbsp;/g, " ")
+                  .replace(/&amp;/g, "&")
+                  .replace(/&lt;/g, "<")
+                  .replace(/&gt;/g, ">")
+                  .replace(/&quot;/g, '"')
+                  .replace(/&#39;/g, "'")
+                  .replace(/\s+/g, " ")
+                  .trim()
+              )
+              .filter((line) => line.length >= 5 && !line.includes("<") && !line.includes("http"))
+              .map((cleanLine, pIdx) => (
                 <li key={pIdx} className="flex items-start gap-3 text-[15px] sm:text-base leading-[1.75] text-zinc-800 font-medium">
                   <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold shadow-2xs mt-0.5">
                     {pIdx + 1}
                   </span>
-                  <span>{line.replace(/^[0-9]+[.)]\s*/, "").replace(/^[-*•]\s*/, "")}</span>
+                  <span>{cleanLine}</span>
                 </li>
               ))}
           </ul>
@@ -299,16 +319,21 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
 
       {/* 원문 출처 및 면책 안내 박스 */}
       {article.sourceUrl && (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 text-xs text-zinc-600 shadow-2xs">
-          <span className="font-semibold text-zinc-900">출처 안내: </span>
-          본 기사는 다음 원문 보도를 바탕으로 요약 및 재구성되었습니다:{" "}
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 text-xs text-zinc-600 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-zinc-900">출처:</span>
+            <span className="font-medium text-zinc-800 bg-zinc-100 px-2.5 py-1 rounded-md">
+              {sourceName}
+            </span>
+          </div>
           <a
             href={article.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline break-all font-medium"
+            className="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1 transition-colors"
           >
-            {article.sourceUrl}
+            <span>원문 확인하기</span>
+            <span className="text-xs">↗</span>
           </a>
         </div>
       )}

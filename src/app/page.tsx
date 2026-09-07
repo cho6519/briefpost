@@ -3,6 +3,7 @@ import Image from "next/image";
 import AdSlot from "@/components/ads/AdSlot";
 import { getArticles, seedArticlesIfNeeded } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { getSourceDisplayName } from "@/lib/sourceHelper";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,26 @@ interface PageProps {
 function parseSummaryPoints(summary?: string | null): string[] {
   if (!summary) return [];
   return summary
-    .split("\n")
+    .split(/(?:^|\n|\s+)(?:[1-3][.)\-]\s+|[•\-*]\s+)/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => line.replace(/^[0-9]+[.)]\s*/, "").replace(/^[-*•]\s*/, ""));
+    .map((line) =>
+      line
+        .replace(/^[0-9]+[.)]\s*/, "")
+        .replace(/^[-*•]\s*/, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/<\/?[a-z][a-z0-9]*\b[^>]*$/gi, " ")
+        .replace(/https?:\/\/[^\s]+/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
+    .filter((line) => line.length >= 5 && !line.includes("<") && !line.includes("http"));
 }
 
 function estimateReadingTime(content: string): string {
@@ -123,6 +140,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             const readingTime = estimateReadingTime(article.content);
             const summaryPoints = parseSummaryPoints(article.summary);
             const isHero = isHeroPage && index === 0;
+            const sourceName = getSourceDisplayName(article.sourceUrl, article.title, article.category);
 
             // 1) 히어로 피처드 스토리 (메인 첫 페이지 1위 기사)
             if (isHero) {
@@ -196,8 +214,8 @@ export default async function HomePage({ searchParams }: PageProps) {
 
                       {/* 하단 바 */}
                       <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
-                        <span className="text-[11px] text-zinc-500 font-medium">
-                          {article.sourceUrl ? "원문 보도 기반 요약" : "핵심 브리프"}
+                        <span className="text-[11px] text-zinc-500 font-medium truncate max-w-[240px]">
+                          출처: {sourceName}
                         </span>
 
                         <Link
@@ -281,8 +299,8 @@ export default async function HomePage({ searchParams }: PageProps) {
 
                     {/* 하단 액션 */}
                     <div className="flex items-center justify-between pt-1 border-t border-zinc-100">
-                      <span className="text-[11px] text-zinc-500 font-medium">
-                        출처 정보 포함
+                      <span className="text-[11px] text-zinc-500 font-medium truncate max-w-[200px]">
+                        출처: {sourceName}
                       </span>
 
                       <Link

@@ -3,6 +3,7 @@ import { fetchRssFeeds, ParsedRssItem } from "@/lib/rss";
 import { rewriteArticleWithAI } from "@/lib/ai";
 import { createArticle, ensureUniqueSlug, articleExistsBySourceUrl } from "@/lib/articles";
 import { verifyCronAuth } from "@/lib/cronAuth";
+import { verifyAndSanitizeArticle } from "@/lib/articleValidator";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +12,12 @@ type CronStage =
   | "CONFIG_CHECK"
   | "RSS_FETCH"
   | "AI_PROCESSING"
+  | "QUALITY_VALIDATION"
   | "DB_SAVE"
   | "COMPLETED";
 
 /**
- * RSS 수집 + AI 패러프레이징 + DB 자동 퍼블리싱 공통 핸들러
+ * RSS 수집 + AI 패러프레이징 + 품질 검증 + DB 자동 퍼블리싱 공통 핸들러
  */
 async function handlePublishArticles(request: NextRequest) {
   const startTime = Date.now();
@@ -26,6 +28,7 @@ async function handlePublishArticles(request: NextRequest) {
     CONFIG_CHECK: "환경변수 및 Gemini API 설정 확인",
     RSS_FETCH: "공공 및 언론사 RSS 피드 원문 수집 및 중복 체크",
     AI_PROCESSING: "Google Gemini AI 본문 재가공 및 요약·SEO 생성",
+    QUALITY_VALIDATION: "3줄 요약 태그 제거 및 제목-내용 일치성 무결성 검증",
     DB_SAVE: "SQLite 데이터베이스 영구 저장 및 슬러그 검증",
     COMPLETED: "전체 기사 자동 발행 파이프라인 완료",
   };
@@ -134,19 +137,47 @@ async function handlePublishArticles(request: NextRequest) {
           link: rawItem.link,
         });
 
-        currentStage = "DB_SAVE";
-        // 고유 슬러그 검증 및 중복 방지 타임스탬프 처리
-        const uniqueSlug = ensureUniqueSlug(rewritten.slug);
+        currentStage = "QUALITY_VALIDATION";
+        console.log(`[PUBLISH CRON] ${itemIndexStr} 기사 품질 및 제목-내용 일치성 무결성 검증 수행...`);
 
-        // SQLite DB에 최종 기사 자동 Insert (우리 사이트 송출 시점 기준 최신화)
-        const savedArticle = createArticle({
+        // 3줄 요약 태그 제거 및 제목-내용 일치성 검증 게이트 통과
+        const validation = verifyAndSanitizeArticle({
           title: rewritten.title,
-          slug: uniqueSlug,
-          content: rewritten.content,
+          slug: rewritten.slug,
           summary: rewritten.summary,
+          content: rewritten.content,
           category: rewritten.category || rawItem.category,
           metaTitle: rewritten.metaTitle,
           metaDescription: rewritten.metaDescription,
+          thumbnailUrl: rawItem.thumbnailUrl,
+          sourceUrl: rawItem.link,
+        });
+
+        if (!validation.isValid) {
+          throw new Error(`기사 품질 기준 미달로 발행 거절: ${validation.rejectionReason}`);
+        }
+
+        if (validation.repairedIssues.length > 0) {
+          console.log(
+            `[PUBLISH CRON REPAIRED] ${itemIndexStr} 무결성 자동 보정 적용: ${validation.repairedIssues.join(" | ")}`
+          );
+        }
+
+        const validArticle = validation.sanitized;
+
+        currentStage = "DB_SAVE";
+        // 고유 슬러그 검증 및 중복 방지 타임스탬프 처리
+        const uniqueSlug = ensureUniqueSlug(validArticle.slug);
+
+        // SQLite DB에 최종 기사 자동 Insert (우리 사이트 송출 시점 기준 최신화)
+        const savedArticle = createArticle({
+          title: validArticle.title,
+          slug: uniqueSlug,
+          content: validArticle.content,
+          summary: validArticle.summary,
+          category: validArticle.category,
+          metaTitle: validArticle.metaTitle ?? null,
+          metaDescription: validArticle.metaDescription ?? null,
           thumbnailUrl: rawItem.thumbnailUrl,
           sourceUrl: rawItem.link,
           createdAt: new Date().toISOString(),
