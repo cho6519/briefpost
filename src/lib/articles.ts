@@ -91,6 +91,17 @@ export function getArticleBySlug(slug: string): Article | null {
 }
 
 /**
+ * ID 기반 단일 기사 상세 조회 (article/[id] 라우트 대응)
+ */
+export function getArticleById(id: number | string): Article | null {
+  const numId = Number(id);
+  if (isNaN(numId)) return null;
+  const stmt = db.prepare("SELECT * FROM articles WHERE id = ? LIMIT 1");
+  const article = stmt.get(numId) as Article | undefined;
+  return article || null;
+}
+
+/**
  * 동일 카테고리 내 관련 기사 3선 조회 (독자 체류 시간 극대화 및 이탈 방지)
  */
 export function getRelatedArticles(currentSlug: string, category: string, limit: number = 3): Article[] {
