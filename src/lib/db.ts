@@ -70,6 +70,7 @@ function initSchema(db: Database.Database) {
       metaDescription TEXT,
       thumbnailUrl TEXT,
       sourceUrl TEXT,
+      faq TEXT,
       createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -78,6 +79,17 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category);
     CREATE INDEX IF NOT EXISTS idx_articles_createdAt ON articles(createdAt DESC);
   `);
+
+  // 기존 테이블에 faq 컬럼이 없는 경우 안전하게 마이그레이션 추가
+  try {
+    const tableInfo = db.pragma("table_info(articles)") as { name: string }[];
+    const hasFaq = tableInfo.some((col) => col.name === "faq");
+    if (!hasFaq) {
+      db.exec("ALTER TABLE articles ADD COLUMN faq TEXT");
+    }
+  } catch (err) {
+    console.warn("[DB] faq 컬럼 확인/마이그레이션 스킵:", err);
+  }
 }
 
 export default getDatabase();

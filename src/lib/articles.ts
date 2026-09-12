@@ -11,6 +11,7 @@ export interface Article {
   metaDescription: string | null;
   thumbnailUrl: string | null;
   sourceUrl: string | null;
+  faq?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,16 +90,47 @@ export function getArticleBySlug(slug: string): Article | null {
 }
 
 /**
+ * 동일 카테고리 내 관련 기사 3선 조회 (독자 체류 시간 극대화 및 이탈 방지)
+ */
+export function getRelatedArticles(currentSlug: string, category: string, limit: number = 3): Article[] {
+  // 1. 같은 카테고리 내 현재 기사를 제외한 최신 기사 조회
+  const stmt = db.prepare(`
+    SELECT * FROM articles 
+    WHERE category = ? AND slug != ? 
+    ORDER BY id DESC 
+    LIMIT ?
+  `);
+  let related = stmt.all(category, currentSlug, limit) as Article[];
+
+  // 2. 만약 해당 카테고리 기사가 부족한 경우, 다른 최신 기사로 보충
+  if (related.length < limit) {
+    const needed = limit - related.length;
+    const existingSlugs = [currentSlug, ...related.map((a) => a.slug)];
+    const placeholders = existingSlugs.map(() => "?").join(",");
+    const fallbackStmt = db.prepare(`
+      SELECT * FROM articles 
+      WHERE slug NOT IN (${placeholders})
+      ORDER BY id DESC 
+      LIMIT ?
+    `);
+    const fallbacks = fallbackStmt.all(...existingSlugs, needed) as Article[];
+    related = [...related, ...fallbacks];
+  }
+
+  return related;
+}
+
+/**
  * 신규 기사 저장 (송출 파이프라인 연동용)
  */
 export function createArticle(input: CreateArticleInput): Article {
   const stmt = db.prepare(`
     INSERT INTO articles (
       title, slug, content, summary, category, 
-      metaTitle, metaDescription, thumbnailUrl, sourceUrl, createdAt
+      metaTitle, metaDescription, thumbnailUrl, sourceUrl, faq, createdAt
     ) VALUES (
       @title, @slug, @content, @summary, @category, 
-      @metaTitle, @metaDescription, @thumbnailUrl, @sourceUrl,
+      @metaTitle, @metaDescription, @thumbnailUrl, @sourceUrl, @faq,
       COALESCE(@createdAt, CURRENT_TIMESTAMP)
     )
   `);
@@ -113,6 +145,7 @@ export function createArticle(input: CreateArticleInput): Article {
     metaDescription: input.metaDescription || input.summary || null,
     thumbnailUrl: input.thumbnailUrl || null,
     sourceUrl: input.sourceUrl || null,
+    faq: input.faq || null,
     createdAt: input.createdAt || null,
   });
 

@@ -3,11 +3,15 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { marked } from "marked";
-import AdSlot from "@/components/ads/AdSlot";
-import { getArticleBySlug, getAllArticleSlugs } from "@/lib/articles";
+import AdUnit from "@/components/ads/AdUnit";
+import OfficialCtaCard from "@/components/article/OfficialCtaCard";
+import FAQSection from "@/components/article/FAQSection";
+import RelatedArticles from "@/components/article/RelatedArticles";
+import { getArticleBySlug, getAllArticleSlugs, getRelatedArticles } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
 import { normalizeArticleContent, enforceHeadingHierarchy } from "@/lib/articleValidator";
+import { ArticleFaqItem } from "@/lib/ai";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -26,22 +30,58 @@ export async function generateStaticParams() {
 }
 
 /**
- * 본문 HTML을 문단 블록 단위로 50% 지점에서 분할하는 스마트 스플리터
+ * 본문 HTML을 4단계 H2 섹션 및 애드센스 슬롯 위치에 맞게 스마트 3단 분할
+ * - Part 1: 도입부 및 1번, 2번 H2 섹션
+ *   -> [광고 슬롯 ② 배치: 문맥 매칭 인피드 위치]
+ * - Part 2: 3번 H2 섹션 (세부 혜택 및 수치 비교)
+ *   -> [광고 슬롯 ③ 배치: 공식 신청 가이드 바로 위]
+ * - Part 3: 4번 H2 섹션 (신청 방법 및 공식 안내)
  */
-function splitContentInHalf(html: string): [string, string] {
-  // 블록 요소 시작 태그 기준으로 분할
+function splitContentForAdSense(html: string): {
+  part1: string;
+  part2: string;
+  part3: string;
+} {
+  const h2Matches = Array.from(html.matchAll(/<h2\b[^>]*>/gi));
+
+  // 1. 표준 4단계 H2 구조 (H2가 4개 이상인 경우)
+  if (h2Matches.length >= 4) {
+    const idxH2_3 = h2Matches[2].index!; // 3번째 H2 시작 위치
+    const idxH2_4 = h2Matches[3].index!; // 4번째 H2 시작 위치
+
+    return {
+      part1: html.slice(0, idxH2_3),
+      part2: html.slice(idxH2_3, idxH2_4),
+      part3: html.slice(idxH2_4),
+    };
+  }
+
+  // 2. H2가 3개인 경우 (1, 2번 / 3번 / 3번 하반부)
+  if (h2Matches.length === 3) {
+    const idxH2_2 = h2Matches[1].index!;
+    const idxH2_3 = h2Matches[2].index!;
+
+    return {
+      part1: html.slice(0, idxH2_2),
+      part2: html.slice(idxH2_2, idxH2_3),
+      part3: html.slice(idxH2_3),
+    };
+  }
+
+  // 3. H2가 적은 구형 기사: 블록 태그 기준 3등분 안전 폴백
   const blockRegex = /(?=<p|<h[1-6]|<ul|<ol|<blockquote|<div)/gi;
   const blocks = html.split(blockRegex).filter((b) => b.trim().length > 0);
 
-  if (blocks.length <= 1) {
-    return [html, ""];
+  if (blocks.length <= 2) {
+    return { part1: html, part2: "", part3: "" };
   }
 
-  const midIndex = Math.ceil(blocks.length / 2);
-  const firstHalf = blocks.slice(0, midIndex).join("");
-  const secondHalf = blocks.slice(midIndex).join("");
+  const third = Math.ceil(blocks.length / 3);
+  const part1 = blocks.slice(0, third).join("");
+  const part2 = blocks.slice(third, third * 2).join("");
+  const part3 = blocks.slice(third * 2).join("");
 
-  return [firstHalf, secondHalf];
+  return { part1, part2, part3 };
 }
 
 /**
@@ -67,9 +107,10 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     description,
     keywords: [
       article.category,
-      "AI 뉴스",
-      "테크 브리프",
-      "기술 뉴스레터",
+      "정책 브리핑",
+      "지원금 안내",
+      "정부 혜택",
+      "경제 뉴스",
       ...article.title.split(" ").slice(0, 4),
     ],
     alternates: {
@@ -123,12 +164,30 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  // 마크다운 구조 무결성 보정 및 HTML 변환 (본문 50% 스마트 분할)
+  // 마크다운 구조 무결성 보정 및 HTML 변환
   const cleanMarkdown = normalizeArticleContent(article.content);
   const rawHtml = marked.parse(cleanMarkdown, { async: false }) as string;
   // 구글 SEO & 애드센스 규격 강제: 본문 H태그 위계 구조 불변 고정 (H1은 기사 제목 단 하나만 허용, 본문은 H2 -> H3만 허용)
   const fullHtml = enforceHeadingHierarchy(rawHtml);
-  const [firstHalfHtml, secondHalfHtml] = splitContentInHalf(fullHtml);
+
+  // 애드센스 문맥 매칭 슬롯에 맞춘 본문 3단 분할
+  const { part1, part2, part3 } = splitContentForAdSense(fullHtml);
+
+  // FAQ 구조화 데이터 파싱
+  let faqList: ArticleFaqItem[] = [];
+  if (article.faq) {
+    try {
+      const parsed = JSON.parse(article.faq);
+      if (Array.isArray(parsed)) {
+        faqList = parsed;
+      }
+    } catch {
+      // 무시
+    }
+  }
+
+  // 관련 기사 3선 조회
+  const relatedArticles = getRelatedArticles(article.slug, article.category, 3);
 
   const formattedDate = new Date(article.createdAt).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -136,7 +195,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     day: "numeric",
   });
 
-  // 구글 검색엔진용 NewsArticle & BlogPosting 복합 구조화 데이터 (Google Rich Results 완전 준수)
+  // 1. 기사 표준 구조화 데이터 (NewsArticle & BlogPosting)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": ["NewsArticle", "BlogPosting"],
@@ -174,15 +233,38 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     },
   };
 
+  // 2. 구글 schema.org/FAQPage 구조화 데이터
+  const faqJsonLd =
+    faqList.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqList.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: item.answer,
+            },
+          })),
+        }
+      : null;
+
   const sourceName = getSourceDisplayName(article.sourceUrl, article.title, article.category);
 
   return (
     <article className="mx-auto max-w-2xl px-1 sm:px-0 space-y-6 sm:space-y-8">
-      {/* 구조화 데이터 주입 */}
+      {/* 구조화 데이터 주입 (기사 스키마 & 구글 FAQPage 스키마) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
 
       {/* 상단 네비게이션 & 카테고리 태그 */}
       <div className="flex items-center justify-between pt-1">
@@ -225,6 +307,14 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
           )}
         </div>
       </header>
+
+      {/* [광고 슬롯 ①] 기사 메인 타이틀(h1) 바로 아래 (상단 슬롯) */}
+      <AdUnit
+        slotId="ad-top-headline"
+        format="horizontal"
+        label="광고 영역 (AdSense Slot ① - 상단)"
+        className="my-4"
+      />
 
       {/* 가독성 특화: 3줄 핵심 요약 블루 틴트 박스 */}
       {article.summary && (
@@ -286,40 +376,56 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         </div>
       )}
 
-      {/* [광고 슬롯 1] 본문 시작 직전 (상단 슬롯) - 신단수 자체 배너 또는 구글 애드센스 */}
-      <AdSlot
-        slotId="top-in-article"
-        bannerId="shindansu"
-        format="horizontal"
-        label="SPONSORED (상단)"
-        className="my-6"
-      />
-
       {/* 본문 텍스트 영역 (가독성 특화: 최적화된 폰트 크기, 편안한 대비, 좌측 액센트 소제목) */}
       <div className="article-content text-[16px] sm:text-[17px] leading-[1.8] sm:leading-[1.85] text-zinc-700 dark:text-zinc-300 font-normal tracking-[-0.01em] break-keep">
-        {/* 본문 전반부 (50% 이전) */}
+        {/* 본문 1단계: 도입부 및 1번, 2번 H2 섹션 (개요 및 자격 요건) */}
         <div
           className="space-y-5 [&>p]:text-zinc-700 dark:[&>p]:text-zinc-300 [&>p]:font-normal [&>p]:leading-[1.85] [&>p]:mb-5 [&>h2]:text-[19px] sm:[&>h2]:text-[21px] [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-900 dark:[&>h2]:text-zinc-100 [&>h2]:mt-9 [&>h2]:mb-4 [&>h2]:pt-1.5 [&>h2]:border-l-4 [&>h2]:border-blue-600 [&>h2]:pl-3.5 [&>h3]:text-[16.5px] sm:[&>h3]:text-[17.5px] [&>h3]:font-bold [&>h3]:text-zinc-900 dark:[&>h3]:text-zinc-100 [&>h3]:mt-7 [&>h3]:mb-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2.5 [&>ul]:my-5 [&>ul>li]:text-zinc-700 dark:[&>ul>li]:text-zinc-300 [&>ul>li]:leading-[1.75] [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2.5 [&>ol]:my-5 [&>ol>li]:text-zinc-700 dark:[&>ol>li]:text-zinc-300 [&>ol>li]:leading-[1.75] [&_strong]:font-semibold [&_strong]:text-zinc-900 dark:[&_strong]:text-zinc-100 [&>blockquote]:border-l-4 [&>blockquote]:border-zinc-200 dark:[&>blockquote]:border-zinc-700 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-zinc-600 dark:[&>blockquote]:text-zinc-400 [&>blockquote]:my-4"
-          dangerouslySetInnerHTML={{ __html: firstHalfHtml }}
+          dangerouslySetInnerHTML={{ __html: part1 }}
         />
 
-        {/* [광고 슬롯 2] 본문 50% 지점 (인필드 슬롯) - KECEL 자체 배너 또는 구글 애드센스 */}
-        <AdSlot
-          slotId="mid-in-article"
-          bannerId="kecel"
+        {/* [광고 슬롯 ②] 두 번째 <h2> 섹션과 세 번째 <h2> 섹션 사이 (문맥 매칭 인피드 위치) */}
+        <AdUnit
+          slotId="ad-in-feed-mid"
           format="fluid"
-          label="SPONSORED (인피드)"
+          label="광고 영역 (AdSense Slot ② - 문맥 인피드)"
           className="my-8"
         />
 
-        {/* 본문 후반부 (50% 이후) */}
-        {secondHalfHtml && (
+        {/* 본문 2단계: 3번 H2 섹션 (세부 혜택 및 수치 비교) */}
+        {part2 && (
           <div
             className="space-y-5 [&>p]:text-zinc-700 dark:[&>p]:text-zinc-300 [&>p]:font-normal [&>p]:leading-[1.85] [&>p]:mb-5 [&>h2]:text-[19px] sm:[&>h2]:text-[21px] [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-900 dark:[&>h2]:text-zinc-100 [&>h2]:mt-9 [&>h2]:mb-4 [&>h2]:pt-1.5 [&>h2]:border-l-4 [&>h2]:border-blue-600 [&>h2]:pl-3.5 [&>h3]:text-[16.5px] sm:[&>h3]:text-[17.5px] [&>h3]:font-bold [&>h3]:text-zinc-900 dark:[&>h3]:text-zinc-100 [&>h3]:mt-7 [&>h3]:mb-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2.5 [&>ul]:my-5 [&>ul>li]:text-zinc-700 dark:[&>ul>li]:text-zinc-300 [&>ul>li]:leading-[1.75] [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2.5 [&>ol]:my-5 [&>ol>li]:text-zinc-700 dark:[&>ol>li]:text-zinc-300 [&>ol>li]:leading-[1.75] [&_strong]:font-semibold [&_strong]:text-zinc-900 dark:[&_strong]:text-zinc-100 [&>blockquote]:border-l-4 [&>blockquote]:border-zinc-200 dark:[&>blockquote]:border-zinc-700 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-zinc-600 dark:[&>blockquote]:text-zinc-400 [&>blockquote]:my-4"
-            dangerouslySetInnerHTML={{ __html: secondHalfHtml }}
+            dangerouslySetInnerHTML={{ __html: part2 }}
+          />
+        )}
+
+        {/* [광고 슬롯 ③] 본문 최하단 '공식 신청 가이드' 바로 위 */}
+        <AdUnit
+          slotId="ad-bottom-guide"
+          format="rectangle"
+          label="광고 영역 (AdSense Slot ③ - 하단 가이드 직전)"
+          className="my-8"
+        />
+
+        {/* 본문 3단계: 4번 H2 섹션 (신청 방법 및 향후 일정) */}
+        {part3 && (
+          <div
+            className="space-y-5 [&>p]:text-zinc-700 dark:[&>p]:text-zinc-300 [&>p]:font-normal [&>p]:leading-[1.85] [&>p]:mb-5 [&>h2]:text-[19px] sm:[&>h2]:text-[21px] [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-900 dark:[&>h2]:text-zinc-100 [&>h2]:mt-9 [&>h2]:mb-4 [&>h2]:pt-1.5 [&>h2]:border-l-4 [&>h2]:border-blue-600 [&>h2]:pl-3.5 [&>h3]:text-[16.5px] sm:[&>h3]:text-[17.5px] [&>h3]:font-bold [&>h3]:text-zinc-900 dark:[&>h3]:text-zinc-100 [&>h3]:mt-7 [&>h3]:mb-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2.5 [&>ul]:my-5 [&>ul>li]:text-zinc-700 dark:[&>ul>li]:text-zinc-300 [&>ul>li]:leading-[1.75] [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2.5 [&>ol]:my-5 [&>ol>li]:text-zinc-700 dark:[&>ol>li]:text-zinc-300 [&>ol>li]:leading-[1.75] [&_strong]:font-semibold [&_strong]:text-zinc-900 dark:[&_strong]:text-zinc-100 [&>blockquote]:border-l-4 [&>blockquote]:border-zinc-200 dark:[&>blockquote]:border-zinc-700 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-zinc-600 dark:[&>blockquote]:text-zinc-400 [&>blockquote]:my-4"
+            dangerouslySetInnerHTML={{ __html: part3 }}
           />
         )}
       </div>
+
+      {/* 공식 신청 및 안내 바로가기 콜아웃 액션 카드 (CTA) */}
+      <OfficialCtaCard
+        sourceUrl={article.sourceUrl}
+        title={article.title}
+        category={article.category}
+      />
+
+      {/* 독자 궁금증 해결 FAQ 섹션 (구글 FAQPage 스키마 연계) */}
+      {faqList.length > 0 && <FAQSection faqItems={faqList} />}
 
       {/* 원문 출처 및 면책 안내 박스 */}
       {article.sourceUrl && (
@@ -342,16 +448,13 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         </div>
       )}
 
-      {/* [광고 슬롯 3] 본문 끝/댓글 직전 (하단 슬롯) - 신단수 자체 배너 또는 구글 애드센스 */}
-      <AdSlot
-        slotId="bottom-in-article"
-        bannerId="shindansu"
-        format="rectangle"
-        label="SPONSORED (하단)"
-        className="my-8"
+      {/* 하단 '관련 정책 및 추천 브리핑' 3선 카드 노출 (이탈률 방지 및 체류시간 극대화) */}
+      <RelatedArticles
+        articles={relatedArticles}
+        currentCategory={article.category}
       />
 
-      {/* 댓글 영역 (하단 슬롯 바로 뒤) */}
+      {/* 의견 남기기 커뮤니티 영역 */}
       <section className="border-t border-zinc-200 pt-8 mt-10">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-bold text-zinc-900">
@@ -385,3 +488,4 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     </article>
   );
 }
+

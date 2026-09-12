@@ -46,6 +46,11 @@ function ensureEnvLoaded() {
 
 ensureEnvLoaded();
 
+export interface ArticleFaqItem {
+  question: string;
+  answer: string;
+}
+
 export interface RewrittenArticleResult {
   title: string;
   slug: string;
@@ -54,6 +59,7 @@ export interface RewrittenArticleResult {
   category: string;
   metaTitle: string;
   metaDescription: string;
+  faq?: ArticleFaqItem[];
 }
 
 export interface RawArticleInput {
@@ -137,6 +143,11 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
 4. ## 4. 신청 방법 및 향후 일정 (300자 이상 필수)
    - 공식 신청처(정부24, 복지로, 공식 홈페이지, 전용 상담 창구 등), 신청 기간, 준비 서류 및 독자가 주의해야 할 점을 실용적으로 안내하십시오. (하위 ### 소제목 적극 활용)
 
+[CRITICAL 4: 독자 궁금증 해결 FAQ (구글 schema.org/FAQPage 연동)]
+기사를 다 읽은 독자가 가장 궁금해할 실질적인 질문과 명쾌한 답변 2~3개를 "faq" 필드에 JSON 배열로 반드시 생성하십시오.
+- 질문(question): '신청 자격', '중복 수혜 여부', '지급 시기 및 지급 방식', '준비 서류' 등 독자가 포털에서 검색할 만한 핵심 질문
+- 답변(answer): 기사 팩트에 기반한 친절하고 명확한 2~3문장의 완결된 설명
+
 [H태그 위계 및 문체 원칙]
 1. 본문 안에서 '#' (H1) 마크다운이나 '<h1>' 태그를 절대 사용하지 마십시오. (H1은 기사 메인 타이틀에 단 하나만 적용됩니다)
 2. 본문 대주제는 오직 '## 1.', '## 2.', '## 3.', '## 4.' (H2) 4개로만 구성하십시오.
@@ -158,7 +169,17 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
   "content": "## 1. 핵심 개요 및 주요 쟁점\\n\\n(300자 이상 상세 서술)\\n\\n## 2. 지원 대상 및 자격 요건\\n\\n(350자 이상 상세 서술)\\n\\n### 주요 자격 요건\\n- **소득 기준:** ...\\n- **연령 및 대상:** ...\\n\\n## 3. 세부 혜택 및 수치 비교\\n\\n(350자 이상 상세 서술)\\n\\n### 지원 수치 비교\\n- **지원 한도:** ...\\n- **감면율:** ...\\n\\n## 4. 신청 방법 및 향후 일정\\n\\n(300자 이상 상세 서술)\\n\\n### 공식 신청처 및 제출 서류\\n- **접수처:** ...\\n- **준비 서류:** ...",
   "category": "['정책·지원금', '부동산·세제', '금융·경제', '테크·IT', '사회·문화'] 중 하나",
   "metaTitle": "검색 결과용 60자 내외 SEO 타이틀",
-  "metaDescription": "검색 결과 클릭률을 높이는 130자 내외 메타 디스크립션"
+  "metaDescription": "검색 결과 클릭률을 높이는 130자 내외 메타 디스크립션",
+  "faq": [
+    {
+      "question": "구체적인 지원 대상 자격 기준은 어떻게 확인하나요?",
+      "answer": "공식 신청처 및 복지로 포털에서 모의 계산기를 통해 소득인정액과 연령 기준 충족 여부를 즉시 조회하실 수 있습니다."
+    },
+    {
+      "question": "신청 시 필수 구비 서류는 무엇이 있나요?",
+      "answer": "신분증 사본과 함께 주민등록등본, 소득 증빙 서류를 준비하셔야 하며 온라인 신청 시 정부24 공공 마이데이터로 간편 제출이 가능합니다."
+    }
+  ]
 }`;
 
 /**
@@ -196,6 +217,7 @@ ${cleanInputContent}
    - ## 3. 세부 혜택 및 수치 비교 (350자 이상, ### 소제목과 '-' 불릿 적극 활용)
    - ## 4. 신청 방법 및 향후 일정 (300자 이상, ### 소제목 적극 활용)
 4. 본문 내 H1('#') 사용 절대 금지, 오직 '##'(H2) 4개와 하위 '###'(H3)으로만 H태그 위계를 구성하십시오.
+5. 독자 궁금증 해결 FAQ: 독자가 가장 궁금해할 핵심 질문 2~3개와 실질적인 답변을 "faq" 배열에 반드시 작성하십시오.
 
 반드시 지정된 JSON 규격 하나만 출력하십시오.`;
 
@@ -364,6 +386,18 @@ ${cleanInputContent}
     const sanitizedAiSummary = stripMediaAndPortalTags(parsed.summary);
     const sanitizedAiContent = stripMediaAndPortalTags(parsed.content);
 
+    // FAQ 구조화 데이터 안전 파싱 및 정제
+    let parsedFaq: ArticleFaqItem[] | undefined = undefined;
+    if (Array.isArray(parsed.faq) && parsed.faq.length > 0) {
+      parsedFaq = parsed.faq
+        .filter((item: unknown) => item && typeof item === "object" && "question" in item && "answer" in item)
+        .map((item: { question: string; answer: string }) => ({
+          question: stripMediaAndPortalTags(String(item.question)).trim(),
+          answer: stripMediaAndPortalTags(String(item.answer)).trim(),
+        }))
+        .filter((item: { question: string; answer: string }) => item.question.length > 3 && item.answer.length > 5);
+    }
+
     const validated = verifyAndSanitizeArticle({
       title: sanitizedAiTitle,
       slug: (parsed.slug || createEnglishSlug(sanitizedAiTitle)).toLowerCase().trim(),
@@ -382,6 +416,7 @@ ${cleanInputContent}
       category: validated.sanitized.category,
       metaTitle: validated.sanitized.metaTitle || `${validated.sanitized.title} | Brief Post`,
       metaDescription: validated.sanitized.metaDescription || validated.sanitized.summary.replace(/\n/g, " ").slice(0, 130),
+      faq: parsedFaq && parsedFaq.length > 0 ? parsedFaq : undefined,
     };
   } catch (error: unknown) {
     clearTimeout(timeoutId);
@@ -690,6 +725,22 @@ ${s3}
     metaDescription: `${s1.slice(0, 90)} 관련 최신 동향과 핵심 시사점을 3줄 요약과 함께 심층 분석합니다.`,
   });
 
+  // 기본 FAQ 항목 구성 (구글 FAQPage 스키마 대응)
+  const defaultFaq: ArticleFaqItem[] = [
+    {
+      question: `${title.slice(0, 25)}의 지원 대상 및 신청 자격은 어떻게 되나요?`,
+      answer: "해당 지원 사업은 공고된 기준에 부합하는 대상자(연령, 소득, 가구 요건 등)를 우선 선발하며, 상세 자격 기준은 공식 신청처 및 관할 안내 창구에서 확인하실 수 있습니다.",
+    },
+    {
+      question: "신청 방법과 준비해야 할 필수 서류는 무엇인가요?",
+      answer: "공식 웹사이트를 통한 온라인 신청 또는 관할 행정기관 방문 접수가 가능하며, 본인 확인을 위한 신분증과 자격 증빙 서류를 사전에 구비하셔야 합니다.",
+    },
+    {
+      question: "지급 일정 및 향후 진행 상황은 어디서 조회할 수 있나요?",
+      answer: "신청 접수 마감 후 서류 심사를 거쳐 개별 통보되며, 공식 포털의 마이페이지를 통해 실시간 심사 상태를 조회하실 수 있습니다.",
+    },
+  ];
+
   return {
     title: validated.sanitized.title,
     slug: validated.sanitized.slug,
@@ -698,6 +749,7 @@ ${s3}
     category: validated.sanitized.category,
     metaTitle: validated.sanitized.metaTitle || `${title} | Brief Post`,
     metaDescription: validated.sanitized.metaDescription || `${s1.slice(0, 90)} 심층 분석`,
+    faq: defaultFaq,
   };
 }
 

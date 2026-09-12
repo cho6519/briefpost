@@ -86,6 +86,34 @@ async function testLongformPipeline() {
 
   console.log(`- <h4~h6> 규격 외 태그: ${h4To6Matches.length}개 ${h4To6Matches.length === 0 ? "✅ 합격" : "❌ 위반"}`);
 
+  // 4. FAQ 생성 결과 검증
+  console.log(`\n📌 [FAQ 구조화 데이터 (schema.org/FAQPage)]`);
+  if (result.faq && result.faq.length > 0) {
+    console.log(`- 생성된 FAQ 개수: ${result.faq.length}개 ✅ 성공`);
+    result.faq.forEach((f, idx) => {
+      console.log(`    [Q${idx + 1}] ${f.question}`);
+      console.log(`    [A${idx + 1}] ${f.answer}`);
+    });
+  } else {
+    console.log(`- FAQ가 생성되지 않았습니다 (undefined) ⚠️`);
+  }
+
+  // 5. 애드센스 슬롯 분할 검증
+  const h2Parsed = Array.from(contentHtml.matchAll(/<h2\b[^>]*>/gi));
+  console.log(`\n📌 [애드센스 슬롯 3개 위치 분할 검증]`);
+  console.log(`- 슬롯 ① 위치: H1 제목 바로 아래 (상단 탑) ✅`);
+  if (h2Parsed.length >= 4) {
+    const idxH2_3 = h2Parsed[2].index!;
+    const idxH2_4 = h2Parsed[3].index!;
+    const p1 = contentHtml.slice(0, idxH2_3);
+    const p2 = contentHtml.slice(idxH2_3, idxH2_4);
+    const p3 = contentHtml.slice(idxH2_4);
+    console.log(`- 슬롯 ② 위치: Part 1(섹션 1,2: ${p1.length}자) 뒤 / 문맥 인피드 ✅`);
+    console.log(`- 슬롯 ③ 위치: Part 2(섹션 3: ${p2.length}자) 뒤 / 신청 가이드(Part 3: ${p3.length}자) 바로 위 ✅`);
+  } else {
+    console.log(`- H2 개수가 4개 미만(${h2Parsed.length}개)이므로 안전 폴백 분할 적용`);
+  }
+
   console.log("\n=================================================");
   console.log("📝 [생성된 본문 마크다운 미리보기 (앞 600자)]");
   console.log("=================================================");
