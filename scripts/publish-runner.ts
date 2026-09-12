@@ -48,11 +48,12 @@ async function main() {
     console.log(`✅ Google Gemini API Key 확인 완료 (지정 모델: ${aiModel})`);
   }
 
-  // 한 번에 발행할 기사 개수 (명령줄 인자 우선, 없으면 환경변수, 기본값 2개)
+  // 한 번에 발행할 기사 개수 (명령줄 인자 우선, 없으면 환경변수, 없으면 3~4개 자연스러운 수량 자동 배정)
   const argLimit = parseInt(process.argv[2], 10);
   const envLimit = parseInt(process.env.PUBLISH_LIMIT || "", 10);
-  const limit = !isNaN(argLimit) && argLimit > 0 ? argLimit : (!isNaN(envLimit) && envLimit > 0 ? envLimit : 2);
-  console.log(`• 1회 최대 발행 목표 수량(limit): ${limit}건`);
+  const defaultRandomLimit = Math.floor(Math.random() * 2) + 3; // 3 또는 4건 자연스러운 분배
+  const limit = !isNaN(argLimit) && argLimit > 0 ? argLimit : (!isNaN(envLimit) && envLimit > 0 ? envLimit : defaultRandomLimit);
+  console.log(`• 1회 최대 발행 목표 수량(limit): ${limit}건 (설정 기준: 1회당 3~4건)`);
 
   // 2. 활성화된 RSS 피드 전체 수집
   console.log("\n📡 [1/3] 등록된 공공·언론사 RSS 피드 수집 시작...");

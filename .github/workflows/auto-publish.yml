@@ -2,15 +2,19 @@ name: Auto Publish Articles
 
 on:
   schedule:
-    # 한국 표준시(KST) 기준 매일 08:00 (UTC 23:00) 및 18:00 (UTC 09:00)에 자동 실행
+    # 한국 표준시(KST) 기준 하루 3회 자동 실행:
+    # 1. 매일 08:00 (UTC 23:00) - 출근길 아침 정책/뉴스 브리핑
+    # 2. 매일 12:30 (UTC 03:30) - 점심시간 주요 이슈 브리핑
+    # 3. 매일 18:00 (UTC 09:00) - 퇴근길 저녁 경제/이슈 정리
     - cron: '0 23 * * *'
+    - cron: '30 3 * * *'
     - cron: '0 9 * * *'
   workflow_dispatch:
     inputs:
       limit:
-        description: '발행할 최대 기사 개수'
+        description: '발행할 최대 기사 개수 (미입력 시 3~4개 자동 발행)'
         required: false
-        default: '2'
+        default: ''
 
 # 저장소에 news.db 변경사항을 커밋하고 푸시하기 위한 권한 부여
 permissions:
@@ -37,9 +41,9 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AI_MODEL: ${{ vars.AI_MODEL || vars.GEMINI_MODEL || 'gemini-3.8-flash' }}
-          PUBLISH_LIMIT: ${{ github.event.inputs.limit || '2' }}
+          PUBLISH_LIMIT: ${{ github.event.inputs.limit }}
         run: |
-          npm run publish:cron ${{ github.event.inputs.limit || 2 }}
+          npm run publish:cron ${{ github.event.inputs.limit }}
 
       - name: 변경된 news.db 데이터베이스 자동 커밋 및 푸시
         run: |
