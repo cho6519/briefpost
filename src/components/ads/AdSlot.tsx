@@ -33,15 +33,17 @@ export default function AdSlot({
   className = "",
   label = "SPONSORED",
 }: AdSlotProps) {
+  const isAdsEnabled = process.env.NEXT_PUBLIC_ENABLE_ADS === "true";
   const adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   const forceCustom = process.env.NEXT_PUBLIC_FORCE_CUSTOM_BANNER === "true";
   const isLoaded = useRef(false);
 
   const shouldRenderCustom =
-    mode === "custom" || forceCustom || (mode === "auto" && (!adClient || !slotId));
+    isAdsEnabled && (mode === "custom" || forceCustom || (mode === "auto" && (!adClient || !slotId)));
 
   useEffect(() => {
     if (
+      isAdsEnabled &&
       !shouldRenderCustom &&
       adClient &&
       slotId &&
@@ -55,7 +57,12 @@ export default function AdSlot({
         console.error("AdSense push error:", err);
       }
     }
-  }, [shouldRenderCustom, adClient, slotId]);
+  }, [isAdsEnabled, shouldRenderCustom, adClient, slotId]);
+
+  // 애드센스 승인 전 또는 Feature Flag 비활성화 시 DOM에서 완전 제거
+  if (!isAdsEnabled) {
+    return null;
+  }
 
   // 1. 자체 이미지 배너(신단수, KECEL) 렌더링 케이스
   if (shouldRenderCustom) {

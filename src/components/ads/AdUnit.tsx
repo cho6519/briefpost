@@ -27,14 +27,15 @@ export default function AdUnit({
   className = "",
   label = "광고 영역 (AdSense Slot)",
 }: AdUnitProps) {
+  const isAdsEnabled = process.env.NEXT_PUBLIC_ENABLE_ADS === "true";
   const adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   const isLoaded = useRef(false);
 
-  // 실서비스 애드센스 활성화 여부 판별 (클라이언트 ID 등록 및 프로덕션 환경)
-  const isLiveAdSense = Boolean(adClient && process.env.NODE_ENV === "production");
+  // 실서비스 애드센스 활성화 여부 판별 (광고 활성화 플래그, 클라이언트 ID 등록 및 프로덕션 환경)
+  const isLiveAdSense = Boolean(isAdsEnabled && adClient && process.env.NODE_ENV === "production");
 
   useEffect(() => {
-    if (isLiveAdSense && typeof window !== "undefined" && !isLoaded.current) {
+    if (isAdsEnabled && isLiveAdSense && typeof window !== "undefined" && !isLoaded.current) {
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
         isLoaded.current = true;
@@ -42,7 +43,12 @@ export default function AdUnit({
         console.error("[AdSense] 슬롯 초기화 에러:", err);
       }
     }
-  }, [isLiveAdSense, slotId]);
+  }, [isAdsEnabled, isLiveAdSense, slotId]);
+
+  // 애드센스 승인 전 또는 Feature Flag 비활성화 시 DOM에서 완전 제거
+  if (!isAdsEnabled) {
+    return null;
+  }
 
   // 1. 실서비스 구글 애드센스 광고 단위 렌더링
   if (isLiveAdSense && adClient) {
