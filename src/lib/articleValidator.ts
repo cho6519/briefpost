@@ -149,9 +149,9 @@ export function normalizeArticleContent(raw: string): string {
   text = text.replace(/\n##\s*\n+(?=##)/g, "\n\n");
   text = text.replace(/\n##\s*(\n|$)/g, "\n\n");
 
-  // 3. 소제목과 본문 설명 문장이 한 줄로 뭉개진 경우 자동 분리
+  // 3. 소제목과 본문 설명 문장이 한 줄로 뭉개진 경우만 안전하게 분리 (이미 #로 시작하는 줄은 절대 쪼개지 않음)
   text = text.replace(
-    /(?:^|\n)(?:##\s*)?([0-9]+\.\s+[가-힣a-zA-Z0-9\s]{2,30}?(?:개선|가능성|의미|특징|요건|기준|절차|배경|전망|효과|대책|현황|동향|분석|방향|역할|전환|원인|구조|방법|혜택|지원|확대|축소|설계|이유|쟁점))\s+([가-힣][^\n]+)/g,
+    /(?:^|\n)(?<!#)([0-9]+\.\s+[가-힣a-zA-Z0-9\s]{2,25}?(?:개선|가능성|의미|특징|요건|기준|절차|배경|전망|효과|대책|현황|동향|분석|방향|역할|전환|원인|구조|방법|혜택|지원|확대|축소|설계|이유|쟁점))\s+([가-힣][^\n]+?(?:다\.|습니다\.|됩니다\.|있습니다\.|합니다\.)[^\n]*)/g,
     "\n\n## $1\n\n$2"
   );
 
@@ -546,9 +546,22 @@ export function repairMismatchedHeadings(
     }
   }
 
-  // 4. 마크다운 H2(##) 소제목 앞뒤 줄바꿈을 완벽하게 정돈
-  result = result
-    .replace(/\s*##\s+/g, "\n\n## ")
+  // 4. 줄 단위로 순회하여 오직 ## 1. ~ ## 4. 만 H2로 유지하고 나머지는 H3(###)으로 정규화
+  const lines = result.replace(/\r\n/g, "\n").split("\n");
+  const processedLines = lines.map((line) => {
+    const trimmed = line.trim();
+    if (/^##(?:\s+|$)/.test(trimmed)) {
+      if (/^##\s+[1-4]\./.test(trimmed)) {
+        return trimmed;
+      }
+      wasRepaired = true;
+      return `### ${trimmed.replace(/^##\s*/, "")}`;
+    }
+    return line;
+  });
+
+  result = processedLines
+    .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
