@@ -13,6 +13,7 @@ import { getSourceDisplayName } from "@/lib/sourceHelper";
 import { normalizeArticleContent, enforceHeadingHierarchy } from "@/lib/articleValidator";
 import { enhanceArticleHtml } from "@/lib/articleFormatter";
 import { ArticleFaqItem, determineCtaType } from "@/lib/ai";
+import { getStockImage } from "@/utils/imageMapper";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -101,7 +102,10 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const title = article.metaTitle || article.title;
   const description = article.metaDescription || article.summary || "";
   const canonicalUrl = `${siteUrl}/news/${article.slug}`;
-  const imageUrl = article.thumbnailUrl || `${siteUrl}/favicon.ico`;
+  const stockImage = getStockImage(article.imageTheme, article.title, article.category, article.content);
+  const imageUrl = (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
+    ? article.thumbnailUrl
+    : stockImage.url;
 
   return {
     title,
@@ -205,13 +209,22 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     day: "numeric",
   });
 
+  // 한국형 일상·공공 테마 검증된 Unsplash 실사 스톡 이미지 풀 매핑
+  const stockImage = getStockImage(article.imageTheme, article.title, article.category, article.content);
+  const featuredImage = {
+    url: (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
+      ? article.thumbnailUrl
+      : stockImage.url,
+    caption: stockImage.caption || "사진: Unsplash / 공공 포털 참고",
+  };
+
   // 1. 기사 표준 구조화 데이터 (NewsArticle & BlogPosting)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": ["NewsArticle", "BlogPosting"],
     headline: article.title,
     description: article.metaDescription || article.summary || article.title,
-    image: article.thumbnailUrl ? [article.thumbnailUrl] : [`${siteUrl}/favicon.ico`],
+    image: [featuredImage.url],
     datePublished: article.createdAt,
     dateModified: article.updatedAt || article.createdAt,
     articleSection: article.category,
@@ -328,6 +341,23 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         />
       )}
 
+      {/* 상단 대표 실사 썸네일 (한국형 일상·공공 테마 검증된 Unsplash 실사 풀) */}
+      <div className="w-full mb-6">
+        <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-xl shadow-sm bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-800">
+          <Image
+            src={featuredImage.url}
+            alt={article.title}
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 680px"
+            className="w-full h-64 md:h-80 object-cover rounded-xl"
+          />
+        </div>
+        <p className="mt-2 text-right text-xs text-zinc-400 dark:text-zinc-500 tracking-tight font-normal">
+          {featuredImage.caption}
+        </p>
+      </div>
+
       {/* 가독성 특화: 3줄 핵심 요약 블루 틴트 박스 */}
       {article.summary && (
         <section className="summary-box rounded-2xl p-5 sm:p-6 shadow-2xs">
@@ -372,20 +402,6 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
               ))}
           </ul>
         </section>
-      )}
-
-      {/* 썸네일 이미지 */}
-      {article.thumbnailUrl && (
-        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-          <Image
-            src={article.thumbnailUrl}
-            alt={article.title}
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 680px"
-            className="object-cover"
-          />
-        </div>
       )}
 
       {/* 본문 텍스트 영역 (전문 미디어 아티클 타이포그래피: H2 포인트 바, 배지 하이라이트, 앰버 알림 박스) */}
@@ -472,42 +488,12 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       )}
 
       {/* 하단 '관련 정책 및 추천 브리핑' 3선 카드 노출 (이탈률 방지 및 체류시간 극대화) */}
-      <RelatedArticles
-        articles={relatedArticles}
-        currentCategory={article.category}
-      />
-
-      {/* 의견 남기기 커뮤니티 영역 */}
-      <section className="border-t border-zinc-200 pt-8 mt-10">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-zinc-900">
-            의견 남기기
-          </h3>
-          <span className="text-xs text-zinc-500">클린 뉴스레터 커뮤니티</span>
-        </div>
-        <div className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center bg-white shadow-2xs">
-          <p className="text-sm text-zinc-600 font-medium">
-            이 기사에 대한 의견을 자유롭게 나눠보세요.
-          </p>
-          <div className="mt-4 flex gap-2">
-            <input
-              type="text"
-              placeholder="댓글을 작성해 주세요..."
-              disabled
-              className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs text-zinc-500 focus:outline-none"
-            />
-            <button
-              disabled
-              className="rounded-xl bg-zinc-200 px-4 py-2.5 text-xs font-semibold text-zinc-500 cursor-not-allowed"
-            >
-              등록
-            </button>
-          </div>
-          <span className="text-[11px] text-zinc-500 mt-2 block">
-            현재 댓글 기능은 준비 중입니다.
-          </span>
-        </div>
-      </section>
+      <div className="pt-2 pb-6">
+        <RelatedArticles
+          articles={relatedArticles}
+          currentCategory={article.category}
+        />
+      </div>
     </article>
   );
 }

@@ -4,6 +4,7 @@ import AdSlot from "@/components/ads/AdSlot";
 import { getArticles, seedArticlesIfNeeded } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
+import { getStockImage } from "@/utils/imageMapper";
 
 export const dynamic = "force-dynamic";
 
@@ -141,6 +142,10 @@ export default async function HomePage({ searchParams }: PageProps) {
             const summaryPoints = parseSummaryPoints(article.summary);
             const isHero = isHeroPage && index === 0;
             const sourceName = getSourceDisplayName(article.sourceUrl, article.title, article.category);
+            const cardStockImage = getStockImage(article.imageTheme, article.title, article.category, article.content);
+            const cardImageUrl = (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
+              ? article.thumbnailUrl
+              : cardStockImage.url;
 
             // 1) 히어로 피처드 스토리 (메인 첫 페이지 1위 기사)
             if (isHero) {
@@ -148,22 +153,20 @@ export default async function HomePage({ searchParams }: PageProps) {
                 <div key={article.id} className="space-y-6">
                   <article className="group relative overflow-hidden rounded-2xl border border-zinc-200/90 bg-white p-5 sm:p-7 shadow-sm transition-all duration-300 hover:border-zinc-300 hover:shadow-md">
                     <div className="flex flex-col gap-4">
-                      {/* 기사 썸네일 */}
-                      {article.thumbnailUrl && (
-                        <Link
-                          href={`/news/${article.slug}`}
-                          className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-zinc-100"
-                        >
-                          <Image
-                            src={article.thumbnailUrl}
-                            alt={article.title}
-                            fill
-                            priority
-                            sizes="(max-width: 768px) 100vw, 720px"
-                            className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                          />
-                        </Link>
-                      )}
+                      {/* 기사 썸네일 (실사 스톡 이미지 풀 매핑) */}
+                      <Link
+                        href={`/news/${article.slug}`}
+                        className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-zinc-100"
+                      >
+                        <Image
+                          src={cardImageUrl}
+                          alt={article.title}
+                          fill
+                          priority
+                          sizes="(max-width: 768px) 100vw, 720px"
+                          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      </Link>
 
                       {/* 상단 메타 바 */}
                       <div className="flex items-center justify-between text-xs">
@@ -260,21 +263,19 @@ export default async function HomePage({ searchParams }: PageProps) {
                       </time>
                     </div>
 
-                    {/* 컴팩트 썸네일 */}
-                    {article.thumbnailUrl && (
-                      <Link
-                        href={`/news/${article.slug}`}
-                        className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-zinc-100"
-                      >
-                        <Image
-                          src={article.thumbnailUrl}
-                          alt={article.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 680px"
-                          className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                        />
-                      </Link>
-                    )}
+                    {/* 컴팩트 썸네일 (실사 스톡 이미지 풀 매핑) */}
+                    <Link
+                      href={`/news/${article.slug}`}
+                      className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-zinc-100"
+                    >
+                      <Image
+                        src={cardImageUrl}
+                        alt={article.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 680px"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
+                    </Link>
 
                     {/* 헤드라인 */}
                     <h2 className="text-[17px] sm:text-lg font-bold tracking-tight text-zinc-950 leading-snug group-hover:text-blue-600 transition-colors">

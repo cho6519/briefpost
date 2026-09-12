@@ -16,6 +16,7 @@ import {
   cleanseHeadline,
   stripMediaAndPortalTags,
 } from "./articleValidator";
+import { detectImageTheme, ImageTheme } from "../utils/imageMapper";
 
 /**
  * 로컬 CLI/스크립트 환경에서도 .env.local 파일의 키를 안전하게 로드
@@ -61,6 +62,7 @@ export interface RewrittenArticleResult {
   metaDescription: string;
   faq?: ArticleFaqItem[];
   ctaType?: "subsidy" | "general";
+  imageTheme?: ImageTheme;
 }
 
 /**
@@ -157,6 +159,7 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
    - 누가 혜택(또는 영향)을 받는지 소득 기준, 연령, 주택 보유 여부, 해당 업종 등 구체적 자격 기준을 상세히 명시하십시오. (하위 ### 소제목 및 '-' 글머리기호 적극 활용)
 3. ## 3. 세부 혜택 및 수치 비교 (350자 이상 필수)
    - 지원 금액, 금리, 한도, 감면율 등 구체적 수치와 이전 제도와의 차이점을 명확히 비교 정리하십시오. (하위 ### 소제목 및 '-' 글머리기호 적극 활용)
+   - [필수 비교표 작성] 이 섹션 안에는 독자가 한눈에 혜택과 수치 변화를 비교할 수 있도록 반드시 마크다운 표(| 항목 | 기존 | 변경(지원) | 비고 | 형태)를 1개 이상 필수 포함하여 작성하십시오.
 4. ## 4. 신청 방법 및 향후 일정 (300자 이상 필수)
    - 공식 신청처(정부24, 복지로, 공식 홈페이지, 전용 상담 창구 등), 신청 기간, 준비 서류 및 독자가 주의해야 할 점을 실용적으로 안내하십시오. (하위 ### 소제목 적극 활용)
 
@@ -169,6 +172,13 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
 기사의 성격을 판단하여 "ctaType" 필드에 아래 두 가지 중 하나를 반드시 지정하십시오:
 - "subsidy": 지원금, 보조금, 청약, 환급, 복지 혜택, 감면 등 독자의 '실제 신청이나 접수'가 수반되는 정책 기사
 - "general": 일반 경제, 금리, 환율, 증시, 테크, IT, 사회, 문화 등 '단순 보도, 시황, 정책 발표, 통계' 기사
+
+[CRITICAL 6: 한국형 대표 실사 썸네일 테마 태그 (imageTheme)]
+기사의 핵심 소재 및 주제에 가장 적합한 실사 스톡 사진 테마를 다음 4가지 중 하나로 반드시 선택하십시오:
+- "housing": 부동산, 주거, 아파트 단지, 주택, 청약, 전세, 월세, 임대, 분양 계약 등
+- "finance": 금융, 경제, 소상공인 결제, 계산기, 모바일 뱅킹, 지폐, 금리, 대출, 세금, 증시 등
+- "youth": 청년, 취업, 일자리, 카페 노트북 작업, 도서관, 직장인, 커리어, 교육 등
+- "policy": 정부청사/관공서 외관, 공공 정책 브리핑, 행정 회의, 지원사업 안내, 사회 일반 등
 
 [H태그 위계 및 문체 원칙]
 1. 본문 안에서 '#' (H1) 마크다운이나 '<h1>' 태그를 절대 사용하지 마십시오. (H1은 기사 메인 타이틀에 단 하나만 적용됩니다)
@@ -188,11 +198,12 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
   "title": "20~35자 내외의 자연스러운 정통 뉴스 헤드라인 (대괄호 태그나 기계적 접미사 절대 금지)",
   "slug": "url-friendly-lowercase-slug-in-english",
   "summary": "1. 첫 번째 핵심 사건 요약 문장.\\n2. 두 번째 세부 내용 및 수치 요약 문장.\\n3. 세 번째 향후 전망 및 독자 영향 요약 문장.",
-  "content": "## 1. 핵심 개요 및 주요 쟁점\\n\\n(300자 이상 상세 서술)\\n\\n## 2. 지원 대상 및 자격 요건\\n\\n(350자 이상 상세 서술)\\n\\n### 주요 자격 요건\\n- **소득 기준:** ...\\n- **연령 및 대상:** ...\\n\\n## 3. 세부 혜택 및 수치 비교\\n\\n(350자 이상 상세 서술)\\n\\n### 지원 수치 비교\\n- **지원 한도:** ...\\n- **감면율:** ...\\n\\n## 4. 신청 방법 및 향후 일정\\n\\n(300자 이상 상세 서술)\\n\\n### 공식 신청처 및 제출 서류\\n- **접수처:** ...\\n- **준비 서류:** ...",
+  "content": "## 1. 핵심 개요 및 주요 쟁점\\n\\n(300자 이상 상세 서술)\\n\\n## 2. 지원 대상 및 자격 요건\\n\\n(350자 이상 상세 서술)\\n\\n### 주요 자격 요건\\n- **소득 기준:** ...\\n- **연령 및 대상:** ...\\n\\n## 3. 세부 혜택 및 수치 비교\\n\\n(350자 이상 상세 서술)\\n\\n### 주요 혜택 비교표\\n| 항목 | 기존 지원 | 변경(확대) 지원 | 비고 |\\n| :--- | :--- | :--- | :--- |\\n| 지원 한도 | 1,000만 원 | 최대 2,000만 원 | 100% 증액 |\\n| 적용 금리 | 연 3.5% | 연 2.2% 고정 | 우대 금리 |\\n\\n## 4. 신청 방법 및 향후 일정\\n\\n(300자 이상 상세 서술)\\n\\n### 공식 신청처 및 제출 서류\\n- **접수처:** ...\\n- **준비 서류:** ...",
   "category": "['정책·지원금', '부동산·세제', '금융·경제', '테크·IT', '사회·문화'] 중 하나",
   "metaTitle": "검색 결과용 60자 내외 SEO 타이틀",
   "metaDescription": "검색 결과 클릭률을 높이는 130자 내외 메타 디스크립션",
   "ctaType": "['subsidy', 'general'] 중 하나",
+  "imageTheme": "['housing', 'finance', 'youth', 'policy'] 중 하나",
   "faq": [
     {
       "question": "구체적인 지원 대상 자격 기준은 어떻게 확인하나요?",
@@ -237,11 +248,12 @@ ${cleanInputContent}
 3. 본문(content): 단순 요약이 아닌, 독자에게 실질적 도움을 주는 '4단계 블로그형 심층 롱폼 가이드(공백 포함 최소 1,300자 ~ 1,800자 이상)'로 풍성하게 작성하십시오.
    - ## 1. 핵심 개요 및 주요 쟁점 (300자 이상)
    - ## 2. 지원 대상 및 자격 요건 (350자 이상, ### 소제목과 '-' 불릿 적극 활용)
-   - ## 3. 세부 혜택 및 수치 비교 (350자 이상, ### 소제목과 '-' 불릿 적극 활용)
+   - ## 3. 세부 혜택 및 수치 비교 (350자 이상, 반드시 마크다운 비교표 | 항목 | 기존 | 변경(지원) | 비고 | 1개 이상 포함)
    - ## 4. 신청 방법 및 향후 일정 (300자 이상, ### 소제목 적극 활용)
 4. 본문 내 H1('#') 사용 절대 금지, 오직 '##'(H2) 4개와 하위 '###'(H3)으로만 H태그 위계를 구성하십시오.
 5. 독자 궁금증 해결 FAQ: 독자가 가장 궁금해할 핵심 질문 2~3개와 실질적인 답변을 "faq" 배열에 반드시 작성하십시오.
 6. CTA 버튼 타입(ctaType): 실제 신청/접수가 있는 지원금/복지/청약은 "subsidy", 일반 경제/시황/보도 기사는 "general"로 지정하십시오.
+7. 이미지 테마 태그(imageTheme): 기사 주제에 맞추어 'housing' | 'finance' | 'youth' | 'policy' 중 하나를 필수로 지정하십시오.
 
 반드시 지정된 JSON 규격 하나만 출력하십시오.`;
 
@@ -438,6 +450,15 @@ ${cleanInputContent}
         ? parsed.ctaType
         : determineCtaType(assignedCategory, sanitizedAiTitle, sanitizedAiContent);
 
+    // 대표 실사 이미지 테마 태그 결정 ('housing' | 'finance' | 'youth' | 'policy')
+    let finalImageTheme: ImageTheme = "policy";
+    const validThemes: ImageTheme[] = ["housing", "finance", "youth", "policy"];
+    if (parsed.imageTheme && validThemes.includes(parsed.imageTheme as ImageTheme)) {
+      finalImageTheme = parsed.imageTheme as ImageTheme;
+    } else {
+      finalImageTheme = detectImageTheme(undefined, assignedCategory, sanitizedAiTitle, sanitizedAiContent);
+    }
+
     return {
       title: validated.sanitized.title,
       slug: validated.sanitized.slug,
@@ -448,6 +469,7 @@ ${cleanInputContent}
       metaDescription: validated.sanitized.metaDescription || validated.sanitized.summary.replace(/\n/g, " ").slice(0, 130),
       faq: parsedFaq && parsedFaq.length > 0 ? parsedFaq : undefined,
       ctaType: finalCtaType,
+      imageTheme: finalImageTheme,
     };
   } catch (error: unknown) {
     clearTimeout(timeoutId);
@@ -782,6 +804,7 @@ ${s3}
     metaDescription: validated.sanitized.metaDescription || `${s1.slice(0, 90)} 심층 분석`,
     faq: defaultFaq,
     ctaType: determineCtaType(finalCategory, title, content),
+    imageTheme: detectImageTheme(undefined, finalCategory, title, content),
   };
 }
 

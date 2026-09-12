@@ -175,15 +175,66 @@ export function formatTagTypography(html: string): string {
 }
 
 /**
+ * 4. 핀테크(토스/뱅크샐러드) 스타일 고가독성 컬러 테두리 핵심 비교/정리표 (HTML Table) 렌더링:
+ *    - 외곽 테두리: 브랜드 블루 컬러(border-2 border-blue-200 dark:border-blue-800)로 가독성 극대화
+ *    - 헤더(th): bg-blue-50/90, border-b-2 border-blue-200, 컬럼 구분선(border-r border-blue-100)
+ *    - 본문 셀(td): 행 구분선(border-b border-blue-100/80) 및 열 구분선(border-r border-blue-100/50)
+ *    - 모바일 화면에서도 깨지지 않도록 overflow-x-auto 래퍼로 감쌈
+ */
+export function formatTableElements(html: string): string {
+  if (!html || !html.includes("<table")) return html;
+
+  // table 태그 및 th, td를 선명한 컬러 테두리 핀테크 스타일로 변환
+  let formatted = html.replace(
+    /<table\b([^>]*)>([\s\S]*?)<\/table>/gi,
+    (match, tableAttrs, tableInner) => {
+      // 1. th 스타일: 은은한 블루 배경 + 선명한 하단 2px 블루 보더 + 우측 열 구분 보더
+      let styledInner = tableInner.replace(
+        /<th\b([^>]*)>/gi,
+        '<th class="bg-blue-50/90 dark:bg-blue-950/70 text-blue-950 dark:text-blue-100 font-bold p-3.5 border-b-2 border-blue-200 dark:border-blue-700/80 border-r border-blue-100 dark:border-blue-900/60 last:border-r-0 text-left text-[13.5px] sm:text-sm whitespace-nowrap tracking-tight"$1>'
+      );
+
+      // 2. td 스타일: 선명한 가로/세로 블루 틴트 구분선 부여
+      styledInner = styledInner.replace(
+        /<td\b([^>]*)>/gi,
+        '<td class="p-3.5 border-b border-blue-100/80 dark:border-slate-800 border-r border-blue-100/50 dark:border-slate-800/80 last:border-r-0 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900/80 text-[13.5px] sm:text-sm leading-relaxed"$1>'
+      );
+
+      // 3. 첫 번째 열(항목명)에 텍스트 강조 및 은은한 배경 틴트 적용
+      styledInner = styledInner.replace(
+        /(<tr\b[^>]*>\s*)<td\b([^>]*)class="([^"]*)"([^>]*)>/gi,
+        '$1<td$2class="$3 font-semibold text-slate-900 dark:text-slate-100 bg-slate-50/40 dark:bg-slate-800/20"$4>'
+      );
+
+      // 4. tr 호버 효과 부여
+      styledInner = styledInner.replace(
+        /<tr\b([^>]*)>/gi,
+        '<tr class="transition-colors hover:bg-blue-50/40 dark:hover:bg-blue-950/30"$1>'
+      );
+
+      return `<div class="w-full my-6 overflow-x-auto rounded-xl border-2 border-blue-200 dark:border-blue-800/80 shadow-xs bg-white dark:bg-slate-900">
+        <table class="w-full text-sm border-collapse text-left m-0"${tableAttrs}>
+          ${styledInner}
+        </table>
+      </div>`;
+    }
+  );
+
+  return formatted;
+}
+
+/**
  * 최종 본문 HTML 스타일링 파이프라인
  */
 export function enhanceArticleHtml(html: string): string {
   if (!html) return "";
-  // 1단계: 엄격한 주의사항 콜아웃 (과도한 적용 없이 1~2줄 한정)
-  let enhanced = formatCalloutBoxes(html);
-  // 2단계: 불릿 목록 키워드 블루 배지 변환
+  // 1단계: 핀테크 스타일 핵심 비교 요약표 (HTML Table) 렌더링 & 모바일 스크롤 래퍼
+  let enhanced = formatTableElements(html);
+  // 2단계: 엄격한 주의사항 콜아웃 (과도한 적용 없이 1~2줄 한정)
+  enhanced = formatCalloutBoxes(enhanced);
+  // 3단계: 불릿 목록 키워드 블루 배지 변환
   enhanced = formatBulletHighlights(enhanced);
-  // 3단계: H2 블록 요소 및 단락 분리 타이포그래피 주입
+  // 4단계: H2 블록 요소 및 단락 분리 타이포그래피 주입
   enhanced = formatTagTypography(enhanced);
   return enhanced;
 }

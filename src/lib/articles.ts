@@ -13,6 +13,7 @@ export interface Article {
   sourceUrl: string | null;
   faq?: string | null;
   ctaType?: "subsidy" | "general" | string | null;
+  imageTheme?: "housing" | "finance" | "youth" | "policy" | string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -139,11 +140,12 @@ export function createArticle(input: CreateArticleInput): Article {
   const stmt = db.prepare(`
     INSERT INTO articles (
       title, slug, content, summary, category, 
-      metaTitle, metaDescription, thumbnailUrl, sourceUrl, faq, ctaType, createdAt
+      metaTitle, metaDescription, thumbnailUrl, sourceUrl, faq, ctaType, imageTheme, createdAt
     ) VALUES (
       @title, @slug, @content, @summary, @category, 
       @metaTitle, @metaDescription, @thumbnailUrl, @sourceUrl, @faq,
       COALESCE(@ctaType, 'general'),
+      @imageTheme,
       COALESCE(@createdAt, CURRENT_TIMESTAMP)
     )
   `);
@@ -160,6 +162,7 @@ export function createArticle(input: CreateArticleInput): Article {
     sourceUrl: input.sourceUrl || null,
     faq: typeof input.faq === "object" && input.faq !== null ? JSON.stringify(input.faq) : (input.faq || null),
     ctaType: input.ctaType || "general",
+    imageTheme: input.imageTheme || null,
     createdAt: input.createdAt || null,
   });
 
