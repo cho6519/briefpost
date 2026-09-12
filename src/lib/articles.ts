@@ -158,7 +158,7 @@ export function createArticle(input: CreateArticleInput): Article {
     metaDescription: input.metaDescription || input.summary || null,
     thumbnailUrl: input.thumbnailUrl || null,
     sourceUrl: input.sourceUrl || null,
-    faq: input.faq || null,
+    faq: typeof input.faq === "object" && input.faq !== null ? JSON.stringify(input.faq) : (input.faq || null),
     ctaType: input.ctaType || "general",
     createdAt: input.createdAt || null,
   });

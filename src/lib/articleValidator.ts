@@ -203,9 +203,6 @@ export function normalizeArticleContent(raw: string): string {
   text = text.replace(/^##\s*\n+([0-9]+\.[^\n]+)/gm, "## $1");
   text = text.replace(/^###\s*\n+([^\n]+)/gm, "### $1");
 
-  // - 4단계 대주제(1., 2., 3., 4.)를 제외한 모든 본문 소제목은 ### (H3)로 강제 정렬
-  //   (H2는 오직 4대 대주제: 1. 핵심 개요, 2. 지원 대상, 3. 세부 혜택, 4. 신청 방법만 담당)
-  text = text.replace(/^##\s+(?![1-4]\.)([^\n]+)$/gm, "### $1");
 
   // - 본문 내 # (H1) 마크다운 및 <h1> 태그 절대 불가 -> ## (H2)로 자동 강등
   text = text.replace(/^#\s+([^\n]+)$/gm, "## $1");

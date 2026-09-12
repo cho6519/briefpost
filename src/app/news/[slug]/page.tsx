@@ -390,45 +390,51 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
 
       {/* 본문 텍스트 영역 (전문 미디어 아티클 타이포그래피: H2 포인트 바, 배지 하이라이트, 앰버 알림 박스) */}
       <div className="article-content text-[16px] sm:text-[17px] leading-relaxed text-slate-700 dark:text-slate-300 font-normal tracking-[-0.01em] break-keep">
-        {/* 본문 1단계: 도입부 및 1번, 2번 H2 섹션 (개요 및 자격 요건) */}
-        <div
-          className={articleSectionClass}
-          dangerouslySetInnerHTML={{ __html: part1 }}
-        />
+        {isAdsEnabled ? (
+          <>
+            {/* 본문 1단계: 도입부 및 1번, 2번 H2 섹션 (개요 및 자격 요건) */}
+            <div
+              className={articleSectionClass}
+              dangerouslySetInnerHTML={{ __html: part1 }}
+            />
 
-        {/* [광고 슬롯 ②] 두 번째 <h2> 섹션과 세 번째 <h2> 섹션 사이 (심사용 클린 모드) */}
-        {isAdsEnabled && (
-          <AdUnit
-            slotId="ad-in-feed-mid"
-            format="fluid"
-            label="광고 영역 (AdSense Slot ② - 문맥 인피드)"
-            className="my-8"
-          />
-        )}
+            {/* [광고 슬롯 ②] 두 번째 <h2> 섹션과 세 번째 <h2> 섹션 사이 (심사용 클린 모드) */}
+            <AdUnit
+              slotId="ad-in-feed-mid"
+              format="fluid"
+              label="광고 영역 (AdSense Slot ② - 문맥 인피드)"
+              className="my-8"
+            />
 
-        {/* 본문 2단계: 3번 H2 섹션 (세부 혜택 및 수치 비교) */}
-        {part2 && (
+            {/* 본문 2단계: 3번 H2 섹션 (세부 혜택 및 수치 비교) */}
+            {part2 && (
+              <div
+                className={articleSectionClass}
+                dangerouslySetInnerHTML={{ __html: part2 }}
+              />
+            )}
+
+            {/* [광고 슬롯 ③] 본문 최하단 '공식 신청 가이드' 바로 위 (심사용 클린 모드) */}
+            <AdUnit
+              slotId="ad-bottom-guide"
+              format="rectangle"
+              label="광고 영역 (AdSense Slot ③ - 하단 가이드 직전)"
+              className="my-8"
+            />
+
+            {/* 본문 3단계: 4번 H2 섹션 (신청 방법 및 향후 일정) */}
+            {part3 && (
+              <div
+                className={articleSectionClass}
+                dangerouslySetInnerHTML={{ __html: part3 }}
+              />
+            )}
+          </>
+        ) : (
+          /* 광고 비활성화 심사 클린 모드: 분할 없이 온전한 본문 단일 컨테이너 렌더링 */
           <div
             className={articleSectionClass}
-            dangerouslySetInnerHTML={{ __html: part2 }}
-          />
-        )}
-
-        {/* [광고 슬롯 ③] 본문 최하단 '공식 신청 가이드' 바로 위 (심사용 클린 모드) */}
-        {isAdsEnabled && (
-          <AdUnit
-            slotId="ad-bottom-guide"
-            format="rectangle"
-            label="광고 영역 (AdSense Slot ③ - 하단 가이드 직전)"
-            className="my-8"
-          />
-        )}
-
-        {/* 본문 3단계: 4번 H2 섹션 (신청 방법 및 향후 일정) */}
-        {part3 && (
-          <div
-            className={articleSectionClass}
-            dangerouslySetInnerHTML={{ __html: part3 }}
+            dangerouslySetInnerHTML={{ __html: styledHtml }}
           />
         )}
       </div>
