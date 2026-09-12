@@ -94,16 +94,30 @@ export function normalizeArticleContent(raw: string): string {
   // 1. 대괄호 언론사 태그 등 찌꺼기 정제
   text = stripMediaAndPortalTags(text);
 
-  // 2. 중복 해시 기호 정리 (## ### -> ### 등)
+  // 2. 단독 빈 헤딩 정리 및 중복 해시 기호 정리
   text = text.replace(/#{2,}\s*#{2,}\s*/g, "### ");
+  text = text.replace(/\n##\s*\n+(?=##)/g, "\n\n");
+  text = text.replace(/\n##\s*(\n|$)/g, "\n\n");
+
+  // 3. 소제목과 본문 설명 문장이 한 줄로 뭉개진 경우 자동 분리
+  text = text.replace(
+    /(?:^|\n)(?:##\s*)?([0-9]+\.\s+[가-힣a-zA-Z0-9\s]{2,30}?(?:개선|가능성|의미|특징|요건|기준|절차|배경|전망|효과|대책|현황|동향|분석|방향|역할|전환|원인|구조|방법|혜택|지원|확대|축소|설계|이유|쟁점))\s+([가-힣][^\n]+)/g,
+    "\n\n## $1\n\n$2"
+  );
+
   text = text.replace(/^##\s*\n+([0-9]+\.[^\n]+)/gm, "## $1");
   text = text.replace(/^###\s*\n+([^\n]+)/gm, "### $1");
 
-  // 3. 서두 템플릿 찌꺼기 문장 정제
+  // 4. 줄 끝의 불필요한 단독 # 및 말미 --- 정제
+  text = text.replace(/\s+#(?=\n|$)/g, "");
+  text = text.replace(/([^\n])\s*---\s*(?=\n|$)/g, "$1\n\n---\n\n");
+  text = text.replace(/\n+---\s*\n+/g, "\n\n---\n\n");
+
+  // 5. 서두 템플릿 찌꺼기 문장 정제
   text = text.replace(/^[^\n]*?(?:관련\s+최신\s+주요\s+발표와\s+시장\s+동향이|이번\s+사안과\s+관련한\s+핵심\s+쟁점과)[^\n]*\n+/g, "");
   text = text.replace(/^[^\n]*:\s*핵심\s*쟁점과\s*향후\s*전망[^\n]*\n+/g, "");
 
-  // 4. 인라인 불릿 및 숫자 리스트 앞에 줄바꿈: ' - **', ' * ', ' - ', ' 1. '
+  // 6. 인라인 불릿 및 숫자 리스트 앞에 줄바꿈: ' - **', ' * ', ' - ', ' 1. '
   text = text.replace(/([^\n])\s+-\s+\*\*/g, "$1\n\n- **");
   text = text.replace(/([^\n])\s+[-*•]\s+/g, "$1\n\n- ");
   text = text.replace(/([^\n])\s+([0-9]+\.\s+\*\*)/g, "$1\n\n$2");

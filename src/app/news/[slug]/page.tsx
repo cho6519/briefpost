@@ -2,16 +2,15 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { marked } from "marked";
 import AdUnit from "@/components/ads/AdUnit";
 import OfficialCtaCard from "@/components/article/OfficialCtaCard";
 import FAQSection from "@/components/article/FAQSection";
 import RelatedArticles from "@/components/article/RelatedArticles";
+import MarkdownRenderer from "@/components/article/MarkdownRenderer";
 import { getArticleBySlug, getAllArticleSlugs, getRelatedArticles } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
-import { normalizeArticleContent, enforceHeadingHierarchy } from "@/lib/articleValidator";
-import { enhanceArticleHtml } from "@/lib/articleFormatter";
+import { normalizeArticleContent } from "@/lib/articleValidator";
 import { ArticleFaqItem, determineCtaType } from "@/lib/ai";
 import { getStockImage } from "@/utils/imageMapper";
 
@@ -32,58 +31,34 @@ export async function generateStaticParams() {
 }
 
 /**
- * 본문 HTML을 4단계 H2 섹션 및 애드센스 슬롯 위치에 맞게 스마트 3단 분할
+ * 본문 마크다운을 4단계 H2 섹션 및 애드센스 슬롯 위치에 맞게 스마트 3단 분할
  * - Part 1: 도입부 및 1번, 2번 H2 섹션
  *   -> [광고 슬롯 ② 배치: 문맥 매칭 인피드 위치]
  * - Part 2: 3번 H2 섹션 (세부 혜택 및 수치 비교)
  *   -> [광고 슬롯 ③ 배치: 공식 신청 가이드 바로 위]
  * - Part 3: 4번 H2 섹션 (신청 방법 및 공식 안내)
  */
-function splitContentForAdSense(html: string): {
+function splitMarkdownForAdSense(markdown: string): {
   part1: string;
   part2: string;
   part3: string;
 } {
-  const h2Matches = Array.from(html.matchAll(/<h2\b[^>]*>/gi));
-
-  // 1. 표준 4단계 H2 구조 (H2가 4개 이상인 경우)
-  if (h2Matches.length >= 4) {
-    const idxH2_3 = h2Matches[2].index!; // 3번째 H2 시작 위치
-    const idxH2_4 = h2Matches[3].index!; // 4번째 H2 시작 위치
-
+  const sections = markdown.split(/(?=\n##\s+)/);
+  if (sections.length >= 4) {
     return {
-      part1: html.slice(0, idxH2_3),
-      part2: html.slice(idxH2_3, idxH2_4),
-      part3: html.slice(idxH2_4),
+      part1: sections.slice(0, 2).join("\n"),
+      part2: sections.slice(2, 3).join("\n"),
+      part3: sections.slice(3).join("\n"),
     };
   }
-
-  // 2. H2가 3개인 경우 (1, 2번 / 3번 / 3번 하반부)
-  if (h2Matches.length === 3) {
-    const idxH2_2 = h2Matches[1].index!;
-    const idxH2_3 = h2Matches[2].index!;
-
+  if (sections.length === 3) {
     return {
-      part1: html.slice(0, idxH2_2),
-      part2: html.slice(idxH2_2, idxH2_3),
-      part3: html.slice(idxH2_3),
+      part1: sections[0],
+      part2: sections[1],
+      part3: sections[2],
     };
   }
-
-  // 3. H2가 적은 구형 기사: 블록 태그 기준 3등분 안전 폴백
-  const blockRegex = /(?=<p|<h[1-6]|<ul|<ol|<blockquote|<div)/gi;
-  const blocks = html.split(blockRegex).filter((b) => b.trim().length > 0);
-
-  if (blocks.length <= 2) {
-    return { part1: html, part2: "", part3: "" };
-  }
-
-  const third = Math.ceil(blocks.length / 3);
-  const part1 = blocks.slice(0, third).join("");
-  const part2 = blocks.slice(third, third * 2).join("");
-  const part3 = blocks.slice(third * 2).join("");
-
-  return { part1, part2, part3 };
+  return { part1: markdown, part2: "", part3: "" };
 }
 
 /**
@@ -169,23 +144,14 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  // 마크다운 구조 무결성 보정 및 HTML 변환
+  // 마크다운 구조 무결성 보정
   const cleanMarkdown = normalizeArticleContent(article.content);
-  const rawHtml = marked.parse(cleanMarkdown, { async: false }) as string;
-  // 구글 SEO & 애드센스 규격 강제: 본문 H태그 위계 구조 불변 고정 (H1은 기사 제목 단 하나만 허용, 본문은 H2 -> H3만 허용)
-  const fullHtml = enforceHeadingHierarchy(rawHtml);
-  // 본문 타이포그래피 및 배지/콜아웃 박스 시각화 강화
-  const styledHtml = enhanceArticleHtml(fullHtml);
 
   // 애드센스 문맥 매칭 슬롯에 맞춘 본문 3단 분할
-  const { part1, part2, part3 } = splitContentForAdSense(styledHtml);
+  const { part1: mdPart1, part2: mdPart2, part3: mdPart3 } = splitMarkdownForAdSense(cleanMarkdown);
 
   // 애드센스 광고 활성화 여부 (심사용 클린 모드: NEXT_PUBLIC_ENABLE_ADS === 'true'일 때만 활성화)
   const isAdsEnabled = process.env.NEXT_PUBLIC_ENABLE_ADS === "true";
-
-  // 본문 공통 시각화 스타일 클래스 (H2 세로 포인트 바, 편안한 text-slate-700, leading-relaxed)
-  const articleSectionClass =
-    "space-y-5 [&>p]:text-slate-700 dark:[&>p]:text-slate-300 [&>p]:font-normal [&>p]:leading-relaxed [&>p]:mb-5 [&>p]:text-[16px] sm:[&>p]:text-[17px] [&>h2]:mt-8 [&>h2]:mb-4 [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-slate-900 dark:[&>h2]:text-slate-100 [&>h2]:border-l-4 [&>h2]:border-blue-600 [&>h2]:pl-3 [&>h2]:py-0.5 [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:text-[17px] sm:[&>h3]:text-[18px] [&>h3]:font-bold [&>h3]:text-slate-800 dark:[&>h3]:text-slate-200 [&>ul]:my-5 [&>ul]:space-y-3 [&>ul]:list-none [&>ul]:pl-0 [&>ol]:my-5 [&>ol]:space-y-3 [&>ol]:list-decimal [&>ol]:pl-5 [&>ul>li]:text-slate-700 dark:[&>ul>li]:text-slate-300 [&>ul>li]:leading-relaxed [&>ul>li]:flex [&>ul>li]:items-start [&>ol>li]:text-slate-700 dark:[&>ol>li]:text-slate-300 [&>ol>li]:leading-relaxed [&_strong]:font-semibold [&_strong]:text-slate-900 dark:[&_strong]:text-slate-100";
 
   // FAQ 구조화 데이터 파싱
   let faqList: ArticleFaqItem[] = [];
@@ -404,15 +370,12 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         </section>
       )}
 
-      {/* 본문 텍스트 영역 (전문 미디어 아티클 타이포그래피: H2 포인트 바, 배지 하이라이트, 앰버 알림 박스) */}
+      {/* 본문 텍스트 영역 (react-markdown + remark-gfm 기반 전문 미디어 표준 렌더러) */}
       <div className="article-content text-[16px] sm:text-[17px] leading-relaxed text-slate-700 dark:text-slate-300 font-normal tracking-[-0.01em] break-keep">
         {isAdsEnabled ? (
           <>
             {/* 본문 1단계: 도입부 및 1번, 2번 H2 섹션 (개요 및 자격 요건) */}
-            <div
-              className={articleSectionClass}
-              dangerouslySetInnerHTML={{ __html: part1 }}
-            />
+            <MarkdownRenderer content={mdPart1} />
 
             {/* [광고 슬롯 ②] 두 번째 <h2> 섹션과 세 번째 <h2> 섹션 사이 (심사용 클린 모드) */}
             <AdUnit
@@ -423,12 +386,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
             />
 
             {/* 본문 2단계: 3번 H2 섹션 (세부 혜택 및 수치 비교) */}
-            {part2 && (
-              <div
-                className={articleSectionClass}
-                dangerouslySetInnerHTML={{ __html: part2 }}
-              />
-            )}
+            {mdPart2 && <MarkdownRenderer content={mdPart2} />}
 
             {/* [광고 슬롯 ③] 본문 최하단 '공식 신청 가이드' 바로 위 (심사용 클린 모드) */}
             <AdUnit
@@ -439,19 +397,11 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
             />
 
             {/* 본문 3단계: 4번 H2 섹션 (신청 방법 및 향후 일정) */}
-            {part3 && (
-              <div
-                className={articleSectionClass}
-                dangerouslySetInnerHTML={{ __html: part3 }}
-              />
-            )}
+            {mdPart3 && <MarkdownRenderer content={mdPart3} />}
           </>
         ) : (
-          /* 광고 비활성화 심사 클린 모드: 분할 없이 온전한 본문 단일 컨테이너 렌더링 */
-          <div
-            className={articleSectionClass}
-            dangerouslySetInnerHTML={{ __html: styledHtml }}
-          />
+          /* 광고 비활성화 심사 클린 모드: 분할 없이 온전한 본문 react-markdown 단일 렌더링 */
+          <MarkdownRenderer content={cleanMarkdown} />
         )}
       </div>
 
