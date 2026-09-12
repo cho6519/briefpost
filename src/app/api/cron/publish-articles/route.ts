@@ -231,6 +231,8 @@ async function handlePublishArticles(request: NextRequest) {
         totalNewCandidates: rssResult.newItemsCount,
         duplicateSkippedCount: rssResult.skippedCount,
         expiredCount: rssResult.expiredCount ?? 0,
+        noticeSkippedCount: rssResult.noticeSkippedCount ?? 0,
+        noKeywordSkippedCount: rssResult.noKeywordSkippedCount ?? 0,
         processedLimit: limit,
         publishedCount: publishedArticles.length,
         failedCount: failedItems.length,

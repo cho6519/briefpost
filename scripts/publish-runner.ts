@@ -57,10 +57,12 @@ async function main() {
   console.log("\n📡 [1/3] 등록된 공공·언론사 RSS 피드 수집 시작...");
   const rssResult = await fetchRssFeeds();
 
-  console.log(`• 원문 수집 총계:   ${rssResult.totalFetched}건`);
-  console.log(`• DB 기존 중복 제외: ${rssResult.skippedCount}건`);
-  console.log(`• 7일 지난 기사 제외:${rssResult.expiredCount ?? 0}건`);
-  console.log(`• 신규 가공 후보군:  ${rssResult.newItemsCount}건`);
+  console.log(`• 원문 수집 총계:          ${rssResult.totalFetched}건`);
+  console.log(`• DB 기존 중복 제외:        ${rssResult.skippedCount}건`);
+  console.log(`• 7일 지난 기사 제외:       ${rssResult.expiredCount ?? 0}건`);
+  console.log(`• 단순 기관 동정/행사 제외: ${rssResult.noticeSkippedCount ?? 0}건`);
+  console.log(`• 타겟 키워드 미포함 제외:  ${rssResult.noKeywordSkippedCount ?? 0}건`);
+  console.log(`• 🎯 알짜 키워드 매칭 후보:  ${rssResult.newItemsCount}건`);
 
   const candidates = rssResult.items.slice(0, limit);
   if (candidates.length === 0) {
@@ -83,7 +85,8 @@ async function main() {
         continue;
       }
 
-      console.log(`\n✍️ ${indexStr} AI 재작성 진행 중...: "${rawItem.title.slice(0, 45)}"`);
+      const keywordInfo = rawItem.matchedKeywords?.length ? ` [매칭 키워드: ${rawItem.matchedKeywords.join(", ")} | 가중치: ${rawItem.keywordScore}점]` : "";
+      console.log(`\n✍️ ${indexStr}${keywordInfo} AI 재작성 진행 중...: "${rawItem.title.slice(0, 45)}"`);
       const rewritten = await rewriteArticleWithAI({
         title: rawItem.title,
         content: rawItem.content || rawItem.contentSnippet,

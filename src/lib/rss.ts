@@ -19,13 +19,106 @@ export interface FetchRssResult {
   newItemsCount: number;
   skippedCount: number;
   expiredCount?: number;
-  items: ParsedRssItem[];
+  noticeSkippedCount?: number;
+  noKeywordSkippedCount?: number;
+  items: (ParsedRssItem & { keywordScore?: number; matchedKeywords?: string[] })[];
   feedStatuses: {
     feedUrl: string;
     status: "success" | "error";
     itemCount: number;
     error?: string;
   }[];
+}
+
+/**
+ * [타겟 키워드 목록]
+ * 검색률 및 독자 클릭률이 높은 알짜 정보성 보도자료를 선별하기 위한 핵심 키워드
+ */
+export const TARGET_KEYWORDS = [
+  "지원금",
+  "보조금",
+  "청약",
+  "환급",
+  "세제",
+  "소득세",
+  "대출",
+  "감면",
+  "분양",
+  "바우처",
+  "청년",
+  "소상공인",
+] as const;
+
+/**
+ * [제외(Skip) 키워드 목록]
+ * 단순 기관 동정, 의전, 행사, 기념식 등 독자 실익이 낮은 보도자료를 자동 폐기하기 위한 필터
+ */
+export const EXCLUDE_KEYWORDS = [
+  "동정",
+  "행사",
+  "포럼",
+  "워크숍",
+  "세미나",
+  "취임식",
+  "기념식",
+  "위촉",
+  "MOU",
+  "협약식",
+  "캠페인",
+  "체육대회",
+  "표창",
+  "개소식",
+  "출범식",
+  "인사말",
+  "격려사",
+  "시상식",
+] as const;
+
+/**
+ * 기사의 제목과 본문에서 타겟 키워드 포함 여부 및 가중치를 평가하고
+ * 단순 기관 동정/행사 소식은 자동 폐기(Skip) 대상으로 판정
+ */
+export function evaluateArticleKeywords(item: ParsedRssItem): {
+  isExcluded: boolean;
+  score: number;
+  matchedKeywords: string[];
+  excludeReason?: string;
+} {
+  const title = item.title || "";
+  const content = `${item.content || ""} ${item.contentSnippet || ""}`;
+
+  // 1. 단순 기관 동정이나 행사 소식 배제 (제목 기준 우선 검사)
+  for (const excludeWord of EXCLUDE_KEYWORDS) {
+    if (title.includes(excludeWord) || title.startsWith(`[${excludeWord}]`)) {
+      return {
+        isExcluded: true,
+        score: 0,
+        matchedKeywords: [],
+        excludeReason: `단순 기관 동정/행사 키워드('${excludeWord}') 포함`,
+      };
+    }
+  }
+
+  // 2. 타겟 키워드 검사 및 가중치 점수 산정 (제목 매칭: 3점, 본문 매칭: 1점)
+  let score = 0;
+  const matchedKeywords: string[] = [];
+
+  for (const keyword of TARGET_KEYWORDS) {
+    const inTitle = title.includes(keyword);
+    const inContent = content.includes(keyword);
+
+    if (inTitle || inContent) {
+      matchedKeywords.push(keyword);
+      if (inTitle) score += 3;
+      if (inContent) score += 1;
+    }
+  }
+
+  return {
+    isExcluded: false,
+    score,
+    matchedKeywords,
+  };
 }
 
 export const DEFAULT_RSS_FEEDS = RSS_FEEDS;
@@ -526,7 +619,7 @@ export async function fetchRssFeeds(
     }
   }
 
-  // 최신 발행일(pubDate) 내림차순 정렬
+  // 최신 발행일(pubDate) 1차 정렬
   validRecentItems.sort((a, b) => {
     const timeA = Date.parse(a.pubDate) || 0;
     const timeB = Date.parse(b.pubDate) || 0;
@@ -534,16 +627,71 @@ export async function fetchRssFeeds(
   });
 
   console.log(
-    `[RSS Filter] 전체 수집 건수: ${newItems.length}건 / 7일 이내 유효 기사: ${validRecentItems.length}건 / 제외된 지난 기사: ${expiredCount}건\n`
+    `[RSS Filter] 전체 수집 건수: ${newItems.length}건 / 7일 이내 유효 기사: ${validRecentItems.length}건 / 제외된 지난 기사: ${expiredCount}건`
   );
+
+  // --- 🎯 [키워드 가중치 필터] 타겟 키워드 1개 이상 포함 여부 검증 및 단순 기관 동정/행사 폐기 ---
+  type ScoredRssItem = ParsedRssItem & { keywordScore: number; matchedKeywords: string[] };
+  const targetQualifiedItems: ScoredRssItem[] = [];
+  let noticeSkippedCount = 0;
+  let noKeywordSkippedCount = 0;
+
+  for (const item of validRecentItems) {
+    const evaluation = evaluateArticleKeywords(item);
+
+    // 1) 단순 기관 동정이나 행사 소식은 자동 폐기(Skip)
+    if (evaluation.isExcluded) {
+      noticeSkippedCount++;
+      continue;
+    }
+
+    // 2) 타겟 키워드가 1개 이상 포함된 알짜 기사만 선별
+    if (evaluation.score > 0) {
+      targetQualifiedItems.push({
+        ...item,
+        keywordScore: evaluation.score,
+        matchedKeywords: evaluation.matchedKeywords,
+      });
+    } else {
+      noKeywordSkippedCount++;
+    }
+  }
+
+  // 가중치 정렬: 1순위 키워드 점수(제목 3점, 본문 1점 합산), 2순위 최신 발행일
+  targetQualifiedItems.sort((a, b) => {
+    if (b.keywordScore !== a.keywordScore) {
+      return b.keywordScore - a.keywordScore;
+    }
+    const timeA = Date.parse(a.pubDate) || 0;
+    const timeB = Date.parse(b.pubDate) || 0;
+    return timeB - timeA;
+  });
+
+  console.log(`\n------------------------------------------------------`);
+  console.log(`🎯 [키워드 가중치 필터 선별 결과 요약]`);
+  console.log(`• 7일 이내 전체 후보:               ${validRecentItems.length}건`);
+  console.log(`• ✅ 타겟 키워드 통과(발행 대상):     ${targetQualifiedItems.length}건`);
+  console.log(`• 🗑️ 단순 기관 동정/행사 폐기(Skip):  ${noticeSkippedCount}건`);
+  console.log(`• ⏩ 타겟 키워드 미포함 폐기(Skip):   ${noKeywordSkippedCount}건`);
+  if (targetQualifiedItems.length > 0) {
+    console.log(`• 🌟 최우선 추천 알짜 기사 TOP 3:`);
+    targetQualifiedItems.slice(0, 3).forEach((item, idx) => {
+      console.log(
+        `  [#${idx + 1}] (가중치: ${item.keywordScore}점 | 매칭 키워드: [${item.matchedKeywords.join(", ")}]) "${item.title.slice(0, 45)}..."`
+      );
+    });
+  }
+  console.log(`======================================================\n`);
 
   return {
     success: true,
     totalFetched: totalRawCount,
-    newItemsCount: validRecentItems.length,
+    newItemsCount: targetQualifiedItems.length,
     skippedCount,
     expiredCount,
-    items: validRecentItems,
+    noticeSkippedCount,
+    noKeywordSkippedCount,
+    items: targetQualifiedItems,
     feedStatuses,
   };
 }
