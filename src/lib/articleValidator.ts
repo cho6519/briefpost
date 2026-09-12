@@ -82,10 +82,60 @@ export function stripMediaAndPortalTags(text: string): string {
 }
 
 /**
+ * 긴 텍스트 덩어리(벽돌글)를 2~3문장 단위로 쪼개어 가독성과 호흡을 확보
+ */
+export function breakLongParagraphs(text: string): string {
+  if (!text) return "";
+  const paragraphs = text.split(/\n{2,}/);
+  const formatted = paragraphs.map((p) => {
+    const trimmed = p.trim();
+    // 마크다운 헤딩(#), 테이블(|), 리스트(-, *, 숫자.), 태그(<)는 건드리지 않음
+    if (
+      trimmed.startsWith("#") ||
+      trimmed.startsWith("|") ||
+      trimmed.startsWith("-") ||
+      trimmed.startsWith("*") ||
+      /^[0-9]+\.\s+/.test(trimmed) ||
+      trimmed.startsWith("<") ||
+      trimmed.length <= 150
+    ) {
+      return p;
+    }
+
+    // 150자 초과하고 마침표가 3개 이상 있는 긴 설명 문단은 2~3문장 단위로 분할
+    const sentences = trimmed.split(/(?<=[.!?])\s+(?=[가-힣A-Z"'‘“])/);
+    if (sentences.length >= 3) {
+      const chunks: string[] = [];
+      let current: string[] = [];
+      for (const s of sentences) {
+        current.push(s);
+        if (current.length >= 2) {
+          chunks.push(current.join(" "));
+          current = [];
+        }
+      }
+      if (current.length > 0) {
+        if (chunks.length > 0 && current.length === 1) {
+          chunks[chunks.length - 1] += " " + current[0];
+        } else {
+          chunks.push(current.join(" "));
+        }
+      }
+      return chunks.join("\n\n");
+    }
+
+    return p;
+  });
+
+  return formatted.join("\n\n");
+}
+
+/**
  * 기사 본문 마크다운의 줄바꿈 구조 및 가독성을 복원하고 정규화
  * - ## 소제목 뒤의 줄바꿈(\n\n)을 보장하여 본문 전체가 헤딩으로 오인 렌더링되는 버그 원천 방지
  * - 불릿 리스트(-, *) 및 숫자 리스트(1.) 앞 줄바꿈 복원
  * - 서두 템플릿 찌꺼기 문장 정제
+ * - 긴 벽돌글 2~3문장 단위 자동 문단 분할
  */
 export function normalizeArticleContent(raw: string): string {
   if (!raw) return "";
@@ -123,7 +173,7 @@ export function normalizeArticleContent(raw: string): string {
   text = text.replace(/([^\n])\s+([0-9]+\.\s+\*\*)/g, "$1\n\n$2");
   text = text.replace(/([^\n])\s+([0-9]+\.\s+[가-힣a-zA-Z])/g, "$1\n\n$2");
 
-  // 4. 알려진 정형 소제목 뒤에 줄바꿈 복원
+  // 7. 알려진 정형 소제목 뒤에 줄바꿈 복원
   const knownHeaders = [
     "시장 핵심 동향 및 주요 배경",
     "거시 경제 지표 및 시장 파급 효과",
@@ -190,7 +240,7 @@ export function normalizeArticleContent(raw: string): string {
     text = text.replace(reg, "$1\n\n$2");
   }
 
-  // 5. 임의의 ## 소제목에 줄바꿈이 없는 경우 정규식 분리:
+  // 8. 임의의 ## 소제목에 줄바꿈이 없는 경우 정규식 분리
   const lines = text.split("\n");
   const fixedLines = lines.map((line) => {
     if (!line.startsWith("## ")) return line;
@@ -209,14 +259,13 @@ export function normalizeArticleContent(raw: string): string {
 
   text = fixedLines.join("\n");
 
-  // 6. H태그 위계 구조 표준화 (SEO & 애드센스 규격 강제)
+  // 9. H태그 위계 구조 표준화 (SEO & 애드센스 규격 강제)
   // - 본문 어디서든 "## ### ..." 처럼 중복된 해시 태그는 "### "로 정제
   text = text.replace(/#{2,}\s*#{2,}\s*/g, "### ");
 
   // - "## \n\n 1. ..." 형태로 소제목이 분리된 경우 한 줄로 병합
   text = text.replace(/^##\s*\n+([0-9]+\.[^\n]+)/gm, "## $1");
   text = text.replace(/^###\s*\n+([^\n]+)/gm, "### $1");
-
 
   // - 본문 내 # (H1) 마크다운 및 <h1> 태그 절대 불가 -> ## (H2)로 자동 강등
   text = text.replace(/^#\s+([^\n]+)$/gm, "## $1");
@@ -226,7 +275,10 @@ export function normalizeArticleContent(raw: string): string {
   text = text.replace(/^#{4,6}\s+([^\n]+)$/gm, "### $1");
   text = text.replace(/<h[4-6]\b[^>]*>(.*?)<\/h[4-6]>/gi, "<h3>$1</h3>");
 
-  // 7. 연속 빈 줄 정리 (최대 2줄)
+  // 10. 150자 이상 긴 설명 문단을 2~3문장 단위로 자동 쪼개기
+  text = breakLongParagraphs(text);
+
+  // 11. 연속 빈 줄 정리 (최대 2줄)
   text = text.replace(/[^\S\r\n]+/g, " ");
   text = text.replace(/\n{3,}/g, "\n\n").trim();
 
@@ -527,13 +579,19 @@ export function verifyAndSanitizeArticle(input: ArticleValidationInput): Validat
   }
 
   // 4. 본문 소제목 및 카테고리 불일치 자동 교정
-  const { content: cleanContent, wasRepaired: contentRepaired } = repairMismatchedHeadings(
+  const { content: repairedContent, wasRepaired: contentRepaired } = repairMismatchedHeadings(
     input.content || "",
     input.category || "정책·지원금",
     cleanTitle
   );
   if (contentRepaired) {
     repairedIssues.push("카테고리와 어긋나는 소제목 또는 본문 내 HTML 태그를 해당 카테고리 표준 소제목으로 교정했습니다.");
+  }
+
+  // 4-1. 본문 마크다운 구조 무결성 및 2~3문장 문단 쪼개기 영구 정규화
+  const cleanContent = normalizeArticleContent(repairedContent);
+  if (cleanContent !== repairedContent) {
+    repairedIssues.push("본문 마크다운의 줄바꿈 구조 및 문단 분할(가독성 2~3문장 규칙)을 정규화했습니다.");
   }
 
   // 5. 제목-내용 일치성(Consistency) 검증

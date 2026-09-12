@@ -131,6 +131,9 @@ async function main() {
         metaDescription: validArticle.metaDescription ?? null,
         thumbnailUrl: rawItem.thumbnailUrl,
         sourceUrl: rawItem.link,
+        faq: rewritten.faq ? JSON.stringify(rewritten.faq) : null,
+        ctaType: rewritten.ctaType || "general",
+        imageTheme: rewritten.imageTheme || null,
         createdAt: new Date().toISOString(),
       });
 
