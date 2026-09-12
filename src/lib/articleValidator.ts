@@ -97,6 +97,12 @@ export function cleanseHeadline(title: string): string {
   // 언론사/포털 태그 제거
   clean = stripMediaAndPortalTags(clean);
 
+  // 제목 끝에 공백과 함께 붙어있는 모든 언론사명 완벽 제거
+  const trailingMediaRegex = /\s+(?:v\.daum\.net|연합뉴스(?:TV)?|연합인포맥스|이데일리(?:TV)?|더게임스|게임포커스|시사저널|YTN|조선일보|중앙일보|동아일보|경향신문|한겨레|매일경제|한국경제|스포츠조선|아시아경제|전자신문|머니투데이|뉴시스|newsis(?:\.com)?|[a-zA-Z0-9.-]+\.(?:com|net|kr|co\.kr)|[가-힣]{2,6}(?:일보|신문|뉴스|경제|방송|미디어|TV|포커스|저널|타임스))\s*$/i;
+  while (trailingMediaRegex.test(clean)) {
+    clean = clean.replace(trailingMediaRegex, "").trim();
+  }
+
   // 앞뒤 기호 정리
   clean = clean.replace(/^[:\-\s]+|[:\-\s]+$/g, "").trim();
   return clean;
