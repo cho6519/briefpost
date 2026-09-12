@@ -36,10 +36,21 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-zinc-100 pt-6 text-center sm:text-left text-[11px] text-zinc-500">
-          <p>© {currentYear} Brief Post. All rights reserved.</p>
-          <p className="mt-1 text-[10px] text-zinc-400">
-            본 사이트의 기사는 공공 및 공개된 뉴스를 기반으로 인공지능 요약 및 분석을 거쳐 자동 송출됩니다.
+        <div className="mt-8 border-t border-zinc-100 pt-6 space-y-2 text-[11px] text-zinc-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <p>© {currentYear} Brief Post. All rights reserved.</p>
+            <p className="text-zinc-600 font-medium">
+              기사 정정 및 제휴 문의:{" "}
+              <a
+                href="mailto:contact.briefpost@gmail.com"
+                className="text-blue-600 hover:underline font-semibold"
+              >
+                contact.briefpost@gmail.com
+              </a>
+            </p>
+          </div>
+          <p className="text-[10.5px] text-zinc-400 leading-relaxed">
+            발행·편집: Brief Post 편집팀 | 청소년보호책임자: 편집팀장 | 본 사이트는 공공 포털 및 공개 뉴스를 기반으로 인공지능 요약·분석을 거쳐 독자에게 유용한 정보를 신속하게 전달하는 독립 뉴스레터 미디어입니다.
           </p>
         </div>
       </div>
