@@ -36,7 +36,7 @@ jobs:
       - name: 뉴스 수집 및 AI 기사 자동 발행 파이프라인 실행
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          AI_MODEL: ${{ vars.AI_MODEL || 'gemini-flash-latest' }}
+          AI_MODEL: ${{ vars.AI_MODEL || vars.GEMINI_MODEL || 'gemini-3.8-flash' }}
           PUBLISH_LIMIT: ${{ github.event.inputs.limit || '2' }}
         run: |
           npm run publish:cron ${{ github.event.inputs.limit || 2 }}

@@ -44,7 +44,8 @@ async function main() {
   if (!geminiKey) {
     console.warn("⚠️ [경고] GEMINI_API_KEY 환경변수가 설정되지 않았습니다. AI 가공이 실패할 수 있습니다.");
   } else {
-    console.log("✅ Google Gemini API Key 확인 완료");
+    const aiModel = process.env.AI_MODEL || process.env.GEMINI_MODEL || "gemini-3.8-flash";
+    console.log(`✅ Google Gemini API Key 확인 완료 (지정 모델: ${aiModel})`);
   }
 
   // 한 번에 발행할 기사 개수 (명령줄 인자 우선, 없으면 환경변수, 기본값 2개)
