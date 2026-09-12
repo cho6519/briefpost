@@ -60,6 +60,23 @@ export interface RewrittenArticleResult {
   metaTitle: string;
   metaDescription: string;
   faq?: ArticleFaqItem[];
+  ctaType?: "subsidy" | "general";
+}
+
+/**
+ * 기사 카테고리, 제목, 본문 키워드를 분석하여 액션 CTA 버튼 타입('subsidy' vs 'general')을 스마트하게 판별
+ */
+export function determineCtaType(category?: string, title?: string, content?: string): "subsidy" | "general" {
+  const text = `${category || ""} ${title || ""} ${content || ""}`;
+
+  // 실제 신청, 접수, 수혜, 대상자 모집이 수반되는 키워드 패턴
+  const subsidyRegex = /지원금|보조금|장려금|수당|환급|바우처|청약|분양|감면|모집|접수|신청|혜택|대출\s*지원|지원\s*신청|장학금|지원사업/i;
+
+  if (subsidyRegex.test(text)) {
+    return "subsidy";
+  }
+
+  return "general";
 }
 
 export interface RawArticleInput {
@@ -148,6 +165,11 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
 - 질문(question): '신청 자격', '중복 수혜 여부', '지급 시기 및 지급 방식', '준비 서류' 등 독자가 포털에서 검색할 만한 핵심 질문
 - 답변(answer): 기사 팩트에 기반한 친절하고 명확한 2~3문장의 완결된 설명
 
+[CRITICAL 5: 기사 성격별 CTA 버튼 타입 판별 (ctaType)]
+기사의 성격을 판단하여 "ctaType" 필드에 아래 두 가지 중 하나를 반드시 지정하십시오:
+- "subsidy": 지원금, 보조금, 청약, 환급, 복지 혜택, 감면 등 독자의 '실제 신청이나 접수'가 수반되는 정책 기사
+- "general": 일반 경제, 금리, 환율, 증시, 테크, IT, 사회, 문화 등 '단순 보도, 시황, 정책 발표, 통계' 기사
+
 [H태그 위계 및 문체 원칙]
 1. 본문 안에서 '#' (H1) 마크다운이나 '<h1>' 태그를 절대 사용하지 마십시오. (H1은 기사 메인 타이틀에 단 하나만 적용됩니다)
 2. 본문 대주제는 오직 '## 1.', '## 2.', '## 3.', '## 4.' (H2) 4개로만 구성하십시오.
@@ -170,6 +192,7 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
   "category": "['정책·지원금', '부동산·세제', '금융·경제', '테크·IT', '사회·문화'] 중 하나",
   "metaTitle": "검색 결과용 60자 내외 SEO 타이틀",
   "metaDescription": "검색 결과 클릭률을 높이는 130자 내외 메타 디스크립션",
+  "ctaType": "['subsidy', 'general'] 중 하나",
   "faq": [
     {
       "question": "구체적인 지원 대상 자격 기준은 어떻게 확인하나요?",
@@ -218,6 +241,7 @@ ${cleanInputContent}
    - ## 4. 신청 방법 및 향후 일정 (300자 이상, ### 소제목 적극 활용)
 4. 본문 내 H1('#') 사용 절대 금지, 오직 '##'(H2) 4개와 하위 '###'(H3)으로만 H태그 위계를 구성하십시오.
 5. 독자 궁금증 해결 FAQ: 독자가 가장 궁금해할 핵심 질문 2~3개와 실질적인 답변을 "faq" 배열에 반드시 작성하십시오.
+6. CTA 버튼 타입(ctaType): 실제 신청/접수가 있는 지원금/복지/청약은 "subsidy", 일반 경제/시황/보도 기사는 "general"로 지정하십시오.
 
 반드시 지정된 JSON 규격 하나만 출력하십시오.`;
 
@@ -408,6 +432,12 @@ ${cleanInputContent}
       metaDescription: parsed.metaDescription ? stripMediaAndPortalTags(parsed.metaDescription) : null,
     });
 
+    // CTA 버튼 성격 결정 ('subsidy' vs 'general')
+    const finalCtaType: "subsidy" | "general" =
+      parsed.ctaType === "subsidy" || parsed.ctaType === "general"
+        ? parsed.ctaType
+        : determineCtaType(assignedCategory, sanitizedAiTitle, sanitizedAiContent);
+
     return {
       title: validated.sanitized.title,
       slug: validated.sanitized.slug,
@@ -417,6 +447,7 @@ ${cleanInputContent}
       metaTitle: validated.sanitized.metaTitle || `${validated.sanitized.title} | Brief Post`,
       metaDescription: validated.sanitized.metaDescription || validated.sanitized.summary.replace(/\n/g, " ").slice(0, 130),
       faq: parsedFaq && parsedFaq.length > 0 ? parsedFaq : undefined,
+      ctaType: finalCtaType,
     };
   } catch (error: unknown) {
     clearTimeout(timeoutId);
@@ -750,6 +781,7 @@ ${s3}
     metaTitle: validated.sanitized.metaTitle || `${title} | Brief Post`,
     metaDescription: validated.sanitized.metaDescription || `${s1.slice(0, 90)} 심층 분석`,
     faq: defaultFaq,
+    ctaType: determineCtaType(finalCategory, title, content),
   };
 }
 

@@ -181,6 +181,7 @@ async function handlePublishArticles(request: NextRequest) {
           thumbnailUrl: rawItem.thumbnailUrl,
           sourceUrl: rawItem.link,
           faq: rewritten.faq ? JSON.stringify(rewritten.faq) : null,
+          ctaType: rewritten.ctaType || "general",
           createdAt: new Date().toISOString(),
         });
 

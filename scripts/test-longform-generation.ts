@@ -53,6 +53,7 @@ async function testLongformPipeline() {
   console.log(`   (글자 수: ${result.title.length}자)`);
   console.log(`📌 슬러그 (Slug): ${result.slug}`);
   console.log(`📌 카테고리 (Category): ${result.category}`);
+  console.log(`📌 CTA 버튼 타입 (ctaType): ${result.ctaType} ${result.ctaType === "subsidy" ? "👉 [정부24 및 공식 접수처에서 신청하기] (강조 스타일)" : "👉 [공식 보도자료 원문 및 상세 출처 확인] (차분한 링크)"}`);
 
   console.log(`\n📌 [메인 피드용 3줄 요약 (Summary)]`);
   console.log(result.summary);
@@ -118,6 +119,25 @@ async function testLongformPipeline() {
   console.log("📝 [생성된 본문 마크다운 미리보기 (앞 600자)]");
   console.log("=================================================");
   console.log(cleanMarkdown.slice(0, 600) + "\n...\n");
+
+  // 6. 다양한 기사 유형별 Smart Conditional CTA 판별 검증
+  console.log("=================================================");
+  console.log("🎯 [Smart Conditional CTA 성격별 분기 테스트]");
+  console.log("=================================================");
+  const testCases = [
+    { title: "2026 청년 일자리 도약 장려금 2차 신청 접수", category: "정책·지원금", expected: "subsidy" },
+    { title: "한국은행, 기준금리 3.5% 동결 결정 및 하반기 물가 전망", category: "금융·경제", expected: "general" },
+    { title: "서울시 공공임대 청약 접수 및 특별공급 입주자 모집", category: "부동산·세제", expected: "subsidy" },
+    { title: "삼성전자, 차세대 고대역폭 메모리 HBM4 양산 출하", category: "테크·IT", expected: "general" },
+    { title: "국세청 근로·자녀장려금 정기분 환급금 조기 지급", category: "정책·지원금", expected: "subsidy" },
+  ];
+
+  const { determineCtaType } = await import("../src/lib/ai");
+  for (const tc of testCases) {
+    const determined = determineCtaType(tc.category, tc.title, "");
+    const isPass = determined === tc.expected;
+    console.log(`- [${tc.category}] "${tc.title.slice(0, 25)}..." -> ${determined} (예상: ${tc.expected}) ${isPass ? "✅ 일치" : "❌ 불일치"}`);
+  }
 }
 
 testLongformPipeline().catch((err) => {

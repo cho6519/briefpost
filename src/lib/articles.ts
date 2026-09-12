@@ -12,6 +12,7 @@ export interface Article {
   thumbnailUrl: string | null;
   sourceUrl: string | null;
   faq?: string | null;
+  ctaType?: "subsidy" | "general" | string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -127,10 +128,11 @@ export function createArticle(input: CreateArticleInput): Article {
   const stmt = db.prepare(`
     INSERT INTO articles (
       title, slug, content, summary, category, 
-      metaTitle, metaDescription, thumbnailUrl, sourceUrl, faq, createdAt
+      metaTitle, metaDescription, thumbnailUrl, sourceUrl, faq, ctaType, createdAt
     ) VALUES (
       @title, @slug, @content, @summary, @category, 
       @metaTitle, @metaDescription, @thumbnailUrl, @sourceUrl, @faq,
+      COALESCE(@ctaType, 'general'),
       COALESCE(@createdAt, CURRENT_TIMESTAMP)
     )
   `);
@@ -146,6 +148,7 @@ export function createArticle(input: CreateArticleInput): Article {
     thumbnailUrl: input.thumbnailUrl || null,
     sourceUrl: input.sourceUrl || null,
     faq: input.faq || null,
+    ctaType: input.ctaType || "general",
     createdAt: input.createdAt || null,
   });
 

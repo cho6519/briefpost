@@ -11,7 +11,7 @@ import { getArticleBySlug, getAllArticleSlugs, getRelatedArticles } from "@/lib/
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
 import { normalizeArticleContent, enforceHeadingHierarchy } from "@/lib/articleValidator";
-import { ArticleFaqItem } from "@/lib/ai";
+import { ArticleFaqItem, determineCtaType } from "@/lib/ai";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -417,11 +417,12 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         )}
       </div>
 
-      {/* 공식 신청 및 안내 바로가기 콜아웃 액션 카드 (CTA) */}
+      {/* 공식 신청 및 안내 바로가기 스마트 조건부 콜아웃 카드 (CTA) */}
       <OfficialCtaCard
         sourceUrl={article.sourceUrl}
         title={article.title}
         category={article.category}
+        ctaType={article.ctaType || determineCtaType(article.category, article.title, article.content)}
       />
 
       {/* 독자 궁금증 해결 FAQ 섹션 (구글 FAQPage 스키마 연계) */}
