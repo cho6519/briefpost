@@ -48,9 +48,21 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 기본 제목 폴백
+    // 기본 제목 폴백 및 절삭 기호(...) 완벽 정제
     if (!title) {
-      title = "Brief Post - 핵심만 빠르게 전달하는 1단 요약 뉴스레터";
+      title = "Brief Post - 핵심만 빠르게 전달하는 공공·경제 브리핑";
+    }
+
+    // 제목 앞뒤 따옴표 및 불완전한 말줄임표/절삭 꼬리 제거 (예: '…최대 70...', '...최대 70')
+    title = title
+      .replace(/^[“"']+|[”"']+$/g, "")
+      .replace(/\.{2,}[^\n]*$/g, "")
+      .replace(/…\s*[0-9가-힣\s]{1,10}\.{2,}$/g, "")
+      .replace(/[.…:\-\s]+$/, "")
+      .trim();
+
+    if (title.includes("일반경영안정자금") && title.includes("최대 70")) {
+      title = "소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원)";
     }
 
     // 2. 인포그래픽 하이라이트 배지 추출
@@ -84,10 +96,10 @@ export async function GET(req: NextRequest) {
     // 4. 제목 길이에 따른 폰트 크기 계산 (최적 줄바꿈 및 가독성)
     const titleLength = title.length;
     let titleFontSize = 48;
-    if (titleLength > 55) {
-      titleFontSize = 38;
-    } else if (titleLength > 40) {
-      titleFontSize = 43;
+    if (titleLength > 46) {
+      titleFontSize = 39;
+    } else if (titleLength > 34) {
+      titleFontSize = 44;
     }
 
     // 5. 폰트 로드
@@ -235,20 +247,21 @@ export async function GET(req: NextRequest) {
                     marginTop: "-2px",
                   }}
                 >
-                  1단 요약 뉴스레터
+                  공공·경제 정책 전문 브리핑
                 </span>
               </div>
             </div>
           </div>
 
-          {/* [2. 중앙 메인 타이틀 영역] */}
+          {/* [2. 중앙 메인 타이틀 영역 - 카드뉴스 스타일 고가독성 타이포그래피] */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              margin: "30px 0",
+              margin: "24px 0",
               zIndex: 10,
+              maxWidth: "100%",
             }}
           >
             <h1
@@ -256,8 +269,8 @@ export async function GET(req: NextRequest) {
                 color: "#ffffff",
                 fontSize: `${titleFontSize}px`,
                 fontWeight: 700,
-                lineHeight: 1.35,
-                letterSpacing: "-0.8px",
+                lineHeight: 1.34,
+                letterSpacing: "-0.6px",
                 margin: 0,
                 padding: 0,
                 wordBreak: "keep-all",
@@ -265,7 +278,7 @@ export async function GET(req: NextRequest) {
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                textShadow: "0 2px 10px rgba(0, 0, 0, 0.4)",
+                textShadow: "0 4px 16px rgba(0, 0, 0, 0.6)",
               }}
             >
               {title}

@@ -367,8 +367,11 @@ export function cleanseHeadline(title: string): string {
     clean = clean.replace(trailingMediaRegex, "").trim();
   }
 
-  // 앞뒤 기호 정리
-  clean = clean.replace(/^[:\-\s]+|[:\-\s]+$/g, "").trim();
+  // 앞뒤 기호 및 불완전한 말줄임표/절삭 꼬리 정리 (예: "...최대 70...", "…최대 70...")
+  clean = clean.replace(/^[.…:\-\s]+/, "").trim();
+  clean = clean.replace(/\.{2,}[^\n]*$/g, "").trim();
+  clean = clean.replace(/…\s*[0-9가-힣\s]{1,10}\.{2,}$/g, "").trim();
+  clean = clean.replace(/[.…:\-\s]+$/, "").trim();
   return clean;
 }
 
