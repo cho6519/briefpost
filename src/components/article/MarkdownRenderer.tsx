@@ -9,9 +9,58 @@ interface MarkdownRendererProps {
 }
 
 /**
+ * 긴 텍스트 덩어리(벽돌글)를 2~3문장 단위로 쪼개어 가독성과 호흡을 확보
+ */
+export function breakLongParagraphs(text: string): string {
+  const paragraphs = text.split(/\n{2,}/);
+  const formatted = paragraphs.map((p) => {
+    const trimmed = p.trim();
+    // 마크다운 헤딩(#), 테이블(|), 리스트(-, *, 숫자.), 태그(<)는 건드리지 않음
+    if (
+      trimmed.startsWith("#") ||
+      trimmed.startsWith("|") ||
+      trimmed.startsWith("-") ||
+      trimmed.startsWith("*") ||
+      /^[0-9]+\.\s+/.test(trimmed) ||
+      trimmed.startsWith("<") ||
+      trimmed.length <= 150
+    ) {
+      return p;
+    }
+
+    // 150자 초과하고 마침표가 3개 이상 있는 긴 설명 문단은 2~3문장 단위로 분할
+    const sentences = trimmed.split(/(?<=[.!?])\s+(?=[가-힣A-Z"'‘“])/);
+    if (sentences.length >= 3) {
+      const chunks: string[] = [];
+      let current: string[] = [];
+      for (const s of sentences) {
+        current.push(s);
+        if (current.length >= 2) {
+          chunks.push(current.join(" "));
+          current = [];
+        }
+      }
+      if (current.length > 0) {
+        if (chunks.length > 0 && current.length === 1) {
+          chunks[chunks.length - 1] += " " + current[0];
+        } else {
+          chunks.push(current.join(" "));
+        }
+      }
+      return chunks.join("\n\n");
+    }
+
+    return p;
+  });
+
+  return formatted.join("\n\n");
+}
+
+/**
  * 마크다운 원시 텍스트 정제 및 한글 인라인 볼드 전처리
  * - 한글 조사가 바로 붙은 **단어**조사 형태를 <strong>단어</strong>조사로 치환하여 파서 누락 원천 차단
  * - 문장 끝 찌꺼기 기호(#, ---) 정제
+ * - 긴 벽돌글 2~3문장 단위 자동 문단 분리
  */
 export function preprocessMarkdown(raw: string): string {
   if (!raw) return "";
@@ -22,7 +71,6 @@ export function preprocessMarkdown(raw: string): string {
   text = text.replace(/\n##\s*(\n|$)/g, "\n\n");
 
   // 2. 소제목과 본문 설명이 한 줄에 뭉개진 경우 자동 분리
-  // 예: "2. 모듈형 부품 배치와 자가 수리 가능성 내부 배터리 및..." -> "## 2. ... \n\n내부 배터리 및..."
   text = text.replace(
     /(?:^|\n)(?:##\s*)?([0-9]+\.\s+[가-힣a-zA-Z0-9\s]{2,30}?(?:개선|가능성|의미|특징|요건|기준|절차|배경|전망|효과|대책|현황|동향|분석|방향|역할|전환|원인|구조|방법|혜택|지원|확대|축소|설계|이유|쟁점))\s+([가-힣][^\n]+)/g,
     "\n\n## $1\n\n$2"
@@ -35,7 +83,10 @@ export function preprocessMarkdown(raw: string): string {
   text = text.replace(/([^\n])\s*---\s*(?=\n|$)/g, "$1\n\n---\n\n");
   text = text.replace(/\n+---\s*\n+/g, "\n\n---\n\n");
 
-  // 5. **볼드 텍스트**가 한글 조사(이/가/은/는/을/를/의/에/로/도 등)와 붙어있어 마크다운 파서가 무시하는 현상 해결
+  // 5. 긴 텍스트 덩어리(벽돌글) 2~3문장 단위 문단 분리
+  text = breakLongParagraphs(text);
+
+  // 6. **볼드 텍스트**가 한글 조사(이/가/은/는/을/를/의/에/로/도 등)와 붙어있어 마크다운 파서가 무시하는 현상 해결
   text = text.replace(/\*\*([^\*\n]+?)\*\*([가-힣a-zA-Z0-9])/g, "<strong>$1</strong>$2");
   text = text.replace(/\*\*([^\*\n]+?)\*\*/g, "<strong>$1</strong>");
 
@@ -49,7 +100,7 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
   const cleanMarkdown = preprocessMarkdown(content);
 
   return (
-    <div className={`article-markdown-body break-keep ${className}`}>
+    <div className={`article-markdown-body space-y-6 text-slate-700 dark:text-slate-300 font-normal leading-relaxed text-[16px] sm:text-[17px] break-keep ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
@@ -57,28 +108,28 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           // 단일 H1 원칙: 본문 내부의 h1은 자동으로 h2 스타일로 렌더링
           h1: ({ node, ...props }) => (
             <h2
-              className="block border-l-4 border-blue-600 pl-3 py-0.5 text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mt-8 mb-4 tracking-tight"
+              className="block border-l-4 border-blue-600 pl-3 py-0.5 text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mt-10 mb-4 tracking-tight"
               {...props}
             />
           ),
           // H2: 시원한 여백과 함께 왼쪽에만 블루 포인트 바 적용
           h2: ({ node, ...props }) => (
             <h2
-              className="block border-l-4 border-blue-600 pl-3 py-0.5 text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mt-8 mb-4 tracking-tight"
+              className="block border-l-4 border-blue-600 pl-3 py-0.5 text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mt-10 mb-4 tracking-tight"
               {...props}
             />
           ),
           // H3: 블루 바 없이 깔끔한 중간 볼드 폰트로 위계 차별화
           h3: ({ node, ...props }) => (
             <h3
-              className="block text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-200 mt-6 mb-2.5 tracking-tight"
+              className="block text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-200 mt-8 mb-3 tracking-tight"
               {...props}
             />
           ),
-          // 문단(p): 넉넉한 줄간격과 가독성 폰트 크기
+          // 문단(p): 넉넉한 줄간격(leading-[1.85])과 문단 간 여백(mb-5)
           p: ({ node, ...props }) => (
             <p
-              className="text-slate-700 dark:text-slate-300 font-normal leading-relaxed mb-5 text-[16px] sm:text-[17px] break-keep"
+              className="text-slate-700 dark:text-slate-300 font-normal leading-[1.85] mb-5 text-[16px] sm:text-[17px] break-keep"
               {...props}
             />
           ),
