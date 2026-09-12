@@ -11,6 +11,7 @@ import { getArticleBySlug, getAllArticleSlugs, getRelatedArticles } from "@/lib/
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
 import { normalizeArticleContent, enforceHeadingHierarchy } from "@/lib/articleValidator";
+import { enhanceArticleHtml } from "@/lib/articleFormatter";
 import { ArticleFaqItem, determineCtaType } from "@/lib/ai";
 
 interface ArticlePageProps {
@@ -169,9 +170,18 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   const rawHtml = marked.parse(cleanMarkdown, { async: false }) as string;
   // 구글 SEO & 애드센스 규격 강제: 본문 H태그 위계 구조 불변 고정 (H1은 기사 제목 단 하나만 허용, 본문은 H2 -> H3만 허용)
   const fullHtml = enforceHeadingHierarchy(rawHtml);
+  // 본문 타이포그래피 및 배지/콜아웃 박스 시각화 강화
+  const styledHtml = enhanceArticleHtml(fullHtml);
 
   // 애드센스 문맥 매칭 슬롯에 맞춘 본문 3단 분할
-  const { part1, part2, part3 } = splitContentForAdSense(fullHtml);
+  const { part1, part2, part3 } = splitContentForAdSense(styledHtml);
+
+  // 애드센스 광고 활성화 여부 (심사용 클린 모드: NEXT_PUBLIC_ENABLE_ADS === 'true'일 때만 활성화)
+  const isAdsEnabled = process.env.NEXT_PUBLIC_ENABLE_ADS === "true";
+
+  // 본문 공통 시각화 스타일 클래스 (H2 세로 포인트 바, 편안한 text-slate-700, leading-relaxed)
+  const articleSectionClass =
+    "space-y-5 [&>p]:text-slate-700 dark:[&>p]:text-slate-300 [&>p]:font-normal [&>p]:leading-relaxed [&>p]:mb-5 [&>p]:text-[16px] sm:[&>p]:text-[17px] [&>h2]:mt-8 [&>h2]:mb-4 [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-slate-900 dark:[&>h2]:text-slate-100 [&>h2]:border-l-4 [&>h2]:border-blue-600 [&>h2]:pl-3 [&>h2]:py-0.5 [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:text-[17px] sm:[&>h3]:text-[18px] [&>h3]:font-bold [&>h3]:text-slate-800 dark:[&>h3]:text-slate-200 [&>ul]:my-5 [&>ul]:space-y-3 [&>ul]:list-none [&>ul]:pl-0 [&>ol]:my-5 [&>ol]:space-y-3 [&>ol]:list-decimal [&>ol]:pl-5 [&>ul>li]:text-slate-700 dark:[&>ul>li]:text-slate-300 [&>ul>li]:leading-relaxed [&>ul>li]:flex [&>ul>li]:items-start [&>ol>li]:text-slate-700 dark:[&>ol>li]:text-slate-300 [&>ol>li]:leading-relaxed [&_strong]:font-semibold [&_strong]:text-slate-900 dark:[&_strong]:text-slate-100";
 
   // FAQ 구조화 데이터 파싱
   let faqList: ArticleFaqItem[] = [];
@@ -308,13 +318,15 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         </div>
       </header>
 
-      {/* [광고 슬롯 ①] 기사 메인 타이틀(h1) 바로 아래 (상단 슬롯) */}
-      <AdUnit
-        slotId="ad-top-headline"
-        format="horizontal"
-        label="광고 영역 (AdSense Slot ① - 상단)"
-        className="my-4"
-      />
+      {/* [광고 슬롯 ①] 기사 메인 타이틀(h1) 바로 아래 (심사용 클린 모드: isAdsEnabled === true 일 때만 노출) */}
+      {isAdsEnabled && (
+        <AdUnit
+          slotId="ad-top-headline"
+          format="horizontal"
+          label="광고 영역 (AdSense Slot ① - 상단)"
+          className="my-4"
+        />
+      )}
 
       {/* 가독성 특화: 3줄 핵심 요약 블루 틴트 박스 */}
       {article.summary && (
@@ -376,42 +388,46 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         </div>
       )}
 
-      {/* 본문 텍스트 영역 (가독성 특화: 최적화된 폰트 크기, 편안한 대비, 좌측 액센트 소제목) */}
-      <div className="article-content text-[16px] sm:text-[17px] leading-[1.8] sm:leading-[1.85] text-zinc-700 dark:text-zinc-300 font-normal tracking-[-0.01em] break-keep">
+      {/* 본문 텍스트 영역 (전문 미디어 아티클 타이포그래피: H2 포인트 바, 배지 하이라이트, 앰버 알림 박스) */}
+      <div className="article-content text-[16px] sm:text-[17px] leading-relaxed text-slate-700 dark:text-slate-300 font-normal tracking-[-0.01em] break-keep">
         {/* 본문 1단계: 도입부 및 1번, 2번 H2 섹션 (개요 및 자격 요건) */}
         <div
-          className="space-y-5 [&>p]:text-zinc-700 dark:[&>p]:text-zinc-300 [&>p]:font-normal [&>p]:leading-[1.85] [&>p]:mb-5 [&>h2]:text-[19px] sm:[&>h2]:text-[21px] [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-900 dark:[&>h2]:text-zinc-100 [&>h2]:mt-9 [&>h2]:mb-4 [&>h2]:pt-1.5 [&>h2]:border-l-4 [&>h2]:border-blue-600 [&>h2]:pl-3.5 [&>h3]:text-[16.5px] sm:[&>h3]:text-[17.5px] [&>h3]:font-bold [&>h3]:text-zinc-900 dark:[&>h3]:text-zinc-100 [&>h3]:mt-7 [&>h3]:mb-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2.5 [&>ul]:my-5 [&>ul>li]:text-zinc-700 dark:[&>ul>li]:text-zinc-300 [&>ul>li]:leading-[1.75] [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2.5 [&>ol]:my-5 [&>ol>li]:text-zinc-700 dark:[&>ol>li]:text-zinc-300 [&>ol>li]:leading-[1.75] [&_strong]:font-semibold [&_strong]:text-zinc-900 dark:[&_strong]:text-zinc-100 [&>blockquote]:border-l-4 [&>blockquote]:border-zinc-200 dark:[&>blockquote]:border-zinc-700 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-zinc-600 dark:[&>blockquote]:text-zinc-400 [&>blockquote]:my-4"
+          className={articleSectionClass}
           dangerouslySetInnerHTML={{ __html: part1 }}
         />
 
-        {/* [광고 슬롯 ②] 두 번째 <h2> 섹션과 세 번째 <h2> 섹션 사이 (문맥 매칭 인피드 위치) */}
-        <AdUnit
-          slotId="ad-in-feed-mid"
-          format="fluid"
-          label="광고 영역 (AdSense Slot ② - 문맥 인피드)"
-          className="my-8"
-        />
+        {/* [광고 슬롯 ②] 두 번째 <h2> 섹션과 세 번째 <h2> 섹션 사이 (심사용 클린 모드) */}
+        {isAdsEnabled && (
+          <AdUnit
+            slotId="ad-in-feed-mid"
+            format="fluid"
+            label="광고 영역 (AdSense Slot ② - 문맥 인피드)"
+            className="my-8"
+          />
+        )}
 
         {/* 본문 2단계: 3번 H2 섹션 (세부 혜택 및 수치 비교) */}
         {part2 && (
           <div
-            className="space-y-5 [&>p]:text-zinc-700 dark:[&>p]:text-zinc-300 [&>p]:font-normal [&>p]:leading-[1.85] [&>p]:mb-5 [&>h2]:text-[19px] sm:[&>h2]:text-[21px] [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-900 dark:[&>h2]:text-zinc-100 [&>h2]:mt-9 [&>h2]:mb-4 [&>h2]:pt-1.5 [&>h2]:border-l-4 [&>h2]:border-blue-600 [&>h2]:pl-3.5 [&>h3]:text-[16.5px] sm:[&>h3]:text-[17.5px] [&>h3]:font-bold [&>h3]:text-zinc-900 dark:[&>h3]:text-zinc-100 [&>h3]:mt-7 [&>h3]:mb-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2.5 [&>ul]:my-5 [&>ul>li]:text-zinc-700 dark:[&>ul>li]:text-zinc-300 [&>ul>li]:leading-[1.75] [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2.5 [&>ol]:my-5 [&>ol>li]:text-zinc-700 dark:[&>ol>li]:text-zinc-300 [&>ol>li]:leading-[1.75] [&_strong]:font-semibold [&_strong]:text-zinc-900 dark:[&_strong]:text-zinc-100 [&>blockquote]:border-l-4 [&>blockquote]:border-zinc-200 dark:[&>blockquote]:border-zinc-700 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-zinc-600 dark:[&>blockquote]:text-zinc-400 [&>blockquote]:my-4"
+            className={articleSectionClass}
             dangerouslySetInnerHTML={{ __html: part2 }}
           />
         )}
 
-        {/* [광고 슬롯 ③] 본문 최하단 '공식 신청 가이드' 바로 위 */}
-        <AdUnit
-          slotId="ad-bottom-guide"
-          format="rectangle"
-          label="광고 영역 (AdSense Slot ③ - 하단 가이드 직전)"
-          className="my-8"
-        />
+        {/* [광고 슬롯 ③] 본문 최하단 '공식 신청 가이드' 바로 위 (심사용 클린 모드) */}
+        {isAdsEnabled && (
+          <AdUnit
+            slotId="ad-bottom-guide"
+            format="rectangle"
+            label="광고 영역 (AdSense Slot ③ - 하단 가이드 직전)"
+            className="my-8"
+          />
+        )}
 
         {/* 본문 3단계: 4번 H2 섹션 (신청 방법 및 향후 일정) */}
         {part3 && (
           <div
-            className="space-y-5 [&>p]:text-zinc-700 dark:[&>p]:text-zinc-300 [&>p]:font-normal [&>p]:leading-[1.85] [&>p]:mb-5 [&>h2]:text-[19px] sm:[&>h2]:text-[21px] [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:text-zinc-900 dark:[&>h2]:text-zinc-100 [&>h2]:mt-9 [&>h2]:mb-4 [&>h2]:pt-1.5 [&>h2]:border-l-4 [&>h2]:border-blue-600 [&>h2]:pl-3.5 [&>h3]:text-[16.5px] sm:[&>h3]:text-[17.5px] [&>h3]:font-bold [&>h3]:text-zinc-900 dark:[&>h3]:text-zinc-100 [&>h3]:mt-7 [&>h3]:mb-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-2.5 [&>ul]:my-5 [&>ul>li]:text-zinc-700 dark:[&>ul>li]:text-zinc-300 [&>ul>li]:leading-[1.75] [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-2.5 [&>ol]:my-5 [&>ol>li]:text-zinc-700 dark:[&>ol>li]:text-zinc-300 [&>ol>li]:leading-[1.75] [&_strong]:font-semibold [&_strong]:text-zinc-900 dark:[&_strong]:text-zinc-100 [&>blockquote]:border-l-4 [&>blockquote]:border-zinc-200 dark:[&>blockquote]:border-zinc-700 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-zinc-600 dark:[&>blockquote]:text-zinc-400 [&>blockquote]:my-4"
+            className={articleSectionClass}
             dangerouslySetInnerHTML={{ __html: part3 }}
           />
         )}
