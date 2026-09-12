@@ -168,16 +168,16 @@ ${cleanInputContent}
 
     // 2-A. Google Gemini API 분기 처리
     if (geminiKey) {
-      const preferredModel = process.env.AI_MODEL || "gemini-2.5-flash";
+      const preferredModel = process.env.AI_MODEL || "gemini-flash-latest";
       const candidateModels = Array.from(
-        new Set([preferredModel, "gemini-2.5-flash", "gemini-flash-latest", "gemini-3.6-flash", "gemini-2.5-pro"])
+        new Set([preferredModel, "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-pro-latest", "gemini-3.6-flash"])
       );
 
       let lastError: Error | null = null;
 
       for (const model of candidateModels) {
         const reqController = new AbortController();
-        const reqTimeout = setTimeout(() => reqController.abort(), 35000);
+        const reqTimeout = setTimeout(() => reqController.abort(), 20000);
 
         try {
           console.log(`[AI GEMINI] API 호출 시작 - 모델: ${model} | 대상 기사: "${cleanInputTitle.slice(0, 40)}"`);

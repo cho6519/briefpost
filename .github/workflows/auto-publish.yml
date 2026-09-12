@@ -1,0 +1,57 @@
+name: Auto Publish Articles
+
+on:
+  schedule:
+    # 한국 표준시(KST) 기준 매일 08:00 (UTC 23:00) 및 18:00 (UTC 09:00)에 자동 실행
+    - cron: '0 23 * * *'
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '발행할 최대 기사 개수'
+        required: false
+        default: '2'
+
+# 저장소에 news.db 변경사항을 커밋하고 푸시하기 위한 권한 부여
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 20 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 의존성 패키지 설치
+        run: npm ci
+
+      - name: 뉴스 수집 및 AI 기사 자동 발행 파이프라인 실행
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AI_MODEL: ${{ vars.AI_MODEL || 'gemini-flash-latest' }}
+          PUBLISH_LIMIT: ${{ github.event.inputs.limit || '2' }}
+        run: |
+          npm run publish:cron ${{ github.event.inputs.limit || 2 }}
+
+      - name: 변경된 news.db 데이터베이스 자동 커밋 및 푸시
+        run: |
+          git status
+          if [ -n "$(git status --porcelain data/news.db)" ]; then
+            echo "새로 적재된 기사 데이터 감지 - Git Push 진행"
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add data/news.db
+            git commit -m "chore(auto-publish): publish fresh articles [$(date '+%Y-%m-%d %H:%M')]"
+            git push
+            echo "Vercel 배포 트리거 및 기사 반영 완료!"
+          else
+            echo "새로 발행된 기사가 없거나 DB 변경사항이 없습니다."
+          fi

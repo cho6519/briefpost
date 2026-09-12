@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:cron": "node scripts/trigger-cron.mjs"
+    "test:cron": "node scripts/trigger-cron.mjs",
+    "publish:cron": "tsx scripts/publish-runner.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -26,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
+    "tsx": "^4.19.3",
     "typescript": "^5"
   }
 }
