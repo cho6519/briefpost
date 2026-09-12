@@ -4,7 +4,13 @@
  * (끝의 슬래시 제거 및 올바른 URL 프로토콜 보장)
  */
 export function getSiteUrl(): string {
-  let url = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://example.com";
+  let url =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    "https://example.com";
 
   // 프로토콜이 없는 경우 https:// 기본 추가
   if (!/^https?:\/\//i.test(url)) {
