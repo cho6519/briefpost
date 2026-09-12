@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchRssFeeds, ParsedRssItem } from "@/lib/rss";
 import { rewriteArticleWithAI } from "@/lib/ai";
-import { createArticle, ensureUniqueSlug, articleExistsBySourceUrl } from "@/lib/articles";
+import {
+  createArticle,
+  ensureUniqueSlug,
+  articleExistsBySourceUrl,
+  getRecentThumbnailUrls,
+} from "@/lib/articles";
 import { verifyCronAuth } from "@/lib/cronAuth";
 import { verifyAndSanitizeArticle } from "@/lib/articleValidator";
 import { getStockImage } from "@/utils/imageMapper";
@@ -112,6 +117,8 @@ async function handlePublishArticles(request: NextRequest) {
     // 3. 수집된 후보 기사를 AI로 100% 재작성 및 DB 저장
     console.log(`[PUBLISH CRON] [4/5] AI 재가공 및 DB 저장 루프 시작 (총 ${candidates.length}건)`);
 
+    const recentThumbnails = getRecentThumbnailUrls(60);
+
     for (let i = 0; i < candidates.length; i++) {
       const rawItem = candidates[i];
       const itemIndexStr = `[${i + 1}/${candidates.length}]`;
@@ -170,7 +177,7 @@ async function handlePublishArticles(request: NextRequest) {
         // 고유 슬러그 검증 및 중복 방지 타임스탬프 처리
         const uniqueSlug = ensureUniqueSlug(validArticle.slug);
 
-        // 실사 고화질 스톡 이미지 1:1 고유 배정 (원문 썸네일이 유효한 고화질 Unsplash가 아닐 경우)
+        // 실사 고화질 스톡 이미지 1:1 고유 배정 (최근 60개 기사와 중복 원천 차단)
         const isUnsplash = rawItem.thumbnailUrl && rawItem.thumbnailUrl.includes("unsplash.com");
         const assignedStock = getStockImage(
           rewritten.imageTheme,
@@ -178,10 +185,14 @@ async function handlePublishArticles(request: NextRequest) {
           validArticle.category,
           validArticle.content,
           undefined,
-          uniqueSlug
+          uniqueSlug,
+          recentThumbnails
         );
-        const finalThumbnail = isUnsplash ? rawItem.thumbnailUrl : assignedStock.url;
+        const finalThumbnail = (isUnsplash && rawItem.thumbnailUrl) ? rawItem.thumbnailUrl : assignedStock.url;
         const finalTheme = rewritten.imageTheme || assignedStock.theme;
+        if (finalThumbnail) {
+          recentThumbnails.add(finalThumbnail);
+        }
 
         // SQLite DB에 최종 기사 자동 Insert (우리 사이트 송출 시점 기준 최신화)
         const savedArticle = createArticle({

@@ -180,11 +180,12 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
 - "general": 일반 경제, 금리, 환율, 증시, 테크, IT, 사회, 문화 등 '단순 보도, 시황, 정책 발표, 통계' 기사
 
 [CRITICAL 6: 한국형 대표 실사 썸네일 테마 태그 (imageTheme)]
-기사의 핵심 소재 및 주제에 가장 적합한 실사 스톡 사진 테마를 다음 4가지 중 하나로 반드시 선택하십시오:
+기사의 핵심 소재 및 주제에 가장 적합한 실사 스톡 사진 테마를 다음 5가지 중 하나로 반드시 선택하십시오:
 - "housing": 부동산, 주거, 아파트 단지, 주택, 청약, 전세, 월세, 임대, 분양 계약 등
-- "finance": 금융, 경제, 소상공인 결제, 계산기, 모바일 뱅킹, 지폐, 금리, 대출, 세금, 증시 등
-- "youth": 청년, 취업, 일자리, 카페 노트북 작업, 도서관, 직장인, 커리어, 교육 등
-- "policy": 정부청사/관공서 외관, 공공 정책 브리핑, 행정 회의, 지원사업 안내, 사회 일반 등
+- "finance": 금융, 지원금, 소상공인 결제, 계산기, 모바일 뱅킹, 지폐, 통장, 대출, 세제 등
+- "youth": 청년, 취업, 일자리, 카페 노트북 작업, 도서관, 직장인, 커리어, 교육, 스터디 등
+- "policy": 정부청사/관공서 외관, 공공 정책 브리핑, 법안, 행정 회의, 지원사업 안내 등
+- "economy": 거시경제, 물가, 전통시장 장바구니, 유가 주유소, 주식 차트, 수출 컨테이너선, 환율 등
 
 [H태그 위계 및 문체 원칙]
 1. 본문 안에서 '#' (H1) 마크다운이나 '<h1>' 태그를 절대 사용하지 마십시오. (H1은 기사 메인 타이틀에 단 하나만 적용됩니다)
@@ -209,7 +210,7 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
   "metaTitle": "검색 결과용 60자 내외 SEO 타이틀",
   "metaDescription": "검색 결과 클릭률을 높이는 130자 내외 메타 디스크립션",
   "ctaType": "['subsidy', 'general'] 중 하나",
-  "imageTheme": "['housing', 'finance', 'youth', 'policy'] 중 하나",
+  "imageTheme": "['housing', 'finance', 'youth', 'policy', 'economy'] 중 하나",
   "faq": [
     {
       "question": "구체적인 지원 대상 자격 기준은 어떻게 확인하나요?",
@@ -259,7 +260,7 @@ ${cleanInputContent}
 4. 본문 내 H1('#') 사용 절대 금지, 오직 '##'(H2) 4개와 하위 '###'(H3)으로만 H태그 위계를 구성하십시오.
 5. 독자 궁금증 해결 FAQ: 독자가 가장 궁금해할 핵심 질문 2~3개와 실질적인 답변을 "faq" 배열에 반드시 작성하십시오.
 6. CTA 버튼 타입(ctaType): 실제 신청/접수가 있는 지원금/복지/청약은 "subsidy", 일반 경제/시황/보도 기사는 "general"로 지정하십시오.
-7. 이미지 테마 태그(imageTheme): 기사 주제에 맞추어 'housing' | 'finance' | 'youth' | 'policy' 중 하나를 필수로 지정하십시오.
+7. 이미지 테마 태그(imageTheme): 기사 주제에 맞추어 'housing' | 'finance' | 'youth' | 'policy' | 'economy' 중 하나를 필수로 지정하십시오.
 
 반드시 지정된 JSON 규격 하나만 출력하십시오.`;
 
@@ -456,9 +457,9 @@ ${cleanInputContent}
         ? parsed.ctaType
         : determineCtaType(assignedCategory, sanitizedAiTitle, sanitizedAiContent);
 
-    // 대표 실사 이미지 테마 태그 결정 ('housing' | 'finance' | 'youth' | 'policy')
+    // 대표 실사 이미지 테마 태그 결정 ('housing' | 'finance' | 'youth' | 'policy' | 'economy')
     let finalImageTheme: ImageTheme = "policy";
-    const validThemes: ImageTheme[] = ["housing", "finance", "youth", "policy"];
+    const validThemes: ImageTheme[] = ["housing", "finance", "youth", "policy", "economy", "tech", "society"];
     if (parsed.imageTheme && validThemes.includes(parsed.imageTheme as ImageTheme)) {
       finalImageTheme = parsed.imageTheme as ImageTheme;
     } else {

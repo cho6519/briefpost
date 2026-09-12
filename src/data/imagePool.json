@@ -1,0 +1,478 @@
+{
+  "housing": [
+    {
+      "url": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "현대식 대단지 아파트 전경",
+      "keywords": ["아파트", "단지", "주거", "주택", "공급", "부동산"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "내 집 마련 및 주택 열쇠",
+      "keywords": ["열쇠", "내집마련", "입주", "분양", "매매"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "부동산 분양 계약서 날인 및 서명",
+      "keywords": ["계약서", "날인", "서명", "청약", "매매", "등기"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "스마트 현관 도어락 및 보안 출입",
+      "keywords": ["도어락", "보안", "출입", "현관", "스마트홈"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "새로운 보금자리 이사 박스 포장",
+      "keywords": ["이사", "박스", "입주", "주거이전", "전세"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "도심 신축 주택 단지 전경",
+      "keywords": ["신축", "도심", "타운", "주택단지"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "모던 아파트 거실 실내 인테리어",
+      "keywords": ["실내", "인테리어", "전세", "월세", "거실"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "신축 아파트 모델하우스 견본주택",
+      "keywords": ["모델하우스", "평면도", "분양가", "견본주택"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "공인중개사 부동산 시세 상담",
+      "keywords": ["부동산", "중개", "상담", "시세", "거래"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "주택 재건축 및 아파트 시공 현장",
+      "keywords": ["재건축", "시공", "공사", "재개발", "정비사업"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "주거지 빌라 및 다세대 주택",
+      "keywords": ["빌라", "다세대", "다가구", "주거지"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "고층 주상복합 빌딩 스카이라인",
+      "keywords": ["빌딩", "고층", "스카이라인", "강남", "도심"]
+    }
+  ],
+
+  "finance": [
+    {
+      "url": "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "스마트폰 모바일 뱅킹 및 간편 금융 앱",
+      "keywords": ["스마트폰뱅킹", "모바일뱅킹", "핀테크", "송금", "금융앱"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "원화 지폐 현금 및 정책 지원금",
+      "keywords": ["원화", "지폐", "현금", "지원금", "보조금", "수당"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "계산기 및 자금 소요 예산 계획",
+      "keywords": ["계산기", "예산", "자금계획", "비용계산", "금융"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1556742049-0a67e55722c3?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "신용카드 결제 단말기 및 소상공인 매출",
+      "keywords": ["카드결제", "신용카드", "단말기", "소상공인", "매출"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "저축 통장 및 자산 형성 도약계좌",
+      "keywords": ["통장", "저축", "적금", "예금", "도약계좌", "자산형성"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "세무 장부 및 연말정산 서류 검토",
+      "keywords": ["세무", "세금", "연말정산", "소득공제", "환급"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "세금 신고서 및 환급 영수증",
+      "keywords": ["환급금", "영수증", "종합소득세", "부가세", "감면"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "금융 창구 대출 상담 및 자산 관리",
+      "keywords": ["대출", "금리", "우대금리", "상담", "은행"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "동전 저금통과 가계 재테크",
+      "keywords": ["저금통", "동전", "재테크", "절약", "서민금융"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1518458028785-8fbcd101ebb9?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "가계부 및 생활비 지출 관리",
+      "keywords": ["가계부", "생활비", "가계지출", "재정"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1520607164069-c5b03dd77535?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "기업 금융 지원 및 정책자금 협약",
+      "keywords": ["정책자금", "기업지원", "보증", "특례보증"]
+    }
+  ],
+
+  "youth": [
+    {
+      "url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "카페에서 노트북으로 작업 중인 청년",
+      "keywords": ["카페", "노트북", "청년", "프리랜서", "원격근무"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "공공 도서관 열람실에서 학습하는 청년",
+      "keywords": ["도서관", "열람실", "시험", "자격증", "공시생"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "자기계발 서류 및 이력서 검토",
+      "keywords": ["서류", "이력서", "자기소개서", "취업준비", "자격증"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "기업 채용 면접 및 역량 인터뷰",
+      "keywords": ["면접", "채용", "공채", "인터뷰", "구직"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "청년들의 그룹 스터디 및 토론",
+      "keywords": ["스터디", "대학생", "협업", "팀프로젝트"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "스마트 워크스페이스 청년 창업가",
+      "keywords": ["워크스페이스", "스타트업", "청년창업", "도약"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "청년 일자리 상담 및 직무 코칭",
+      "keywords": ["일자리", "취업성공패키지", "코칭", "멘토링"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "대학 캠퍼스 청년 복지 토론",
+      "keywords": ["캠퍼스", "장학금", "등록금", "대학생복지"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "진로 탐색과 미래 역량 개발",
+      "keywords": ["진로", "역량강화", "취업박람회", "청년도약"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "사회초년생의 당당한 첫 출근",
+      "keywords": ["사회초년생", "신입사원", "첫직장", "청년수당"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "내일배움카드 국비 직무 교육",
+      "keywords": ["내일배움카드", "직업훈련", "국비지원", "스킬업"]
+    }
+  ],
+
+  "policy": [
+    {
+      "url": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "정부종합청사 및 공공 행정 중심지",
+      "keywords": ["정부종합청사", "정부청사", "세종청사", "관공서", "행정"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "공공기관 주민센터 민원실 창구",
+      "keywords": ["민원실", "주민센터", "행정복지센터", "민원창구", "정부24"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1575517111478-7f6afd0973db?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "국회 및 정부 공식 회의 테이블",
+      "keywords": ["회의테이블", "국회", "의회", "법안", "정책회의", "국무회의"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "정부 공식 대국민 정책 브리핑 연단",
+      "keywords": ["브리핑", "기자회견", "연단", "발표", "태극기"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "사법부 법원 정의의 여신과 법률 조문",
+      "keywords": ["법원", "법률", "판결", "시행령", "법안통과", "규정"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "대국민 공공 정책 기획 보고서 검토",
+      "keywords": ["정책", "기획", "보고서", "가이드라인", "제도개선"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "공공 대국민 사업설명회 현장",
+      "keywords": ["설명회", "사업안내", "공모사업", "복지포털"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "공공 상생 파트너십 협약 체결",
+      "keywords": ["협약", "상생", "MOU", "공공협력"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "열린 행정을 실천하는 관공서 로비",
+      "keywords": ["관공서", "청사로비", "열린행정", "시민소통"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "디지털 공공 마이데이터 및 행정 전산망",
+      "keywords": ["마이데이터", "공공마이데이터", "전산망", "복지로"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1521790797524-b2497295b8a0?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "사회 취약계층 기초생활보장 지원망",
+      "keywords": ["기초생활수급", "차상위", "생계급여", "복지안전망"]
+    }
+  ],
+
+  "economy": [
+    {
+      "url": "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "전통시장 장바구니 및 생활 물가 동향",
+      "keywords": ["전통시장", "장바구니", "생활물가", "물가안정", "식료품", "소비자물가"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1527018606412-03c261a4c21e?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "국제 유가 주유소 및 에너지 수급",
+      "keywords": ["유가", "주유소", "휘발유", "경유", "기름값", "원유", "에너지"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "거시경제 및 주식 시장 캔들 차트",
+      "keywords": ["주식차트", "증시", "코스피", "코스닥", "주가", "거시경제"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "무역항 수출입 컨테이너선 물류",
+      "keywords": ["수출", "수입", "컨테이너선", "무역", "선박", "물류", "공급망"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "글로벌 외환 시장 원·달러 환율 지표",
+      "keywords": ["환율", "원달러", "외환보유액", "달러", "엔화", "환시"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "증권 거래소 객장 시장 지표 전광판",
+      "keywords": ["증권거래소", "한국거래소", "전광판", "지수", "주식시장"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "경제 성장률 및 GDP 지표 분석",
+      "keywords": ["경제성장률", "GDP", "경기전망", "산업동향"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1565514020179-026b92b84bb6?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "금괴 원자재 및 인플레이션 헤지",
+      "keywords": ["인플레이션", "금값", "원자재", "안전자산", "물가상승"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "중앙은행 통화 기준금리 정책 회의",
+      "keywords": ["기준금리", "중앙은행", "한국은행", "금통위", "연준", "통화정책"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "국가 산업 경쟁력 및 수출 실적",
+      "keywords": ["무역수지", "수출실적", "경상수지", "산업생산"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "국가 기반 기간산업 및 물류 인프라",
+      "keywords": ["기간산업", "물류인프라", "철도", "고속도로", "운송"]
+    }
+  ],
+
+  "tech": [
+    {
+      "url": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "첨단 전자 회로 및 마이크로 반도체 칩",
+      "keywords": ["반도체", "칩", "HBM", "메모리", "하드웨어"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "사이버 보안 및 네트워크 침해 방어",
+      "keywords": ["보안", "해킹", "취약점", "제로데이", "크롬", "업데이트"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "스마트워치 및 차세대 웨어러블 디바이스",
+      "keywords": ["스마트워치", "픽셀워치", "웨어러블", "갤럭시워치", "애플워치"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "모바일 전자기기 분해 및 자가 수리 부품",
+      "keywords": ["수리", "분해", "아이픽스잇", "접착제", "나사", "배터리"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "생성형 AI 및 차세대 인공지능 그래픽",
+      "keywords": ["AI", "인공지능", "생성형", "챗GPT", "LLM"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "클린룸 첨단 반도체 제조 및 연구원",
+      "keywords": ["웨이퍼", "파운드리", "삼성전자", "SK하이닉스", "공정"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "엔터프라이즈 데이터센터 서버 랙",
+      "keywords": ["데이터센터", "서버", "인프라", "호스팅"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "최신 프리미엄 노트북 및 슬림 테크",
+      "keywords": ["노트북", "PC", "컴퓨터", "맥북", "디바이스"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "최신 플래그십 스마트폰 디스플레이",
+      "keywords": ["스마트폰", "모바일", "갤럭시", "아이폰", "앱"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "스마트 팩토리 및 산업용 자동화 로봇",
+      "keywords": ["로봇", "자동화", "스마트팩토리", "제조"]
+    }
+  ],
+
+  "society": [
+    {
+      "url": "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "급변하는 기상 기후 및 태풍 안전 대책",
+      "keywords": ["태풍", "기상", "날씨", "호우", "기후", "크로반", "안전"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "문화 예술 축제 및 미디어 공연",
+      "keywords": ["축제", "공연", "콘서트", "문화패스", "예술"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "미술관 및 공공 전시 문화 공간",
+      "keywords": ["미술관", "전시", "박물관", "문화누리"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "자연 생태 보존 및 청정 환경",
+      "keywords": ["생태", "청정", "제주", "자연", "바이오"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "친환경 풍력 및 신재생 그린 에너지",
+      "keywords": ["에너지", "친환경", "풍력", "태양광", "탄소중립"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "공공 보건 의료 및 첨단 병원 시설",
+      "keywords": ["의료", "병원", "보건", "건강보험", "치료"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "초중고 교육 현장 및 미래 교실",
+      "keywords": ["교육", "학교", "늘봄학교", "돌봄교실", "교사"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "도시 대중교통 및 친환경 교통망",
+      "keywords": ["교통", "지하철", "버스", "친환경차"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "가족 친화 및 따뜻한 일상 복지",
+      "keywords": ["가족", "부모", "아이", "육아", "출산지원"]
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&auto=format&fit=crop&q=80",
+      "caption": "사진: Unsplash / 공공 포털 참고",
+      "description": "현대 사회 라이프스타일과 지식 정보",
+      "keywords": ["사회", "문화", "생활", "트렌드"]
+    }
+  ]
+}

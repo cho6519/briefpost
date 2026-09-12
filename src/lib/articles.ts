@@ -269,6 +269,17 @@ export function getAllArticleSlugs(): { slug: string; updatedAt: string }[] {
 }
 
 /**
+ * 최근 발행된 기사들의 썸네일 URL Set을 조회하여 신규 기사와의 썸네일 중복(Collision)을 원천 방지
+ */
+export function getRecentThumbnailUrls(limit: number = 60): Set<string> {
+  const stmt = db.prepare(
+    "SELECT thumbnailUrl FROM articles WHERE thumbnailUrl IS NOT NULL ORDER BY id DESC LIMIT ?"
+  );
+  const rows = stmt.all(limit) as { thumbnailUrl: string }[];
+  return new Set(rows.map((r) => r.thumbnailUrl).filter(Boolean));
+}
+
+/**
  * 초기 테스트 및 데모용 시드 데이터 적재
  */
 export function seedArticlesIfNeeded(): void {

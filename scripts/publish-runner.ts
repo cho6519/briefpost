@@ -6,6 +6,7 @@ import {
   createArticle,
   ensureUniqueSlug,
   articleExistsBySourceUrl,
+  getRecentThumbnailUrls,
 } from "../src/lib/articles";
 import { verifyAndSanitizeArticle } from "../src/lib/articleValidator";
 import { getStockImage } from "../src/utils/imageMapper";
@@ -77,6 +78,8 @@ async function main() {
   const publishedArticles = [];
   const failedItems = [];
 
+  const recentThumbnails = getRecentThumbnailUrls(60);
+
   for (let i = 0; i < candidates.length; i++) {
     const rawItem = candidates[i];
     const indexStr = `[${i + 1}/${candidates.length}]`;
@@ -121,7 +124,7 @@ async function main() {
       const validArticle = validation.sanitized;
       const uniqueSlug = ensureUniqueSlug(validArticle.slug);
 
-      // 3-1. 실사 고화질 스톡 이미지 1:1 고유 배정 (원문 썸네일이 유효한 고화질 Unsplash가 아닐 경우)
+      // 3-1. 실사 고화질 스톡 이미지 1:1 고유 배정 (최근 60개 기사와 중복 원천 차단)
       const isUnsplash = rawItem.thumbnailUrl && rawItem.thumbnailUrl.includes("unsplash.com");
       const assignedStock = getStockImage(
         rewritten.imageTheme,
@@ -129,10 +132,14 @@ async function main() {
         validArticle.category,
         validArticle.content,
         undefined,
-        uniqueSlug
+        uniqueSlug,
+        recentThumbnails
       );
-      const finalThumbnail = isUnsplash ? rawItem.thumbnailUrl : assignedStock.url;
+      const finalThumbnail = (isUnsplash && rawItem.thumbnailUrl) ? rawItem.thumbnailUrl : assignedStock.url;
       const finalTheme = rewritten.imageTheme || assignedStock.theme;
+      if (finalThumbnail) {
+        recentThumbnails.add(finalThumbnail);
+      }
 
       // 4. SQLite DB 저장
       const saved = createArticle({
