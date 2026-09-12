@@ -84,10 +84,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const title = article.metaTitle || article.title;
   const description = article.metaDescription || article.summary || "";
   const canonicalUrl = `${siteUrl}/news/${article.slug}`;
-  const stockImage = getStockImage(article.imageTheme, article.title, article.category, article.content, article.id, article.slug);
-  const imageUrl = (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
-    ? article.thumbnailUrl
-    : stockImage.url;
+  const cardImageUrl = `${siteUrl}/api/og?slug=${article.slug}`;
 
   return {
     title,
@@ -127,7 +124,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       authors: ["Brief Post 편집팀"],
       images: [
         {
-          url: imageUrl,
+          url: cardImageUrl,
           width: 1200,
           height: 630,
           alt: article.title,
@@ -138,7 +135,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       card: "summary_large_image",
       title,
       description,
-      images: [imageUrl],
+      images: [cardImageUrl],
     },
   };
 }
@@ -182,14 +179,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     day: "numeric",
   });
 
-  // 한국형 일상·공공 테마 검증된 Unsplash 실사 스톡 이미지 풀 매핑
-  const stockImage = getStockImage(article.imageTheme, article.title, article.category, article.content, article.id, article.slug);
-  const featuredImage = {
-    url: (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
-      ? article.thumbnailUrl
-      : stockImage.url,
-    caption: stockImage.caption || "사진: Unsplash / 공공 포털 참고",
-  };
+  // 서버 내부 렌더링 맞춤형 타이포그래피 카드뉴스 URL (외부 유료 API 의존 및 이질감 제로)
+  const cardImageUrl = `${siteUrl}/api/og?slug=${article.slug}`;
 
   // 1. 기사 표준 구조화 데이터 (NewsArticle & BlogPosting)
   const jsonLd = {
@@ -197,7 +188,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     "@type": ["NewsArticle", "BlogPosting"],
     headline: article.title,
     description: article.metaDescription || article.summary || article.title,
-    image: [featuredImage.url],
+    image: [cardImageUrl],
     datePublished: article.createdAt,
     dateModified: article.updatedAt || article.createdAt,
     articleSection: article.category,
@@ -314,20 +305,21 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         />
       )}
 
-      {/* 상단 대표 실사 썸네일 (한국형 일상·공공 테마 검증된 Unsplash 실사 풀) */}
+      {/* 상단 대표 썸네일: 서버 내부 렌더링 맞춤형 타이포그래피 카드뉴스 */}
       <div className="w-full mb-6">
-        <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-xl shadow-sm bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-800">
+        <div className="relative w-full aspect-[1200/630] overflow-hidden rounded-xl shadow-md border border-zinc-200/80 bg-zinc-950">
           <Image
-            src={featuredImage.url}
+            src={cardImageUrl}
             alt={article.title}
             fill
             priority
+            unoptimized
             sizes="(max-width: 768px) 100vw, 680px"
-            className="w-full h-64 md:h-80 object-cover rounded-xl"
+            className="w-full h-full object-cover rounded-xl"
           />
         </div>
-        <p className="mt-2 text-right text-xs text-zinc-400 dark:text-zinc-500 tracking-tight font-normal">
-          {featuredImage.caption}
+        <p className="mt-2 text-right text-xs text-zinc-400 tracking-tight font-normal">
+          Brief Post 맞춤형 카드뉴스 브리핑
         </p>
       </div>
 

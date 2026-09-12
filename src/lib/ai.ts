@@ -17,6 +17,7 @@ import {
   stripMediaAndPortalTags,
 } from "./articleValidator";
 import { detectImageTheme, ImageTheme } from "../utils/imageMapper";
+import { extractCardBadge } from "./cardBadgeExtractor";
 
 /**
  * 로컬 CLI/스크립트 환경에서도 .env.local 파일의 키를 안전하게 로드
@@ -63,6 +64,7 @@ export interface RewrittenArticleResult {
   faq?: ArticleFaqItem[];
   ctaType?: "subsidy" | "general";
   imageTheme?: ImageTheme;
+  highlightBadge?: string;
 }
 
 /**
@@ -492,6 +494,12 @@ ${cleanInputContent}
       finalImageTheme = detectImageTheme(undefined, assignedCategory, sanitizedAiTitle, sanitizedAiContent);
     }
 
+    const cardBadge = extractCardBadge(
+      validated.sanitized.title,
+      validated.sanitized.content,
+      validated.sanitized.category
+    );
+
     return {
       title: validated.sanitized.title,
       slug: validated.sanitized.slug,
@@ -503,6 +511,7 @@ ${cleanInputContent}
       faq: parsedFaq && parsedFaq.length > 0 ? parsedFaq : undefined,
       ctaType: finalCtaType,
       imageTheme: finalImageTheme,
+      highlightBadge: cardBadge.badgeText,
     };
   } catch (error: unknown) {
     clearTimeout(timeoutId);
@@ -560,8 +569,8 @@ export function generateFallbackParaphrase(raw: RawArticleInput): RewrittenArtic
     cleanTitle.includes("골목상권") ||
     cleanTitle.includes("희망리턴") ||
     cleanTitle.includes("스마트상점") ||
-    cleanInputContent.includes("소상공인시장진흥공단") ||
-    cleanInputContent.includes("소상공인 정책자금");
+    pureText.includes("소상공인시장진흥공단") ||
+    pureText.includes("소상공인 정책자금");
 
   if (isSmallBiz) {
     content = `
@@ -989,6 +998,12 @@ ${s3}
     ];
   }
 
+  const cardBadge = extractCardBadge(
+    validated.sanitized.title,
+    validated.sanitized.content,
+    validated.sanitized.category
+  );
+
   return {
     title: validated.sanitized.title,
     slug: validated.sanitized.slug,
@@ -1000,6 +1015,7 @@ ${s3}
     faq: defaultFaq,
     ctaType: determineCtaType(finalCategory, title, content),
     imageTheme: detectImageTheme(undefined, finalCategory, title, content),
+    highlightBadge: cardBadge.badgeText,
   };
 }
 
