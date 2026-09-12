@@ -58,7 +58,7 @@ async function handlePublishArticles(request: NextRequest) {
     currentStage = "CONFIG_CHECK";
     console.log(`[PUBLISH CRON] [2/5] 환경변수 및 키 검증 단계...`);
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    const aiModel = process.env.AI_MODEL || "gemini-3.6-flash";
+    const aiModel = process.env.AI_MODEL || "gemini-3.8-flash";
 
     if (!geminiKey) {
       console.warn(
@@ -259,7 +259,7 @@ async function handlePublishArticles(request: NextRequest) {
         durationMs,
         diagnostics: {
           hasGeminiKey: !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
-          aiModel: process.env.AI_MODEL || "gemini-3.6-flash",
+          aiModel: process.env.AI_MODEL || "gemini-3.8-flash",
           rssSummary: rssResult
             ? {
                 totalRawFetched: rssResult.totalFetched,

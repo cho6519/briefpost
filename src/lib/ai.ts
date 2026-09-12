@@ -253,9 +253,9 @@ ${cleanInputContent}
 
     // 2-A. Google Gemini API 분기 처리
     if (geminiKey) {
-      const preferredModel = process.env.AI_MODEL || "gemini-flash-lite-latest";
+      const preferredModel = process.env.AI_MODEL || "gemini-3.8-flash";
       const candidateModels = Array.from(
-        new Set([preferredModel, "gemini-flash-lite-latest", "gemini-flash-latest", "gemini-3.6-flash", "gemini-pro-latest"])
+        new Set([preferredModel, "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-flash-latest", "gemini-flash-lite-latest", "gemini-pro-latest"])
       );
 
       let lastError: Error | null = null;
