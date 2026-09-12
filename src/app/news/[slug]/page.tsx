@@ -77,7 +77,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const title = article.metaTitle || article.title;
   const description = article.metaDescription || article.summary || "";
   const canonicalUrl = `${siteUrl}/news/${article.slug}`;
-  const stockImage = getStockImage(article.imageTheme, article.title, article.category, article.content);
+  const stockImage = getStockImage(article.imageTheme, article.title, article.category, article.content, article.id, article.slug);
   const imageUrl = (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
     ? article.thumbnailUrl
     : stockImage.url;
@@ -176,7 +176,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   });
 
   // 한국형 일상·공공 테마 검증된 Unsplash 실사 스톡 이미지 풀 매핑
-  const stockImage = getStockImage(article.imageTheme, article.title, article.category, article.content);
+  const stockImage = getStockImage(article.imageTheme, article.title, article.category, article.content, article.id, article.slug);
   const featuredImage = {
     url: (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
       ? article.thumbnailUrl

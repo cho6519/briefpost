@@ -8,6 +8,7 @@ import {
   articleExistsBySourceUrl,
 } from "../src/lib/articles";
 import { verifyAndSanitizeArticle } from "../src/lib/articleValidator";
+import { getStockImage } from "../src/utils/imageMapper";
 
 /**
  * .env.local 파일이 존재할 경우 환경변수 안전 로드 (로컬 수동 실행용)
@@ -120,6 +121,19 @@ async function main() {
       const validArticle = validation.sanitized;
       const uniqueSlug = ensureUniqueSlug(validArticle.slug);
 
+      // 3-1. 실사 고화질 스톡 이미지 1:1 고유 배정 (원문 썸네일이 유효한 고화질 Unsplash가 아닐 경우)
+      const isUnsplash = rawItem.thumbnailUrl && rawItem.thumbnailUrl.includes("unsplash.com");
+      const assignedStock = getStockImage(
+        rewritten.imageTheme,
+        validArticle.title,
+        validArticle.category,
+        validArticle.content,
+        undefined,
+        uniqueSlug
+      );
+      const finalThumbnail = isUnsplash ? rawItem.thumbnailUrl : assignedStock.url;
+      const finalTheme = rewritten.imageTheme || assignedStock.theme;
+
       // 4. SQLite DB 저장
       const saved = createArticle({
         title: validArticle.title,
@@ -129,11 +143,11 @@ async function main() {
         category: validArticle.category,
         metaTitle: validArticle.metaTitle ?? null,
         metaDescription: validArticle.metaDescription ?? null,
-        thumbnailUrl: rawItem.thumbnailUrl,
+        thumbnailUrl: finalThumbnail,
         sourceUrl: rawItem.link,
         faq: rewritten.faq ? JSON.stringify(rewritten.faq) : null,
         ctaType: rewritten.ctaType || "general",
-        imageTheme: rewritten.imageTheme || null,
+        imageTheme: finalTheme,
         createdAt: new Date().toISOString(),
       });
 

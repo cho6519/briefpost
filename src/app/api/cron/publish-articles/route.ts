@@ -4,6 +4,7 @@ import { rewriteArticleWithAI } from "@/lib/ai";
 import { createArticle, ensureUniqueSlug, articleExistsBySourceUrl } from "@/lib/articles";
 import { verifyCronAuth } from "@/lib/cronAuth";
 import { verifyAndSanitizeArticle } from "@/lib/articleValidator";
+import { getStockImage } from "@/utils/imageMapper";
 
 export const dynamic = "force-dynamic";
 
@@ -169,6 +170,19 @@ async function handlePublishArticles(request: NextRequest) {
         // 고유 슬러그 검증 및 중복 방지 타임스탬프 처리
         const uniqueSlug = ensureUniqueSlug(validArticle.slug);
 
+        // 실사 고화질 스톡 이미지 1:1 고유 배정 (원문 썸네일이 유효한 고화질 Unsplash가 아닐 경우)
+        const isUnsplash = rawItem.thumbnailUrl && rawItem.thumbnailUrl.includes("unsplash.com");
+        const assignedStock = getStockImage(
+          rewritten.imageTheme,
+          validArticle.title,
+          validArticle.category,
+          validArticle.content,
+          undefined,
+          uniqueSlug
+        );
+        const finalThumbnail = isUnsplash ? rawItem.thumbnailUrl : assignedStock.url;
+        const finalTheme = rewritten.imageTheme || assignedStock.theme;
+
         // SQLite DB에 최종 기사 자동 Insert (우리 사이트 송출 시점 기준 최신화)
         const savedArticle = createArticle({
           title: validArticle.title,
@@ -178,11 +192,11 @@ async function handlePublishArticles(request: NextRequest) {
           category: validArticle.category,
           metaTitle: validArticle.metaTitle ?? null,
           metaDescription: validArticle.metaDescription ?? null,
-          thumbnailUrl: rawItem.thumbnailUrl,
+          thumbnailUrl: finalThumbnail,
           sourceUrl: rawItem.link,
           faq: rewritten.faq ? JSON.stringify(rewritten.faq) : null,
           ctaType: rewritten.ctaType || "general",
-          imageTheme: rewritten.imageTheme || null,
+          imageTheme: finalTheme,
           createdAt: new Date().toISOString(),
         });
 

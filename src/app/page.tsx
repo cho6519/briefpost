@@ -141,7 +141,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             const summaryPoints = parseSummaryPoints(article.summary);
             const isHero = isHeroPage && index === 0;
             const sourceName = getSourceDisplayName(article.sourceUrl, article.title, article.category);
-            const cardStockImage = getStockImage(article.imageTheme, article.title, article.category, article.content);
+            const cardStockImage = getStockImage(article.imageTheme, article.title, article.category, article.content, article.id, article.slug);
             const cardImageUrl = (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
               ? article.thumbnailUrl
               : cardStockImage.url;
