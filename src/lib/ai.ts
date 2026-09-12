@@ -6,12 +6,45 @@
  * ==============================================================================
  */
 
+import fs from "fs";
+import path from "path";
 import {
   verifyAndSanitizeArticle,
   normalizeThreeLineSummary,
   sanitizePlainText,
   extractTitleKeywords,
+  cleanseHeadline,
+  stripMediaAndPortalTags,
 } from "./articleValidator";
+
+/**
+ * 로컬 CLI/스크립트 환경에서도 .env.local 파일의 키를 안전하게 로드
+ */
+function ensureEnvLoaded() {
+  if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) return;
+  try {
+    const envPath = path.join(process.cwd(), ".env.local");
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, "utf-8");
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx !== -1) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          const val = trimmed.slice(eqIdx + 1).trim();
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+  } catch {
+    // 무시
+  }
+}
+
+ensureEnvLoaded();
 
 export interface RewrittenArticleResult {
   title: string;
@@ -71,57 +104,42 @@ export function normalizeCategory(input?: string): ArticleCategory {
   return "정책·지원금";
 }
 
-const SYSTEM_PROMPT = `당신은 정책·세제·생활경제 및 테크 미디어 수석 에디터이자 구글 검색엔진 최적화(SEO) 및 구글 애드센스 정책 최고 전문가입니다.
-주어지는 원본 기사나 보도자료의 팩트(Fact)를 철저히 검증하고, 저작권 분쟁 및 검색엔진의 중복 콘텐츠(Duplicate Content) 패널티를 원천 차단하기 위해 원문의 어휘와 문장 구조를 100% 새롭게 재작성(Paraphrasing)하십시오.
+const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타민 미디어의 수석 에디터이자 검색엔진 최적화(SEO) 및 기사 작문 최고 전문가입니다.
+주어지는 원본 보도자료의 팩트(Fact)를 바탕으로, 저작권 및 검색엔진 중복 콘텐츠 패널티를 완벽히 우회하면서도 독자가 바로 이해할 수 있는 정통 뉴스 기사로 100% 재작성하십시오.
+
+[CRITICAL 1: 제목 생성 규칙 (Title Rule) - 절대 준수]
+1. [심층 분석], [긴급 점검], [속보], [단독], [기획], [해설] 같은 고정 말머리 말뚝 태그를 절대 사용하지 마십시오.
+2. 제목 뒤에 ": 핵심 쟁점과 향후 전망", ": 총정리", "연합뉴스TV", "v.daum.net" 등 언론사명이나 기계적 접미사를 절대 붙이지 마십시오.
+3. 원문 제목을 그대로 복붙하거나 단순 단어만 바꾸는 짜깁기를 절대 금지합니다.
+4. 기사 본문의 핵심 사실, 변화하는 수치, 독자에게 미치는 실질적 영향을 바탕으로 "20~35자 내외의 자연스러운 정통 경제·정책 뉴스 헤드라인"을 새롭게 작문하십시오.
+   - ❌ 나쁜 예: [심층 분석] 이 대통령 "유가 걱정 마시라...원유 중동 의존도 50%로 낮춰" 연합뉴스TV: 핵심 쟁점과 향후 전망
+   - ⭕ 좋은 예: 정부, 중동 원유 의존도 50%로 축소 추진… "국제유가 급등 영향 최소화"
+   - ❌ 나쁜 예: [심층 분석] 세제 불확실성·대출 규제에 강남 3구 거래 '실종' 연합인포맥스: 핵심 쟁점과 향후 전망
+   - ⭕ 좋은 예: 대출 규제와 세제 불확실성에 강남 3구 아파트 거래 급감
+
+[CRITICAL 2: 본문 3줄 요약 규칙 (Summary Clean-up Rule) - 절대 준수]
+1. [연합뉴스], [v.daum.net], [한겨레], [아시아경제] 등 포털 링크나 언론사 대괄호 출처 태그를 절대 포함하지 마십시오.
+2. 단순 제목 나열이나 불완전한 문장 형태를 엄격히 금지합니다.
+3. 반드시 아래 3단계 논리 구조를 갖춘 매끄러운 완성형 문장 3줄로 작성하십시오:
+   - 1. 무슨 일인가? (핵심 사건 및 정책 발표 내용)
+   - 2. 원인 및 배경 (세부 내용, 구체적 수치, 지원 요건 및 기준 변화)
+   - 3. 전망 또는 영향 (독자 및 시장에게 미치는 실질적 효과와 향후 일정)
+   - 예시: "1. 서울시가 2026년 청년문화패스 지원 연령을 만 24세까지 전격 확대하기로 결정했습니다.\\n2. 지원 한도는 기존 회당 5만 원에서 10만 원으로 상향되며, 문화 소외 계층 청년 3만 명이 혜택을 받게 됩니다.\\n3. 신청 접수는 오는 20일부터 청년몽땅정보통 포털에서 온라인으로 진행될 예정입니다."
 
 [카테고리 선택지 제한]
-기사를 면밀히 분석한 후 반드시 아래 5가지 카테고리 중 가장 부합하는 하나만 정확히 골라 "category" 값에 지정하십시오:
-- '정책·지원금'
-- '부동산·세제'
-- '금융·경제'
-- '테크·IT'
-- '사회·문화'
+기사 성격에 부합하는 하나만 정확히 골라 "category" 값에 지정하십시오:
+- '정책·지원금' | '부동산·세제' | '금융·경제' | '테크·IT' | '사회·문화'
 
-[카테고리별 맞춤 소제목 구조 (절대 획일적 소제목 강제 금지)]
-기사의 본문은 반드시 기사 제목 및 카테고리에 완벽히 부합하는 소제목(##) 3개로 구성하십시오:
-1. '정책·지원금':
-   - ## 지원 대상 및 핵심 자격 요건
-   - ## 무엇이 얼마나 달라지나? (핵심 변경 혜택)
-   - ## 어떻게 신청하나? (신청 방법 및 주의사항)
-2. '부동산·세제':
-   - ## 주요 정책 및 세제 개편 핵심
-   - ## 시장 거래 반응 및 가격 영향 분석
-   - ## 실수요자 대응 전략 및 가이드
-3. '금융·경제':
-   - ## 시장 핵심 동향 및 주요 배경
-   - ## 거시 경제 지표 및 시장 파급 효과
-   - ## 향후 시장 전망 및 투자자 유의점
-4. '테크·IT':
-   - ## 신제품 및 핵심 기술 주요 특징
-   - ## 사용자 경험 및 산업 전반의 파급 효과
-   - ## 향후 출시 일정 및 기술 로드맵
-5. '사회·문화':
-   - ## 핵심 이슈 개요 및 사건 배경
-   - ## 사회적 반응 및 각계 목소리
-   - ## 향후 일정 및 주요 쟁점 점검
-
-[CRITICAL: 3줄 핵심 요약 작성 절대 규칙]
-1. HTML 태그(<ol>, <li>, <a>, <p> 등), 웹 주소(http://, https://), 마크다운 링크 절대 포함 금지!
-2. 반드시 순수한 한글 완전 문장 3개로만 작성하십시오. (줄바꿈 구분: "1. 첫 번째 핵심 요약 문장.\\n2. 두 번째 핵심 요약 문장.\\n3. 세 번째 핵심 요약 문장.")
-3. 기사 제목의 주제와 100% 일치하는 팩트만 서술하십시오.
-
-[작성 및 편집 기본 지침]
-1. 팩트 준수: 원문의 수치, 고유명사, 핵심 사건 등 사실관계는 왜곡하지 마십시오.
-2. 제목-내용 일치: 본문과 요약은 기사 제목의 핵심 주제를 철저히 관통해야 합니다.
-3. 영문 슬러그(slug): 기사의 핵심 주제를 담은 3~6단어의 영문 소문자/하이픈 식별자를 만드십시오.
-4. SEO 최적화: 60자 내외의 metaTitle과 클릭률 높은 130자 내외의 metaDescription을 작성하십시오.
+[카테고리별 맞춤 소제목 구조]
+기사의 본문은 기사 제목 및 카테고리에 완벽히 부합하는 자연스러운 마크다운 H2(##) 소제목 3개로 구성하십시오.
+HTML 태그나 외부 링크는 절대 포함하지 마십시오.
 
 반드시 다른 설명 없이 아래 JSON 규격 하나만을 엄격히 출력하십시오:
 {
-  "title": "검색 키워드를 포함한 직관적인 H1 제목 (한국어)",
+  "title": "20~35자 내외의 자연스러운 정통 뉴스 헤드라인 (대괄호 태그나 기계적 접미사 절대 금지)",
   "slug": "url-friendly-lowercase-slug-in-english",
-  "summary": "1. 첫 번째 핵심 포인트 요약.\\n2. 두 번째 핵심 분석 요약.\\n3. 세 번째 향후 전망 요약.",
-  "content": "카테고리에 부합하는 마크다운 H2(##) 소제목 3개가 포함된 풍성한 마크다운 본문",
+  "summary": "1. 첫 번째 핵심 사건 요약 문장.\\n2. 두 번째 세부 내용 및 수치 요약 문장.\\n3. 세 번째 향후 전망 및 독자 영향 요약 문장.",
+  "content": "마크다운 H2(##) 소제목 3개가 포함된 풍성한 100% 재작성 본문",
   "category": "['정책·지원금', '부동산·세제', '금융·경제', '테크·IT', '사회·문화'] 중 하나",
   "metaTitle": "검색 결과용 60자 내외 SEO 타이틀",
   "metaDescription": "검색 결과 클릭률을 높이는 130자 내외 메타 디스크립션"
@@ -143,22 +161,22 @@ export async function rewriteArticleWithAI(raw: RawArticleInput): Promise<Rewrit
     return generateFallbackParaphrase(raw);
   }
 
-  // 원문 텍스트 내 HTML 태그 사전 정제
-  const cleanInputContent = sanitizePlainText(raw.content);
-  const cleanInputTitle = sanitizePlainText(raw.title);
+  // 원문 텍스트 내 언론사/포털 태그 및 HTML 사전 완벽 정제
+  const cleanInputTitle = cleanseHeadline(sanitizePlainText(raw.title));
+  const cleanInputContent = stripMediaAndPortalTags(sanitizePlainText(raw.content));
 
   const userPrompt = `[원본 기사 정보]
 - 원문 제목: ${cleanInputTitle}
-- 원문 출처 카테고리(참고용): ${raw.category || "미지정"}
+- 카테고리: ${raw.category || "정책·지원금"}
 - 원문 내용:
 ${cleanInputContent}
 
-위 원본 기사를 바탕으로 일반 독자가 이해하기 쉬운 친절한 전문 기자 톤으로 100% 재작성하십시오.
-- HTML 태그(<ol>, <li>, <a> 등)나 외부 링크는 절대 포함하지 마십시오.
-- 카테고리('${raw.category || "정책·지원금"}')에 최적화된 마크다운 H2(##) 소제목을 사용하십시오.
-- 3줄 요약은 반드시 '1. ...\\n2. ...\\n3. ...' 형식의 순수 텍스트 3문장이어야 합니다.
-- 원문 기사의 사실(Fact)과 제목에 100% 부합하는 내용만 기술하십시오.
-반드시 지정된 JSON 포맷 하나만 출력해 주세요.`;
+[작성 필수 지침]
+1. 제목(title): [심층 분석], [속보] 같은 대괄호 태그나 ': 핵심 쟁점과 향후 전망' 같은 접미사를 절대 넣지 말고, 20~35자 내외의 매끄러운 정통 뉴스 헤드라인으로 새로 작문하십시오.
+2. 요약(summary): [연합뉴스], [v.daum.net] 같은 언론사/포털 태그를 100% 배제하고, '1. 무슨 일인가 2. 세부 내용/수치 3. 향후 전망/영향' 3줄 완전한 문장으로 작성하십시오.
+3. 본문(content): 원문의 사실을 100% 보존하되 마크다운 H2(##) 소제목 3개로 품격 있는 전문 기자 톤으로 재작성하십시오.
+
+반드시 지정된 JSON 규격 하나만 출력하십시오.`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 40000);
@@ -168,9 +186,9 @@ ${cleanInputContent}
 
     // 2-A. Google Gemini API 분기 처리
     if (geminiKey) {
-      const preferredModel = process.env.AI_MODEL || "gemini-flash-latest";
+      const preferredModel = process.env.AI_MODEL || "gemini-flash-lite-latest";
       const candidateModels = Array.from(
-        new Set([preferredModel, "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-pro-latest", "gemini-3.6-flash"])
+        new Set([preferredModel, "gemini-flash-lite-latest", "gemini-flash-latest", "gemini-3.6-flash", "gemini-pro-latest"])
       );
 
       let lastError: Error | null = null;
@@ -319,15 +337,19 @@ ${cleanInputContent}
 
     const assignedCategory = normalizeCategory(parsed.category || raw.category);
 
-    // 품질 검증 게이트 통과 및 자동 정제
+    // 품질 검증 게이트 통과 및 자동 정제 (고정 태그 및 언론사 찌꺼기 100% 제거)
+    const sanitizedAiTitle = cleanseHeadline(parsed.title);
+    const sanitizedAiSummary = stripMediaAndPortalTags(parsed.summary);
+    const sanitizedAiContent = stripMediaAndPortalTags(parsed.content);
+
     const validated = verifyAndSanitizeArticle({
-      title: parsed.title,
-      slug: (parsed.slug || createEnglishSlug(parsed.title)).toLowerCase().trim(),
-      summary: parsed.summary,
-      content: parsed.content,
+      title: sanitizedAiTitle,
+      slug: (parsed.slug || createEnglishSlug(sanitizedAiTitle)).toLowerCase().trim(),
+      summary: sanitizedAiSummary,
+      content: sanitizedAiContent,
       category: assignedCategory,
-      metaTitle: parsed.metaTitle,
-      metaDescription: parsed.metaDescription,
+      metaTitle: parsed.metaTitle ? cleanseHeadline(parsed.metaTitle) : null,
+      metaDescription: parsed.metaDescription ? stripMediaAndPortalTags(parsed.metaDescription) : null,
     });
 
     return {
@@ -352,36 +374,37 @@ ${cleanInputContent}
  * 기사 제목 및 카테고리에 완벽히 일치하는 소제목과 문맥을 지능적으로 합성
  */
 export function generateFallbackParaphrase(raw: RawArticleInput): RewrittenArticleResult {
-  const cleanTitle = sanitizePlainText(raw.title || "")
-    .replace(/\[심층\s*분석\]/gi, "")
-    .replace(/[-[\]()]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
+  const cleanTitle = cleanseHeadline(sanitizePlainText(raw.title || ""));
   const finalCategory = normalizeCategory(raw.category);
-  const title = `[심층 분석] ${cleanTitle}: 핵심 쟁점과 향후 전망`;
+
+  // 자연스러운 정통 경제·정책 뉴스 헤드라인 (고정 말머리 및 기계적 접미사 100% 제거)
+  let title = cleanTitle;
+  if (title.length > 38) {
+    title = title.slice(0, 36).trim() + "...";
+  }
+
   const slug = createEnglishSlug(cleanTitle);
 
-  // 본문 정제
-  const pureText = sanitizePlainText(raw.content || "");
+  // 본문 및 언론사/포털 태그 정제
+  const pureText = stripMediaAndPortalTags(sanitizePlainText(raw.content || ""));
   const sentences = pureText
     .split(/(?<=[.?!])\s+/)
-    .map((s) => s.trim())
+    .map((s) => stripMediaAndPortalTags(s).trim())
     .filter((s) => s.length >= 15 && /[가-힣]/.test(s) && !s.includes("http"));
 
-  // 3줄 요약 문장 선별
+  // 3줄 요약 문장 (1. 핵심 내용 -> 2. 세부 내용/수치 -> 3. 전망/영향)
   const s1 =
     sentences[0] ||
-    `${cleanTitle} 관련 최신 동향과 주요 발표 내용이 시장과 국민들의 뜨거운 관심을 모으고 있습니다.`;
+    `${cleanTitle} 관련 정부 부처 및 주요 관계 기관의 공식 발표가 나왔습니다.`;
   const s2 =
     sentences[1] ||
-    "주요 이해관계자 및 관련 업계 전반에 미칠 파급 효과와 구체적인 추진 방안이 다각도로 논의되고 있습니다.";
+    "지원 요건과 세부 적용 기준이 구체화되면서 실수요자 및 관련 업계의 실질적 혜택이 확대될 전망입니다.";
   const s3 =
     sentences[2] ||
-    "향후 세부 일정과 공식적인 후속 발표가 이어질 예정이므로 관련 공고와 동향을 지속적으로 점검할 필요가 있습니다.";
+    "세부 신청 일정과 공식 가이드라인에 따라 순차적으로 진행될 예정이므로 꼼꼼한 확인이 필요합니다.";
 
   // 3줄 요약 정규화
-  const { summary } = normalizeThreeLineSummary(`${s1}\n${s2}\n${s3}`, pureText, cleanTitle);
+  const { summary } = normalizeThreeLineSummary(`${s1}\n${s2}\n${s3}`, pureText, title);
 
   // 카테고리별 맞춤 소제목 및 본문 구성
   let content = "";

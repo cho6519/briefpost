@@ -66,8 +66,45 @@ const DUMMY_PHRASES = [
 ];
 
 /**
+ * 언론사명, 포털 도메인(v.daum.net 등), 대괄호 출처 태그를 완벽하게 제거하는 정제기
+ */
+export function stripMediaAndPortalTags(text: string): string {
+  if (!text) return "";
+  return text
+    // 1. 대괄호 안의 언론사 및 도메인 태그 제거 (예: [연합뉴스], [v.daum.net], [한겨레], [아시아경제])
+    .replace(/\[\s*(?:v\.daum\.net|연합뉴스(?:TV)?|연합인포맥스|이데일리(?:TV)?|더게임스|YTN|조선일보|중앙일보|동아일보|경향신문|한겨레|매일경제|한국경제|스포츠조선|아시아경제|전자신문|머니투데이|뉴시스|newsis(?:\.com)?|[a-zA-Z0-9.-]+\.(?:com|net|kr|co\.kr)|[가-힣]{2,6}(?:일보|신문|뉴스|경제|방송|미디어|TV))\s*\]/gi, "")
+    // 2. 텍스트 중간/끝에 단독 노출되는 포털 및 언론사 도메인 제거
+    .replace(/\b(?:v\.daum\.net|edaily\.co\.kr|newsis\.com|yna\.co\.kr|ytn\.co\.kr)\b/gi, "")
+    // 3. 기사 끝자락의 ' - 언론사명' 또는 ' 언론사명:' 제거
+    .replace(/\s*[-–—]\s*[가-힣a-zA-Z0-9.\s]+(?:신문|일보|뉴스|경제|TV|com|net|kr)\s*$/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * 기계적인 제목 태그([심층 분석] 등) 및 접미사(: 핵심 쟁점과 향후 전망 등)를 완벽 제거하고
+ * 자연스러운 정통 뉴스 헤드라인으로 정제
+ */
+export function cleanseHeadline(title: string): string {
+  if (!title) return "";
+  let clean = title
+    // [심층 분석], [긴급 점검], [속보], [단독] 등 고정 말머리 말뚝 태그 제거
+    .replace(/^\[(?:심층\s*분석|긴급\s*점검|속보|단독|기획|종합|포토|단독보도|특징주|해설)\]\s*/i, "")
+    // 제목 뒤에 붙는 ': 핵심 쟁점과 향후 전망', ': 총정리' 등 기계적 접미사 제거
+    .replace(/\s*:\s*(?:핵심\s*쟁점과\s*향후\s*전망|향후\s*전망과\s*핵심\s*쟁점|핵심\s*정리|총정리|종합\s*분석|심층\s*분석)\s*$/gi, "")
+    .replace(/\s+핵심\s*쟁점과\s*향후\s*전망\s*$/gi, "");
+
+  // 언론사/포털 태그 제거
+  clean = stripMediaAndPortalTags(clean);
+
+  // 앞뒤 기호 정리
+  clean = clean.replace(/^[:\-\s]+|[:\-\s]+$/g, "").trim();
+  return clean;
+}
+
+/**
  * 3줄 요약 전용 정규화 및 무결성 보정
- * HTML 태그, 마크다운 링크, 불필요한 공백, 더미 템플릿을 완전히 배제하고
+ * HTML 태그, 마크다운 링크, 불필요한 공백, 언론사 태그를 완전히 배제하고
  * '1. ...\n2. ...\n3. ...' 포맷으로 통일
  */
 export function normalizeThreeLineSummary(
@@ -77,25 +114,21 @@ export function normalizeThreeLineSummary(
 ): { summary: string; wasRepaired: boolean } {
   let wasRepaired = false;
 
-  const cleanTitle = title
-    .replace(/\[심층\s*분석\]/gi, "")
-    .replace(/[-[\]()]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const cleanTitle = cleanseHeadline(title);
 
-  // 1. 기존 요약에서 HTML 태그 및 URL 제거
-  const cleanedRaw = sanitizePlainText(summaryRaw);
+  // 1. 기존 요약에서 HTML 태그 및 URL, 언론사 태그 제거
+  const cleanedRaw = stripMediaAndPortalTags(sanitizePlainText(summaryRaw));
 
   // 2. 줄바꿈 또는 번호(1., 2., 3., - , •) 기준으로 항목 분리
   const rawLines = cleanedRaw
     .split(/(?:^|\n|\s+)(?:[1-3][.)\-]\s+|[•\-*]\s+)/)
-    .map((s) => s.trim())
+    .map((s) => stripMediaAndPortalTags(s).trim())
     .filter((s) => s.length >= 8);
 
   // 3. 더미 문장 및 마크다운 헤딩(##), 잔여 태그 필터링
   const validLines = rawLines
     .map((rawLine) => {
-      let line = rawLine;
+      let line = stripMediaAndPortalTags(rawLine);
       // 언론사 나열 찌꺼기 감지 시 첫 번째 헤드라인만 정갈하게 분리
       const mediaListPattern = /\s+(?:v\.daum\.net|연합인포맥스|더게임스|YTN|조선일보|중앙일보|동아일보|경향신문|한겨레|매일경제|한국경제|스포츠조선|아시아경제|전자신문|머니투데이|newsis\.com)/i;
       if (mediaListPattern.test(line)) {
@@ -104,7 +137,14 @@ export function normalizeThreeLineSummary(
           line = parts[0].trim();
         }
       }
-      return line;
+
+      // 다중 기사 제목 뭉침("...받았다 \"집 살게요\"...") 감지 시 첫 번째 온전한 문장만 추출
+      const multiHeadlineMatch = line.match(/^([^\n"“”]+(?:다|요|음|임|함|전망|결정|발표|추진)[.?!]?)/);
+      if (multiHeadlineMatch && multiHeadlineMatch[1].trim().length >= 15 && multiHeadlineMatch[1].trim().length < line.length - 5) {
+        line = multiHeadlineMatch[1].trim();
+      }
+
+      return line.trim();
     })
     .filter((line) => {
       if (line.startsWith("#") || line.startsWith("##")) return false;
@@ -293,10 +333,10 @@ export function verifyAndSanitizeArticle(input: ArticleValidationInput): Validat
     };
   }
 
-  // 2. 제목 정제 (태그 제거)
-  const cleanTitle = sanitizePlainText(input.title);
+  // 2. 제목 정제 (고정 말머리 말뚝 태그 제거, 기계적 접미사 제거, 언론사/포털 태그 제거)
+  const cleanTitle = cleanseHeadline(sanitizePlainText(input.title));
   if (cleanTitle !== input.title) {
-    repairedIssues.push("제목 내 HTML 태그/특수엔티티를 안전하게 제거했습니다.");
+    repairedIssues.push("기계적인 제목 템플릿 태그([심층 분석] 등) 또는 언론사명을 제거하고 정통 헤드라인으로 정제했습니다.");
   }
 
   // 3. 3줄 요약 정제 및 무결성 검증

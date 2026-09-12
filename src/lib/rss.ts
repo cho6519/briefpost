@@ -238,10 +238,10 @@ export function sanitizeRssRawContent(rawHtmlOrText: string): string {
           const mediaMatch = innerHtml.match(/<font[^>]*>([\s\S]*?)<\/font>/i);
           const media = mediaMatch ? stripHtmlTags(mediaMatch[1]).trim() : "";
 
-          // 기사 타이틀 추출
+          // 기사 타이틀 추출 (언론사 태그 없이 순수 타이틀/내용만 보존)
           const text = stripHtmlTags(innerHtml.replace(/<font[^>]*>[\s\S]*?<\/font>/gi, "")).trim();
           if (!text) return "";
-          return media ? `[${media}] ${text}` : text;
+          return text;
         })
         .filter((line) => line.length > 5);
 
@@ -264,7 +264,7 @@ function extractItemDetails(
   targetFeed: { url: string; name: string; category: string },
   feedTitle: string
 ): ParsedRssItem | null {
-  // 1. Title 추출
+  // 1. Title 추출 (언론사 꼬리표 사전 제거)
   const rawTitle =
     item.title ||
     item.dcTitle ||
@@ -272,7 +272,9 @@ function extractItemDetails(
     item.heading ||
     item.headline ||
     "";
-  const title = stripHtmlTags(String(rawTitle)).trim();
+  const title = stripHtmlTags(String(rawTitle))
+    .replace(/\s*[-–—]\s*[가-힣a-zA-Z0-9.\s]+(?:신문|일보|뉴스(?:TV)?|경제|방송|TV|미디어|com|net|co\.kr)\s*$/gi, "")
+    .trim();
 
   // 2. Link 추출 (Atom href 객체, guid, dc:identifier 등 다형성 지원)
   let rawLink: unknown =
