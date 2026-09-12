@@ -374,7 +374,10 @@ export async function GET(req: NextRequest) {
         height: 630,
         fonts: fontsOption,
         headers: {
-          "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+          "Cache-Control":
+            process.env.NODE_ENV === "development"
+              ? "no-cache, no-store, must-revalidate"
+              : "public, max-age=86400, stale-while-revalidate=604800",
         },
       }
     );

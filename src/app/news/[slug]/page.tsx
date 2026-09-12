@@ -12,7 +12,6 @@ import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
 import { normalizeArticleContent } from "@/lib/articleValidator";
 import { ArticleFaqItem, determineCtaType } from "@/lib/ai";
-import { getStockImage } from "@/utils/imageMapper";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -179,8 +178,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     day: "numeric",
   });
 
-  // 서버 내부 렌더링 맞춤형 타이포그래피 카드뉴스 URL (외부 유료 API 의존 및 이질감 제로)
-  const cardImageUrl = `${siteUrl}/api/og?slug=${article.slug}`;
+  // 서버 내부 렌더링 맞춤형 타이포그래피 카드뉴스 URL (메인 피드 카드 및 OG 이미지와 100% 동일)
+  const cardImageUrl = `/api/og?slug=${article.slug}`;
 
   // 1. 기사 표준 구조화 데이터 (NewsArticle & BlogPosting)
   const jsonLd = {
@@ -188,7 +187,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     "@type": ["NewsArticle", "BlogPosting"],
     headline: article.title,
     description: article.metaDescription || article.summary || article.title,
-    image: [cardImageUrl],
+    image: [`${siteUrl}/api/og?slug=${article.slug}`],
     datePublished: article.createdAt,
     dateModified: article.updatedAt || article.createdAt,
     articleSection: article.category,

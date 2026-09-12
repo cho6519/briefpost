@@ -4,7 +4,6 @@ import AdSlot from "@/components/ads/AdSlot";
 import { getArticles, seedArticlesIfNeeded } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
-import { getStockImage } from "@/utils/imageMapper";
 
 export const dynamic = "force-dynamic";
 
@@ -141,10 +140,8 @@ export default async function HomePage({ searchParams }: PageProps) {
             const summaryPoints = parseSummaryPoints(article.summary);
             const isHero = isHeroPage && index === 0;
             const sourceName = getSourceDisplayName(article.sourceUrl, article.title, article.category);
-            const cardStockImage = getStockImage(article.imageTheme, article.title, article.category, article.content, article.id, article.slug);
-            const cardImageUrl = (article.thumbnailUrl && article.thumbnailUrl.includes("unsplash.com"))
-              ? article.thumbnailUrl
-              : cardStockImage.url;
+            // 맞춤형 동적 타이포그래피 카드뉴스 썸네일 (상세 페이지 및 OG 이미지와 100% 동일)
+            const cardImageUrl = `/api/og?slug=${article.slug}`;
 
             // 1) 히어로 피처드 스토리 (메인 첫 페이지 1위 기사)
             if (isHero) {
@@ -152,16 +149,17 @@ export default async function HomePage({ searchParams }: PageProps) {
                 <div key={article.id} className="space-y-6">
                   <article className="group relative overflow-hidden rounded-2xl border border-zinc-200/90 bg-white p-5 sm:p-7 shadow-sm transition-all duration-300 hover:border-zinc-300 hover:shadow-md">
                     <div className="flex flex-col gap-4">
-                      {/* 기사 썸네일 (실사 스톡 이미지 풀 매핑) */}
+                      {/* 기사 썸네일 (동적 타이포그래피 카드뉴스) */}
                       <Link
                         href={`/news/${article.slug}`}
-                        className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-zinc-100"
+                        className="relative aspect-[1200/630] w-full overflow-hidden rounded-xl bg-zinc-950 shadow-sm"
                       >
                         <Image
                           src={cardImageUrl}
                           alt={article.title}
                           fill
                           priority
+                          unoptimized
                           sizes="(max-width: 768px) 100vw, 720px"
                           className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                         />
@@ -262,15 +260,16 @@ export default async function HomePage({ searchParams }: PageProps) {
                       </time>
                     </div>
 
-                    {/* 컴팩트 썸네일 (실사 스톡 이미지 풀 매핑) */}
+                    {/* 컴팩트 썸네일 (동적 타이포그래피 카드뉴스) */}
                     <Link
                       href={`/news/${article.slug}`}
-                      className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-zinc-100"
+                      className="relative aspect-[1200/630] w-full overflow-hidden rounded-xl bg-zinc-950 shadow-sm"
                     >
                       <Image
                         src={cardImageUrl}
                         alt={article.title}
                         fill
+                        unoptimized
                         sizes="(max-width: 768px) 100vw, 680px"
                         className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                       />
