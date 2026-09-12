@@ -145,6 +145,7 @@ export function normalizeArticleContent(raw: string): string {
   text = stripMediaAndPortalTags(text);
 
   // 2. 단독 빈 헤딩 정리 및 중복 해시 기호 정리
+  text = text.replace(/^\s*#{1,6}\s*$/gm, "");
   text = text.replace(/#{2,}\s*#{2,}\s*/g, "### ");
   text = text.replace(/\n##\s*\n+(?=##)/g, "\n\n");
   text = text.replace(/\n##\s*(\n|$)/g, "\n\n");
@@ -162,6 +163,38 @@ export function normalizeArticleContent(raw: string): string {
   text = text.replace(/\s+#(?=\n|$)/g, "");
   text = text.replace(/([^\n])\s*---\s*(?=\n|$)/g, "$1\n\n---\n\n");
   text = text.replace(/\n+---\s*\n+/g, "\n\n---\n\n");
+
+  // 4-1. 대제목 바로 아래 줄에 대제목 말미 찌꺼기 텍스트(예: '및 수치 비교', '및 향후 일정')가 단락으로 중복 노출되는 현상 방지
+  const rawLines = text.split("\n");
+  const cleanedLines: string[] = [];
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const trimmed = line.trim();
+
+    if (trimmed && !trimmed.startsWith("#")) {
+      let prevH2: string | null = null;
+      for (let j = cleanedLines.length - 1; j >= 0; j--) {
+        const pTrim = cleanedLines[j].trim();
+        if (pTrim === "") continue;
+        if (pTrim.startsWith("## ")) {
+          prevH2 = pTrim;
+        }
+        break;
+      }
+
+      if (prevH2) {
+        const headingText = prevH2.replace(/^##\s+[0-9]+\.\s*/, "").trim();
+        if (headingText.includes(trimmed) && trimmed.length >= 3) {
+          continue; // 중복 찌꺼기 단락 스킵
+        }
+        if (/^및\s+[가-힣\s]{2,15}$/.test(trimmed) && headingText.includes("및")) {
+          continue;
+        }
+      }
+    }
+    cleanedLines.push(line);
+  }
+  text = cleanedLines.join("\n");
 
   // 5. 서두 템플릿 찌꺼기 문장 정제
   text = text.replace(/^[^\n]*?(?:관련\s+최신\s+주요\s+발표와\s+시장\s+동향이|이번\s+사안과\s+관련한\s+핵심\s+쟁점과)[^\n]*\n+/g, "");

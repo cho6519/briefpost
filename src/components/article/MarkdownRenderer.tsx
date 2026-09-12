@@ -66,7 +66,8 @@ export function preprocessMarkdown(raw: string): string {
   if (!raw) return "";
   let text = raw;
 
-  // 1. 단독 빈 헤딩(## 단독 줄) 제거
+  // 1. 단독 빈 헤딩 기호(#, ##, ### 등 단독 줄) 완전 제거
+  text = text.replace(/^\s*#{1,6}\s*$/gm, "");
   text = text.replace(/\n##\s*\n+(?=##)/g, "\n\n");
   text = text.replace(/\n##\s*(\n|$)/g, "\n\n");
 
@@ -79,14 +80,46 @@ export function preprocessMarkdown(raw: string): string {
   // 3. 줄 끝의 불필요한 단독 # 기호 제거
   text = text.replace(/\s+#(?=\n|$)/g, "");
 
-  // 4. 문장 끝에 붙어있는 ---는 단락 뒤 독립된 수평선(<hr>)으로 분리
+  // 4. 대제목 바로 아래 줄에 대제목 말미 찌꺼기 텍스트(예: '및 수치 비교', '및 향후 일정')가 단락으로 중복 노출되는 현상 방지
+  const lines = text.split("\n");
+  const cleanedLines: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (trimmed && !trimmed.startsWith("#")) {
+      let prevH2: string | null = null;
+      for (let j = cleanedLines.length - 1; j >= 0; j--) {
+        const pTrim = cleanedLines[j].trim();
+        if (pTrim === "") continue;
+        if (pTrim.startsWith("## ")) {
+          prevH2 = pTrim;
+        }
+        break;
+      }
+
+      if (prevH2) {
+        const headingText = prevH2.replace(/^##\s+[0-9]+\.\s*/, "").trim();
+        if (headingText.includes(trimmed) && trimmed.length >= 3) {
+          continue; // 중복 찌꺼기 단락 스킵
+        }
+        if (/^및\s+[가-힣\s]{2,15}$/.test(trimmed) && headingText.includes("및")) {
+          continue;
+        }
+      }
+    }
+    cleanedLines.push(line);
+  }
+  text = cleanedLines.join("\n");
+
+  // 5. 문장 끝에 붙어있는 ---는 단락 뒤 독립된 수평선(<hr>)으로 분리
   text = text.replace(/([^\n])\s*---\s*(?=\n|$)/g, "$1\n\n---\n\n");
   text = text.replace(/\n+---\s*\n+/g, "\n\n---\n\n");
 
-  // 5. 긴 텍스트 덩어리(벽돌글) 2~3문장 단위 문단 분리
+  // 6. 긴 텍스트 덩어리(벽돌글) 2~3문장 단위 문단 분리
   text = breakLongParagraphs(text);
 
-  // 6. **볼드 텍스트**가 한글 조사(이/가/은/는/을/를/의/에/로/도 등)와 붙어있어 마크다운 파서가 무시하는 현상 해결
+  // 7. **볼드 텍스트**가 한글 조사(이/가/은/는/을/를/의/에/로/도 등)와 붙어있어 마크다운 파서가 무시하는 현상 해결
   text = text.replace(/\*\*([^\*\n]+?)\*\*([가-힣a-zA-Z0-9])/g, "<strong>$1</strong>$2");
   text = text.replace(/\*\*([^\*\n]+?)\*\*/g, "<strong>$1</strong>");
 
@@ -105,34 +138,54 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
         components={{
-          // 단일 H1 원칙: 본문 내부의 h1은 자동으로 h2 스타일로 렌더링
-          h1: ({ node, ...props }) => (
-            <h2
-              className="block border-l-4 border-blue-600 pl-3 py-0.5 text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mt-10 mb-4 tracking-tight"
-              {...props}
-            />
-          ),
-          // H2: 시원한 여백과 함께 왼쪽에만 블루 포인트 바 적용
-          h2: ({ node, ...props }) => (
-            <h2
-              className="block border-l-4 border-blue-600 pl-3 py-0.5 text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mt-10 mb-4 tracking-tight"
-              {...props}
-            />
-          ),
-          // H3: 블루 바 없이 깔끔한 중간 볼드 폰트로 위계 차별화
-          h3: ({ node, ...props }) => (
-            <h3
-              className="block text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-200 mt-8 mb-3 tracking-tight"
-              {...props}
-            />
-          ),
-          // 문단(p): 넉넉한 줄간격(leading-[1.85])과 문단 간 여백(mb-5)
-          p: ({ node, ...props }) => (
-            <p
-              className="text-slate-700 dark:text-slate-300 font-normal leading-[1.85] mb-5 text-[16px] sm:text-[17px] break-keep"
-              {...props}
-            />
-          ),
+          // 단일 H1 원칙: 본문 내부의 h1은 자동으로 h2 스타일로 렌더링 (빈 헤딩 방지)
+          h1: ({ node, children, ...props }) => {
+            if (!children || (typeof children === "string" && !children.trim())) return null;
+            return (
+              <h2
+                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-extrabold text-slate-950 dark:text-slate-50 mt-10 mb-4 tracking-tight leading-snug"
+                {...props}
+              >
+                {children}
+              </h2>
+            );
+          },
+          // H2: 대제목 - 왼쪽 블루 포인트 바와 굵은 볼드 폰트, 안정적인 상하 여백
+          h2: ({ node, children, ...props }) => {
+            if (!children || (typeof children === "string" && !children.trim())) return null;
+            return (
+              <h2
+                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-extrabold text-slate-950 dark:text-slate-50 mt-10 mb-4 tracking-tight leading-snug"
+                {...props}
+              >
+                {children}
+              </h2>
+            );
+          },
+          // H3: 중제목/소제목 - 블루 바 없이 깔끔한 중간 볼드 폰트로 확실한 위계 차별화
+          h3: ({ node, children, ...props }) => {
+            if (!children || (typeof children === "string" && !children.trim())) return null;
+            return (
+              <h3
+                className="block text-[17px] sm:text-[18.5px] font-bold text-slate-800 dark:text-slate-200 mt-7 mb-2.5 tracking-tight leading-snug"
+                {...props}
+              >
+                {children}
+              </h3>
+            );
+          },
+          // 문단(p): 넉넉한 줄간격(leading-[1.85])과 문단 간 여백(mb-5) (빈 문단 방지)
+          p: ({ node, children, ...props }) => {
+            if (!children || (typeof children === "string" && !children.trim())) return null;
+            return (
+              <p
+                className="text-slate-700 dark:text-slate-300 font-normal leading-[1.85] mb-5 text-[16px] sm:text-[17px] break-keep"
+                {...props}
+              >
+                {children}
+              </p>
+            );
+          },
           // 수평 구분선(hr): 은은한 그레이 구분선
           hr: ({ node, ...props }) => (
             <hr className="my-8 border-t border-zinc-200 dark:border-zinc-800" {...props} />
