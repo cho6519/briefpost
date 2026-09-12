@@ -83,26 +83,25 @@ export default async function HomePage({ searchParams }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
 
-      {/* 실시간 브레이킹 뉴스 캡슐 */}
+      {/* 상단 주요 브리핑 티커 바 */}
       {breakingArticle && (
-        <div className="flex items-center gap-3 rounded-xl border border-zinc-200/90 bg-white px-3.5 py-2.5 shadow-xs transition-colors">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-            </span>
-            <span className="text-[11px] font-black tracking-wider uppercase text-rose-600">
-              LIVE
+        <Link
+          href={`/news/${breakingArticle.slug}`}
+          className="group flex items-center gap-2.5 sm:gap-3 rounded-xl border border-blue-100 dark:border-zinc-800 bg-blue-50/40 hover:bg-blue-50/80 px-3.5 py-2.5 shadow-2xs transition-all duration-200"
+        >
+          <div className="flex items-center shrink-0">
+            <span className="inline-flex items-center rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold text-white shadow-2xs tracking-tight">
+              주요 브리핑
             </span>
           </div>
-          <span className="text-zinc-300 select-none">|</span>
-          <Link
-            href={`/news/${breakingArticle.slug}`}
-            className="text-xs font-semibold text-zinc-800 hover:text-blue-600 transition-colors truncate"
-          >
+          <span className="text-blue-200 dark:text-zinc-700 select-none">|</span>
+          <span className="text-xs sm:text-[13px] font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600 transition-colors truncate flex-1">
             {breakingArticle.title}
-          </Link>
-        </div>
+          </span>
+          <span className="text-xs text-zinc-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0">
+            →
+          </span>
+        </Link>
       )}
 
       {/* 카테고리 필터 헤더 */}

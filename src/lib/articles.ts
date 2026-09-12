@@ -173,19 +173,27 @@ export function createArticle(input: CreateArticleInput): Article {
 import { ALLOWED_CATEGORIES } from "./ai";
 
 /**
- * 등록된 모든 카테고리 목록 조회 (5대 공식 카테고리 항상 메뉴 노출 보장)
+ * 등록된 카테고리 중 기사 수가 minCount(기본 3건) 이상인 알짜 카테고리만 조회
+ * - 콘텐츠 부족(3건 미만) 카테고리의 노출을 원천 차단하여 애드센스 심사 감점 방지
  */
-export function getAllCategories(): string[] {
-  const stmt = db.prepare("SELECT DISTINCT category FROM articles ORDER BY category ASC");
-  const rows = stmt.all() as { category: string }[];
+export function getAllCategories(minCount: number = 3): string[] {
+  const stmt = db.prepare(`
+    SELECT category, COUNT(*) as cnt 
+    FROM articles 
+    GROUP BY category 
+    HAVING COUNT(*) >= ? 
+    ORDER BY cnt DESC, category ASC
+  `);
+  const rows = stmt.all(minCount) as { category: string; cnt: number }[];
 
-  // 5대 표준 카테고리를 항상 기본 목록으로 포함
-  const ordered: string[] = [...ALLOWED_CATEGORIES];
+  // 표준 카테고리 우선순위 순서대로 정렬
+  const priorityOrder = ["정책·지원금", "금융·경제", "부동산·세제", "테크·IT", "사회·문화"];
+  const validCategories = rows.map((r) => r.category);
 
-  // 혹시 DB에 저장된 다른 카테고리가 있다면 뒤에 추가
-  rows.forEach((r) => {
-    if (!ordered.includes(r.category)) {
-      ordered.push(r.category);
+  const ordered = priorityOrder.filter((cat) => validCategories.includes(cat));
+  validCategories.forEach((cat) => {
+    if (!ordered.includes(cat)) {
+      ordered.push(cat);
     }
   });
 

@@ -19,12 +19,12 @@ export default function Header() {
                 <span className="text-base sm:text-lg font-extrabold tracking-tight text-zinc-900 group-hover:text-blue-600 transition-colors">
                   Brief Post
                 </span>
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-600 border border-blue-200/60">
-                  AI BRIEF
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[9.5px] font-bold text-blue-700 border border-blue-200/80 tracking-wide">
+                  DAILY BRIEF
                 </span>
               </div>
-              <span className="text-[10px] text-zinc-500 font-medium tracking-wide">
-                1단 요약 뉴스레터
+              <span className="text-[10.5px] text-zinc-500 font-medium tracking-normal">
+                공공·경제 정책 전문 브리핑
               </span>
             </div>
           </Link>
