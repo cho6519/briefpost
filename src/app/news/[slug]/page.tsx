@@ -7,7 +7,7 @@ import AdSlot from "@/components/ads/AdSlot";
 import { getArticleBySlug, getAllArticleSlugs } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
-import { normalizeArticleContent } from "@/lib/articleValidator";
+import { normalizeArticleContent, enforceHeadingHierarchy } from "@/lib/articleValidator";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -125,7 +125,9 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
 
   // 마크다운 구조 무결성 보정 및 HTML 변환 (본문 50% 스마트 분할)
   const cleanMarkdown = normalizeArticleContent(article.content);
-  const fullHtml = marked.parse(cleanMarkdown, { async: false }) as string;
+  const rawHtml = marked.parse(cleanMarkdown, { async: false }) as string;
+  // 구글 SEO & 애드센스 규격 강제: 본문 H태그 위계 구조 불변 고정 (H1은 기사 제목 단 하나만 허용, 본문은 H2 -> H3만 허용)
+  const fullHtml = enforceHeadingHierarchy(rawHtml);
   const [firstHalfHtml, secondHalfHtml] = splitContentInHalf(fullHtml);
 
   const formattedDate = new Date(article.createdAt).toLocaleDateString("ko-KR", {

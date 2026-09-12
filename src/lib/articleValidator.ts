@@ -166,12 +166,36 @@ export function normalizeArticleContent(raw: string): string {
 
   text = fixedLines.join("\n");
 
-  // 6. 연속 빈 줄 정리 (최대 2줄)
+  // 6. H태그 위계 구조 표준화 (SEO & 애드센스 규격 강제)
+  // - 본문 내 # (H1) 마크다운 및 <h1> 태그 절대 불가 -> ## (H2)로 자동 강등
+  text = text.replace(/^#\s+([^\n]+)$/gm, "## $1");
+  text = text.replace(/<h1\b[^>]*>(.*?)<\/h1>/gi, "<h2>$1</h2>");
+
+  // - H4 이하 (####, #####, ######) 및 <h4~h6> 태그 -> ### (H3)로 자동 승격 매핑
+  text = text.replace(/^#{4,6}\s+([^\n]+)$/gm, "### $1");
+  text = text.replace(/<h[4-6]\b[^>]*>(.*?)<\/h[4-6]>/gi, "<h3>$1</h3>");
+
+  // 7. 연속 빈 줄 정리 (최대 2줄)
   text = text.replace(/[^\S\r\n]+/g, " ");
   text = text.replace(/\n{3,}/g, "\n\n").trim();
 
   return text;
 }
+
+/**
+ * 렌더링 직전 최종 HTML에 대해 H태그 위계를 100% 불변 강제하는 정제기 (Sanitizer)
+ * - <h1>: 기사 상세 페이지 메인 타이틀에만 단 1개만 존재해야 하므로 본문 내 모든 <h1>을 <h2>로 치환
+ * - <h4>, <h5>, <h6>: 구글 SEO 권장 위계(h1 -> h2 -> h3) 준수를 위해 모두 <h3>로 강제 매핑
+ */
+export function enforceHeadingHierarchy(html: string): string {
+  if (!html) return "";
+  return html
+    // <h1> 태그가 본문에 존재할 경우 무조건 <h2>로 강등 치환
+    .replace(/<h1(\s+[^>]*)?>([\s\S]*?)<\/h1>/gi, "<h2$1>$2</h2>")
+    // <h4>, <h5>, <h6> 태그는 위계 하한선인 <h3>로 자동 매핑
+    .replace(/<h[4-6](\s+[^>]*)?>([\s\S]*?)<\/h[4-6]>/gi, "<h3$1>$2</h3>");
+}
+
 
 
 /**

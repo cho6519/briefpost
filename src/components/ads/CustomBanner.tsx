@@ -49,9 +49,9 @@ export default function CustomBanner({
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1.5 max-w-lg">
-          <h3 className="text-base sm:text-lg font-bold text-zinc-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors">
+          <p className="text-base sm:text-lg font-bold text-zinc-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors">
             {banner.tagline}
-          </h3>
+          </p>
           <p className="text-xs sm:text-[13px] text-zinc-600 leading-relaxed line-clamp-2">
             {banner.description}
           </p>
