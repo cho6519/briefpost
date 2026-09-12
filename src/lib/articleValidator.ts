@@ -546,12 +546,12 @@ export function repairMismatchedHeadings(
     }
   }
 
-  // 4. 줄 단위로 순회하여 오직 ## 1. ~ ## 4. 만 H2로 유지하고 나머지는 H3(###)으로 정규화
+  // 4. 줄 단위로 순회하여 오직 ## 1. ~ ## 5. 만 H2로 유지하고 나머지는 H3(###)으로 정규화
   const lines = result.replace(/\r\n/g, "\n").split("\n");
   const processedLines = lines.map((line) => {
     const trimmed = line.trim();
     if (/^##(?:\s+|$)/.test(trimmed)) {
-      if (/^##\s+[1-4]\./.test(trimmed)) {
+      if (/^##\s+[1-5]\./.test(trimmed)) {
         return trimmed;
       }
       wasRepaired = true;

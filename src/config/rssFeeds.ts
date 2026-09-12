@@ -18,7 +18,33 @@ export interface RssFeedConfig {
 }
 
 export const RSS_FEEDS: RssFeedConfig[] = [
-  // --- 1. 정부 및 공공기관 4대 핵심 정책 포털 전용 피드 ---
+  // --- 1. 소상공인시장진흥공단(소진공) 및 중기부 기업마당 소상공인 전용 정책자금 피드 ---
+  {
+    id: "portal-semas",
+    name: "소상공인시장진흥공단 (semas.or.kr 정책자금/지원사업)",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8%EC%8B%9C%EC%9E%A5%EC%A7%84%ED%9D%A5%EA%B3%B5%EB%8B%A8+%EC%A0%95%EC%B1%85%EC%9E%90%EA%B8%88+%EC%A7%80%EC%9B%90%EC%82%AC%EC%97%85&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    description: "소상공인시장진흥공단(semas.or.kr) 소상공인 정책자금 대출, 희망리턴패키지, 스마트상점 등 실시간 공고 피드",
+  },
+  {
+    id: "portal-bizinfo",
+    name: "중소벤처기업부 기업마당 (bizinfo.go.kr 소상공인 지원사업)",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%EA%B8%B0%EC%97%85%EB%A7%88%EB%8B%B9+%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8+%EC%A7%80%EC%9B%90%EC%82%AC%EC%97%85+%EC%A0%95%EC%B1%85%EC%9E%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    description: "중소벤처기업부 기업마당(bizinfo.go.kr) 전국 소상공인·자영업자 중앙 및 지자체 지원사업 공고 피드",
+  },
+  {
+    id: "portal-korea-kr-smallbiz",
+    name: "대한민국 정책브리핑 (korea.kr 소상공인 정책자금)",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%EC%A0%95%EC%B1%85%EB%B8%8C%EB%A6%AC%ED%95%91+%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8+%EC%A7%80%EC%9B%90%EA%B8%88+%EC%A0%95%EC%B1%85%EC%9E%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    description: "대한민국 공식 정책브리핑(korea.kr) 소상공인 금융지원 및 경영안정 정책 속보 피드",
+  },
+
+  // --- 2. 정부 및 공공기관 핵심 정책 포털 전용 피드 ---
   {
     id: "portal-korea-kr",
     name: "대한민국 정책브리핑 (korea.kr 정책 뉴스)",

@@ -44,7 +44,14 @@ function splitMarkdownForAdSense(markdown: string): {
   part3: string;
 } {
   const sections = markdown.split(/(?=\n##\s+)/);
-  if (sections.length >= 4) {
+  if (sections.length >= 5) {
+    return {
+      part1: sections.slice(0, 2).join("\n"),
+      part2: sections.slice(2, 4).join("\n"),
+      part3: sections.slice(4).join("\n"),
+    };
+  }
+  if (sections.length === 4) {
     return {
       part1: sections.slice(0, 2).join("\n"),
       part2: sections.slice(2, 3).join("\n"),
