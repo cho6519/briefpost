@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
     const queryHighlight = searchParams.get("highlight") || searchParams.get("badge");
 
     let title = queryTitle || "";
+    let cardTitleFromDb = "";
     let category = queryCategory || "정책·지원금";
     let content = "";
     let highlightBadge = queryHighlight || "";
@@ -43,6 +44,7 @@ export async function GET(req: NextRequest) {
       const article = getArticleBySlug(slug);
       if (article) {
         title = article.title;
+        cardTitleFromDb = article.card_title || "";
         category = article.category;
         content = article.content || "";
         highlightBadge = article.highlightBadge || "";
@@ -54,7 +56,7 @@ export async function GET(req: NextRequest) {
       title = "Brief Post - 핵심만 빠르게 전달하는 공공·경제 브리핑";
     }
 
-    // 제목 앞뒤 따옴표 및 불완전한 말줄임표/절삭 꼬리 제거 (예: '…최대 70...', '...최대 70')
+    // 제목 앞뒤 따옴표 및 불완전한 말줄임표/절삭 꼬리 제거
     title = title
       .replace(/^[“"']+|[”"']+$/g, "")
       .replace(/\.{2,}[^\n]*$/g, "")
@@ -66,9 +68,10 @@ export async function GET(req: NextRequest) {
       title = "소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원)";
     }
 
-    // 2. 카드뉴스 전용 키워드 타이틀 및 서브 캐치프레이즈 생성 (상세 페이지 h1과의 중복 제거)
+    // 2. 카드뉴스 전용 키워드 타이틀(card_title 우선) 및 서브 캐치프레이즈
     const catchphraseData = generateCardCatchphrase(title, category);
-    const cardMainTitle = searchParams.get("keyword") || catchphraseData.keywordTitle;
+    const queryCardTitle = searchParams.get("card_title") || searchParams.get("keyword");
+    const cardMainTitle = queryCardTitle || cardTitleFromDb || catchphraseData.keywordTitle || title;
     const cardSubCatchphrase = searchParams.get("catchphrase") || catchphraseData.subCatchphrase;
 
     // 3. 인포그래픽 하이라이트 배지 추출
@@ -129,13 +132,13 @@ export async function GET(req: NextRequest) {
       watermarkText = "BRIEF";
     }
 
-    // 5. 모바일 화면 최적화 타이포그래피 폰트 크기 계산 (최소 48px 이상 보장)
+    // 5. 모바일 화면 최적화 타이포그래피 폰트 크기 계산 (text-5xl~text-6xl 수준: 52px~64px 시원하게 확대)
     const titleLength = cardMainTitle.length;
-    let titleFontSize = 58; // 짧은 키워드 타이틀(20자 이하)
-    if (titleLength > 30) {
-      titleFontSize = 48; // 다소 긴 헤드라인(31자 이상): 최소 48px 엄격 보장
-    } else if (titleLength > 20) {
-      titleFontSize = 54; // 중간 헤드라인(21~30자)
+    let titleFontSize = 64; // 18자 이하: 시원한 64px (text-6xl 수준)
+    if (titleLength > 25) {
+      titleFontSize = 52; // 26자 이상: 52px
+    } else if (titleLength > 18) {
+      titleFontSize = 58; // 19~25자: 58px (text-5xl 수준)
     }
 
     // 5. 폰트 로드

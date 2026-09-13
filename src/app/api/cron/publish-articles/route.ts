@@ -208,6 +208,8 @@ async function handlePublishArticles(request: NextRequest) {
           faq: rewritten.faq ? JSON.stringify(rewritten.faq) : null,
           ctaType: rewritten.ctaType || "general",
           imageTheme: finalTheme,
+          highlightBadge: rewritten.highlightBadge || null,
+          card_title: rewritten.card_title || null,
           createdAt: new Date().toISOString(),
         });
 

@@ -15,6 +15,7 @@ export interface Article {
   ctaType?: "subsidy" | "general" | string | null;
   imageTheme?: "housing" | "finance" | "youth" | "policy" | string | null;
   highlightBadge?: string | null;
+  card_title?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -141,13 +142,14 @@ export function createArticle(input: CreateArticleInput): Article {
   const stmt = db.prepare(`
     INSERT INTO articles (
       title, slug, content, summary, category, 
-      metaTitle, metaDescription, thumbnailUrl, sourceUrl, faq, ctaType, imageTheme, highlightBadge, createdAt
+      metaTitle, metaDescription, thumbnailUrl, sourceUrl, faq, ctaType, imageTheme, highlightBadge, card_title, createdAt
     ) VALUES (
       @title, @slug, @content, @summary, @category, 
       @metaTitle, @metaDescription, @thumbnailUrl, @sourceUrl, @faq,
       COALESCE(@ctaType, 'general'),
       @imageTheme,
       @highlightBadge,
+      @card_title,
       COALESCE(@createdAt, CURRENT_TIMESTAMP)
     )
   `);
@@ -166,6 +168,7 @@ export function createArticle(input: CreateArticleInput): Article {
     ctaType: input.ctaType || "general",
     imageTheme: input.imageTheme || null,
     highlightBadge: input.highlightBadge || null,
+    card_title: input.card_title || null,
     createdAt: input.createdAt || null,
   });
 

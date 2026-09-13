@@ -18,6 +18,7 @@ import {
 } from "./articleValidator";
 import { detectImageTheme, ImageTheme } from "../utils/imageMapper";
 import { extractCardBadge } from "./cardBadgeExtractor";
+import { extractKeywordTitle } from "./catchphraseExtractor";
 
 /**
  * 로컬 CLI/스크립트 환경에서도 .env.local 파일의 키를 안전하게 로드
@@ -55,6 +56,7 @@ export interface ArticleFaqItem {
 
 export interface RewrittenArticleResult {
   title: string;
+  card_title: string;
   slug: string;
   summary: string;
   content: string;
@@ -145,6 +147,17 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
    - ❌ 나쁜 예: 소상공인시장진흥공단 2026 일반경영안정자금 접수 개시…최대 70...
    - ⭕ 좋은 예: 소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원 지원)
 
+[CRITICAL 1-1: 카드뉴스 전용 헤드라인 규칙 (card_title Rule) - 절대 준수]
+1. 카드 이미지 중앙에 들어갈 "card_title" 필드를 반드시 별도로 생성하십시오.
+2. card_title은 반드시 "15자~22자 내외"의 간결하고 임팩트 있는 카드뉴스 전용 헤드라인이어야 합니다.
+3. 불필요한 수식어, 긴 기관명 접두어, 말줄임표(...)를 과감히 제거하고, "핵심 키워드와 액션 중심"으로 작성하십시오.
+   - 예시 1: 본문 제목이 '소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원)'인 경우
+     ➔ card_title: "2026 소진공 경영안정자금 접수 개시"
+   - 예시 2: 본문 제목이 '정부, 중소기업 고효율 설비 교체에 최대 2억 원 국비 지원'인 경우
+     ➔ card_title: "중소기업 설비 교체 2억 국비 지원"
+   - 예시 3: 본문 제목이 '2026 청년 주택드림 청약통장 자격 요건 및 신청 방법 총정리'인 경우
+     ➔ card_title: "2026 청년 주택드림 청약통장 안내"
+
 [CRITICAL 2: 메인 목록용 3줄 요약 규칙 (Summary Rule) - 절대 준수]
 1. [연합뉴스], [v.daum.net], [한겨레], [아시아경제] 등 포털 링크나 언론사 대괄호 출처 태그를 절대 포함하지 마십시오.
 2. 메인 피드 목록에 노출될 3줄 핵심 요약은 반드시 아래 3단계 완성형 문장 3줄로 작성하십시오:
@@ -215,6 +228,7 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
 반드시 다른 설명 없이 아래 JSON 규격 하나만을 엄격히 출력하십시오:
 {
   "title": "20~35자 내외의 자연스러운 정통 뉴스 헤드라인 (대괄호 태그나 기계적 접미사 절대 금지)",
+  "card_title": "15~22자 내외의 카드뉴스 전용 임팩트 헤드라인 (키워드·액션 중심)",
   "slug": "url-friendly-lowercase-slug-in-english",
   "summary": "1. 첫 번째 핵심 사건 요약 문장.\n2. 두 번째 세부 내용 및 수치 요약 문장.\n3. 세 번째 향후 전망 및 독자 영향 요약 문장.",
   "content": "## 1. (카테고리에 맞는 1번 소제목)\n\n(300자 이상 상세 서술)\n\n## 2. (카테고리에 맞는 2번 소제목)\n\n(350자 이상 상세 서술)\n\n### 세부 쟁점 및 핵심 기준\n- **항목 1:** ...\n- **항목 2:** ...\n\n## 3. (카테고리에 맞는 3번 소제목)\n\n(350자 이상 상세 서술)\n\n### 주요 비교표\n| 항목 | 기준 1 | 기준 2 | 비고 |\n| :--- | :--- | :--- | :--- |\n| 핵심 비교치 | 세부 데이터 | 개선/변화 수치 | 분석 내용 |\n\n## 4. (카테고리에 맞는 4번 소제목)\n\n(300자 이상 상세 서술)\n\n### 향후 일정 및 유의사항\n- **주요 일정:** ...\n- **독자 체크포인트:** ...",
@@ -501,8 +515,21 @@ ${cleanInputContent}
       validated.sanitized.category
     );
 
+    // 카드뉴스 전용 헤드라인 card_title 추출 및 정제 (15~22자 내외)
+    let finalCardTitle = "";
+    if (parsed.card_title && typeof parsed.card_title === "string") {
+      finalCardTitle = parsed.card_title
+        .replace(/^[“"'\s]+|[”"'\s]+$/g, "")
+        .replace(/\.{2,}/g, "")
+        .trim();
+    }
+    if (!finalCardTitle || finalCardTitle.length < 5 || finalCardTitle.length > 28) {
+      finalCardTitle = extractKeywordTitle(validated.sanitized.title);
+    }
+
     return {
       title: validated.sanitized.title,
+      card_title: finalCardTitle,
       slug: validated.sanitized.slug,
       summary: validated.sanitized.summary,
       content: validated.sanitized.content,
@@ -1004,6 +1031,7 @@ ${s3}
 
   return {
     title: validated.sanitized.title,
+    card_title: extractKeywordTitle(validated.sanitized.title),
     slug: validated.sanitized.slug,
     summary: validated.sanitized.summary,
     content: validated.sanitized.content,
