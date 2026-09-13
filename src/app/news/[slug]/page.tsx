@@ -278,18 +278,10 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
           <time dateTime={article.createdAt} className="font-medium">
             발행: {formattedDate}
           </time>
-          {article.sourceUrl && (
+          {sourceName && (
             <>
               <span className="text-slate-300">·</span>
-              <a
-                href={article.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-slate-500 hover:text-slate-700 transition-colors inline-flex items-center gap-0.5"
-              >
-                <span>출처: {sourceName}</span>
-                <span className="text-[11px] leading-none">↗</span>
-              </a>
+              <span>출처: {sourceName}</span>
             </>
           )}
         </div>
