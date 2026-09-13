@@ -260,7 +260,6 @@ export async function GET(req: NextRequest) {
               opacity: 0.035,
               userSelect: "none",
               lineHeight: 1,
-              zIndex: 1,
             }}
           >
             {watermarkText}
@@ -273,7 +272,6 @@ export async function GET(req: NextRequest) {
               alignItems: "center",
               justifyContent: "space-between",
               width: "100%",
-              zIndex: 10,
             }}
           >
             {/* 카테고리 뱃지 */}
@@ -358,7 +356,6 @@ export async function GET(req: NextRequest) {
               flexDirection: "column",
               justifyContent: "center",
               margin: "18px 0",
-              zIndex: 10,
               maxWidth: "100%",
             }}
           >
@@ -377,7 +374,7 @@ export async function GET(req: NextRequest) {
             >
               <span
                 style={{
-                  display: "inline-flex",
+                  display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   width: "28px",
@@ -423,7 +420,6 @@ export async function GET(req: NextRequest) {
               alignItems: "center",
               justifyContent: "space-between",
               width: "100%",
-              zIndex: 10,
             }}
           >
             {/* 인포그래픽 하이라이트 박스 (모바일 축소 시에도 선명하게 보이도록 볼륨 및 폰트 사이즈 상향) */}
