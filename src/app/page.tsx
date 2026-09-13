@@ -71,7 +71,6 @@ export default async function HomePage({ searchParams }: PageProps) {
     },
   };
 
-  const breakingArticle = articles.length > 0 ? articles[0] : null;
   const isHeroPage = page === 1 && !category;
 
   return (
@@ -81,27 +80,6 @@ export default async function HomePage({ searchParams }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
-
-      {/* 상단 주요 브리핑 티커 바 */}
-      {breakingArticle && (
-        <Link
-          href={`/news/${breakingArticle.slug}`}
-          className="group flex items-center gap-2.5 sm:gap-3 rounded-xl border border-blue-100 dark:border-zinc-800 bg-blue-50/40 hover:bg-blue-50/80 px-3.5 py-2.5 shadow-2xs transition-all duration-200"
-        >
-          <div className="flex items-center shrink-0">
-            <span className="inline-flex items-center rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold text-white shadow-2xs tracking-tight">
-              주요 브리핑
-            </span>
-          </div>
-          <span className="text-blue-200 dark:text-zinc-700 select-none">|</span>
-          <span className="text-xs sm:text-[13px] font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600 transition-colors truncate flex-1">
-            {breakingArticle.title}
-          </span>
-          <span className="text-xs text-zinc-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0">
-            →
-          </span>
-        </Link>
-      )}
 
       {/* 카테고리 필터 헤더 */}
       {category && (
