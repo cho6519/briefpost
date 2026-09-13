@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getArticleBySlug } from "@/lib/articles";
 import { extractCardBadge } from "@/lib/cardBadgeExtractor";
+import { generateCardCatchphrase } from "@/lib/catchphraseExtractor";
 
 export const runtime = "nodejs";
 
@@ -65,12 +66,17 @@ export async function GET(req: NextRequest) {
       title = "소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원)";
     }
 
-    // 2. 인포그래픽 하이라이트 배지 추출
+    // 2. 카드뉴스 전용 키워드 타이틀 및 서브 캐치프레이즈 생성 (상세 페이지 h1과의 중복 제거)
+    const catchphraseData = generateCardCatchphrase(title, category);
+    const cardMainTitle = searchParams.get("keyword") || catchphraseData.keywordTitle;
+    const cardSubCatchphrase = searchParams.get("catchphrase") || catchphraseData.subCatchphrase;
+
+    // 3. 인포그래픽 하이라이트 배지 추출
     const badgeInfo = extractCardBadge(title, content, category, highlightBadge);
     const displayBadge = highlightBadge || badgeInfo.badgeText;
     const displaySub = badgeInfo.subText || "신속하고 정확한 1단 핵심 요약 브리핑";
 
-    // 3. 카테고리별 테마 및 오로라 방사형 조명 포인트 색상 설정
+    // 4. 카테고리별 테마 및 오로라 방사형 조명 포인트 색상 설정
     let categoryBg = "rgba(37, 99, 235, 0.25)";
     let categoryBorder = "#3b82f6";
     let categoryColor = "#93c5fd";
@@ -123,13 +129,13 @@ export async function GET(req: NextRequest) {
       watermarkText = "BRIEF";
     }
 
-    // 4. 모바일 화면 최적화 타이포그래피 폰트 크기 계산 (최소 48px 이상 보장)
-    const titleLength = title.length;
-    let titleFontSize = 58; // 짧은 헤드라인(30자 이하)
-    if (titleLength > 44) {
-      titleFontSize = 48; // 긴 헤드라인(45자 이상): 최소 48px 엄격 보장
-    } else if (titleLength > 30) {
-      titleFontSize = 52; // 중간 헤드라인(31~44자)
+    // 5. 모바일 화면 최적화 타이포그래피 폰트 크기 계산 (최소 48px 이상 보장)
+    const titleLength = cardMainTitle.length;
+    let titleFontSize = 58; // 짧은 키워드 타이틀(20자 이하)
+    if (titleLength > 30) {
+      titleFontSize = 48; // 다소 긴 헤드라인(31자 이상): 최소 48px 엄격 보장
+    } else if (titleLength > 20) {
+      titleFontSize = 54; // 중간 헤드라인(21~30자)
     }
 
     // 5. 폰트 로드
@@ -342,35 +348,68 @@ export async function GET(req: NextRequest) {
             </div>
           </div>
 
-          {/* [2. 중앙 메인 타이틀 영역 - 카드뉴스 스타일 고가독성 모바일 최적화 타이포그래피] */}
+          {/* [2. 중앙 메인 타이틀 영역 - 서브 캐치프레이즈 & 키워드 헤드라인 (h1과의 중복 제거)] */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              margin: "20px 0",
+              margin: "18px 0",
               zIndex: 10,
               maxWidth: "100%",
             }}
           >
+            {/* 세련된 서브 캐치프레이즈 (예: 소상공인 정책자금 긴급 브리핑, 2026년 정부 지원 사업 안내) */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                color: categoryColor,
+                fontSize: "26px",
+                fontWeight: 700,
+                letterSpacing: "-0.4px",
+                marginBottom: "12px",
+                textShadow: "0 2px 12px rgba(0, 0, 0, 0.7)",
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "8px",
+                  backgroundColor: categoryBg,
+                  border: `1px solid ${categoryBorder}`,
+                  marginRight: "10px",
+                  fontSize: "15px",
+                }}
+              >
+                ⚡
+              </span>
+              {cardSubCatchphrase}
+            </div>
+
+            {/* 카드 중앙 메인 키워드 타이틀 (전체 제목 대신 15~26자의 핵심 키워드 헤드라인) */}
             <h1
               style={{
                 color: "#ffffff",
                 fontSize: `${titleFontSize}px`,
-                fontWeight: 700,
-                lineHeight: 1.36,
-                letterSpacing: "-0.8px",
+                fontWeight: 800,
+                lineHeight: 1.28,
+                letterSpacing: "-1px",
                 margin: 0,
                 padding: 0,
                 wordBreak: "keep-all",
                 display: "-webkit-box",
-                WebkitLineClamp: 3,
+                WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                textShadow: "0 4px 20px rgba(0, 0, 0, 0.75)",
+                textShadow: "0 4px 24px rgba(0, 0, 0, 0.85)",
               }}
             >
-              {title}
+              {cardMainTitle}
             </h1>
           </div>
 
