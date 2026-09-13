@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: 저장소 체크아웃
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Node.js 20 설치
         uses: actions/setup-node@v4
@@ -54,7 +56,8 @@ jobs:
             git config --local user.name "github-actions[bot]"
             git add data/news.db
             git commit -m "chore(auto-publish): publish fresh articles [$(date '+%Y-%m-%d %H:%M')]"
-            git push
+            git pull --rebase origin main || true
+            git push origin main
             echo "Vercel 배포 트리거 및 기사 반영 완료!"
           else
             echo "새로 발행된 기사가 없거나 DB 변경사항이 없습니다."
