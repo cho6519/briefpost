@@ -70,27 +70,57 @@ export async function GET(req: NextRequest) {
     const displayBadge = highlightBadge || badgeInfo.badgeText;
     const displaySub = badgeInfo.subText || "신속하고 정확한 1단 핵심 요약 브리핑";
 
-    // 3. 카테고리별 테마 색상 설정
+    // 3. 카테고리별 테마 및 오로라 방사형 조명 포인트 색상 설정
     let categoryBg = "rgba(37, 99, 235, 0.25)";
     let categoryBorder = "#3b82f6";
     let categoryColor = "#93c5fd";
+    let glowColorTop = "rgba(59, 130, 246, 0.35)"; // 우측 상단 블루 글로우
+    let glowColorBottom = "rgba(16, 185, 129, 0.25)"; // 좌측 하단 에메랄드 포인트
+    let topBarGradient = "linear-gradient(90deg, #2563eb 0%, #38bdf8 50%, #10b981 100%)";
+    let watermarkText = "POLICY";
 
-    if (category.includes("소상공인") || category.includes("지원금")) {
+    if (category.includes("소상공인") || category.includes("지원금") || category.includes("정책")) {
       categoryBg = "rgba(16, 185, 129, 0.25)";
       categoryBorder = "#10b981";
       categoryColor = "#6ee7b7";
+      glowColorTop = "rgba(59, 130, 246, 0.35)";
+      glowColorBottom = "rgba(16, 185, 129, 0.28)";
+      topBarGradient = "linear-gradient(90deg, #2563eb 0%, #38bdf8 50%, #10b981 100%)";
+      watermarkText = "POLICY";
     } else if (category.includes("금융") || category.includes("경제")) {
       categoryBg = "rgba(245, 158, 11, 0.25)";
       categoryBorder = "#f59e0b";
       categoryColor = "#fcd34d";
+      glowColorTop = "rgba(245, 158, 11, 0.32)";
+      glowColorBottom = "rgba(59, 130, 246, 0.25)";
+      topBarGradient = "linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #3b82f6 100%)";
+      watermarkText = "FINANCE";
     } else if (category.includes("부동산") || category.includes("세제")) {
       categoryBg = "rgba(139, 92, 246, 0.25)";
       categoryBorder = "#8b5cf6";
       categoryColor = "#c4b5fd";
+      glowColorTop = "rgba(139, 92, 246, 0.32)";
+      glowColorBottom = "rgba(236, 72, 153, 0.22)";
+      topBarGradient = "linear-gradient(90deg, #8b5cf6 0%, #c084fc 50%, #ec4899 100%)";
+      watermarkText = "REALTY";
     } else if (category.includes("테크") || category.includes("IT")) {
       categoryBg = "rgba(14, 165, 233, 0.25)";
       categoryBorder = "#0ea5e9";
       categoryColor = "#7dd3fc";
+      glowColorTop = "rgba(14, 165, 233, 0.35)";
+      glowColorBottom = "rgba(99, 102, 241, 0.25)";
+      topBarGradient = "linear-gradient(90deg, #0ea5e9 0%, #38bdf8 50%, #6366f1 100%)";
+      watermarkText = "TECH·AI";
+    } else if (category.includes("사회") || category.includes("문화")) {
+      categoryBg = "rgba(99, 102, 241, 0.25)";
+      categoryBorder = "#6366f1";
+      categoryColor = "#a5b4fc";
+      glowColorTop = "rgba(99, 102, 241, 0.32)";
+      glowColorBottom = "rgba(16, 185, 129, 0.22)";
+      topBarGradient = "linear-gradient(90deg, #6366f1 0%, #a855f7 50%, #10b981 100%)";
+      watermarkText = "SOCIETY";
+    } else {
+      watermarkText = "BRIEF";
     }
 
     // 4. 모바일 화면 최적화 타이포그래피 폰트 크기 계산 (최소 48px 이상 보장)
@@ -125,14 +155,15 @@ export async function GET(req: NextRequest) {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            background: "linear-gradient(135deg, #070c14 0%, #0d1a2d 45%, #15253d 80%, #0a111e 100%)",
+            background: "linear-gradient(145deg, #020617 0%, #070e1b 40%, #0d1a2d 75%, #020617 100%)",
             padding: "46px 56px",
             fontFamily: "Pretendard, sans-serif",
             position: "relative",
             boxSizing: "border-box",
+            overflow: "hidden",
           }}
         >
-          {/* 상단 액센트 글로우 바 */}
+          {/* 1. 상단 다이내믹 컬러 바 */}
           <div
             style={{
               position: "absolute",
@@ -140,33 +171,91 @@ export async function GET(req: NextRequest) {
               left: 0,
               right: 0,
               height: "6px",
-              background: "linear-gradient(90deg, #2563eb 0%, #38bdf8 50%, #10b981 100%)",
+              background: topBarGradient,
             }}
           />
 
-          {/* 배경 미세 글로우 오브 */}
+          {/* 2. 오로라 방사형 조명 효과 (우측 상단 35% 글로우 + 좌측 하단 25% 포인트) */}
           <div
             style={{
               position: "absolute",
-              top: "-120px",
+              top: "-140px",
               right: "-100px",
-              width: "480px",
-              height: "480px",
+              width: "680px",
+              height: "680px",
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0) 70%)",
+              background: `radial-gradient(circle, ${glowColorTop} 0%, rgba(59, 130, 246, 0.08) 50%, transparent 70%)`,
             }}
           />
           <div
             style={{
               position: "absolute",
-              bottom: "-150px",
-              left: "10%",
-              width: "500px",
-              height: "500px",
+              bottom: "-160px",
+              left: "-80px",
+              width: "640px",
+              height: "640px",
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 70%)",
+              background: `radial-gradient(circle, ${glowColorBottom} 0%, rgba(16, 185, 129, 0.06) 50%, transparent 70%)`,
             }}
           />
+
+          {/* 3. 미세 마이크로 그리드(Grid Pattern) 오버레이 (3.5% 투명도 엔지니어링 리포트 텍스처) */}
+          <svg
+            width="1200"
+            height="630"
+            viewBox="0 0 1200 630"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              opacity: 0.035,
+              pointerEvents: "none",
+            }}
+          >
+            {Array.from({ length: 16 }).map((_, i) => (
+              <line
+                key={`h-${i}`}
+                x1="0"
+                y1={i * 42}
+                x2="1200"
+                y2={i * 42}
+                stroke="#ffffff"
+                strokeWidth="1"
+              />
+            ))}
+            {Array.from({ length: 29 }).map((_, i) => (
+              <line
+                key={`v-${i}`}
+                x1={i * 42}
+                y1="0"
+                x2={i * 42}
+                y2="630"
+                stroke="#ffffff"
+                strokeWidth="1"
+              />
+            ))}
+          </svg>
+
+          {/* 4. 배경 거대 영문 카테고리 워터마크 실루엣 (opacity: 0.035) */}
+          <div
+            style={{
+              position: "absolute",
+              right: "-15px",
+              bottom: "45px",
+              fontSize: "175px",
+              fontWeight: 900,
+              letterSpacing: "-2px",
+              color: "#ffffff",
+              opacity: 0.035,
+              userSelect: "none",
+              lineHeight: 1,
+              zIndex: 1,
+            }}
+          >
+            {watermarkText}
+          </div>
 
           {/* [1. 상단 헤더 영역] 카테고리 뱃지 & Brief Post 브랜드 로고 */}
           <div
