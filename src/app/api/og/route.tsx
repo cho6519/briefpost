@@ -132,16 +132,16 @@ export async function GET(req: NextRequest) {
       watermarkText = "BRIEF";
     }
 
-    // 5. 모바일 화면 최적화 타이포그래피 폰트 크기 계산 (text-5xl~text-6xl 수준: 52px~64px 시원하게 확대)
+    // 5. 모바일 화면 최적화 타이포그래피 폰트 크기 대폭 상향 (최소 64px ~ 72px 볼드/블랙 수준)
     const titleLength = cardMainTitle.length;
-    let titleFontSize = 64; // 18자 이하: 시원한 64px (text-6xl 수준)
-    if (titleLength > 25) {
-      titleFontSize = 52; // 26자 이상: 52px
-    } else if (titleLength > 18) {
-      titleFontSize = 58; // 19~25자: 58px (text-5xl 수준)
+    let titleFontSize = 72; // 17자 이하: 압도적 72px (모바일에서도 한눈에 꽂힘)
+    if (titleLength > 22) {
+      titleFontSize = 54; // 23자 이상: 3줄 넘침 방지 54px 자동 축소
+    } else if (titleLength > 17) {
+      titleFontSize = 66; // 18~22자: 66px
     }
 
-    // 5. 폰트 로드
+    // 6. 폰트 로드
     const fontData = await getPretendardFont();
     const fontsOption =
       fontData.byteLength > 0
@@ -165,7 +165,7 @@ export async function GET(req: NextRequest) {
             flexDirection: "column",
             justifyContent: "space-between",
             background: "linear-gradient(145deg, #020617 0%, #070e1b 40%, #0d1a2d 75%, #020617 100%)",
-            padding: "46px 56px",
+            padding: "44px 64px",
             fontFamily: "Pretendard, sans-serif",
             position: "relative",
             boxSizing: "border-box",
@@ -355,7 +355,7 @@ export async function GET(req: NextRequest) {
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              margin: "18px 0",
+              margin: "14px 0 18px 0",
               maxWidth: "100%",
             }}
           >
@@ -365,10 +365,10 @@ export async function GET(req: NextRequest) {
                 display: "flex",
                 alignItems: "center",
                 color: categoryColor,
-                fontSize: "26px",
+                fontSize: "28px",
                 fontWeight: 700,
-                letterSpacing: "-0.4px",
-                marginBottom: "12px",
+                letterSpacing: "-0.5px",
+                marginBottom: "14px",
                 textShadow: "0 2px 12px rgba(0, 0, 0, 0.7)",
               }}
             >
@@ -377,13 +377,13 @@ export async function GET(req: NextRequest) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "8px",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "9px",
                   backgroundColor: categoryBg,
-                  border: `1px solid ${categoryBorder}`,
-                  marginRight: "10px",
-                  fontSize: "15px",
+                  border: `1.5px solid ${categoryBorder}`,
+                  marginRight: "12px",
+                  fontSize: "17px",
                 }}
               >
                 ⚡
@@ -391,14 +391,14 @@ export async function GET(req: NextRequest) {
               {cardSubCatchphrase}
             </div>
 
-            {/* 카드 중앙 메인 키워드 타이틀 (전체 제목 대신 15~26자의 핵심 키워드 헤드라인) */}
+            {/* 카드 중앙 메인 키워드 타이틀 (66px~72px 압도적 대형 폰트, 타이트한 1.22 줄간격) */}
             <h1
               style={{
                 color: "#ffffff",
                 fontSize: `${titleFontSize}px`,
-                fontWeight: 800,
-                lineHeight: 1.28,
-                letterSpacing: "-1px",
+                fontWeight: 900,
+                lineHeight: 1.22,
+                letterSpacing: "-1.5px",
                 margin: 0,
                 padding: 0,
                 wordBreak: "keep-all",
@@ -406,14 +406,14 @@ export async function GET(req: NextRequest) {
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                textShadow: "0 4px 24px rgba(0, 0, 0, 0.85)",
+                textShadow: "0 6px 28px rgba(0, 0, 0, 0.9)",
               }}
             >
               {cardMainTitle}
             </h1>
           </div>
 
-          {/* [3. 하단 인포그래픽 하이라이트 박스 및 도메인 워터마크 - 모바일 시인성 강화] */}
+          {/* [3. 하단 인포그래픽 하이라이트 박스 및 도메인 워터마크 - 모바일 시인성 대폭 강화] */}
           <div
             style={{
               display: "flex",
@@ -422,21 +422,21 @@ export async function GET(req: NextRequest) {
               width: "100%",
             }}
           >
-            {/* 인포그래픽 하이라이트 박스 (모바일 축소 시에도 선명하게 보이도록 볼륨 및 폰트 사이즈 상향) */}
+            {/* 인포그래픽 하이라이트 박스 (모바일 축소 시에도 뭉개지지 않도록 28px 대형 폰트 및 넉넉한 패딩) */}
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                padding: "16px 28px",
-                borderRadius: "18px",
+                padding: "18px 32px",
+                borderRadius: "20px",
                 backgroundColor: badgeInfo.isSubsidy
-                  ? "rgba(6, 78, 59, 0.65)"
-                  : "rgba(30, 58, 138, 0.55)",
+                  ? "rgba(6, 78, 59, 0.7)"
+                  : "rgba(30, 58, 138, 0.6)",
                 border: badgeInfo.isSubsidy
-                  ? "2px solid rgba(16, 185, 129, 0.75)"
-                  : "2px solid rgba(59, 130, 246, 0.65)",
-                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
-                maxWidth: "76%",
+                  ? "2.5px solid rgba(16, 185, 129, 0.85)"
+                  : "2.5px solid rgba(59, 130, 246, 0.75)",
+                boxShadow: "0 8px 26px rgba(0, 0, 0, 0.45)",
+                maxWidth: "78%",
               }}
             >
               <div
@@ -444,9 +444,9 @@ export async function GET(req: NextRequest) {
                   display: "flex",
                   alignItems: "center",
                   color: badgeInfo.isSubsidy ? "#34d399" : "#60a5fa",
-                  fontSize: "26px",
-                  fontWeight: 700,
-                  letterSpacing: "-0.4px",
+                  fontSize: "28px",
+                  fontWeight: 800,
+                  letterSpacing: "-0.5px",
                 }}
               >
                 {displayBadge}
@@ -454,10 +454,10 @@ export async function GET(req: NextRequest) {
               <div
                 style={{
                   color: "#cbd5e1",
-                  fontSize: "16px",
-                  fontWeight: 500,
+                  fontSize: "18px",
+                  fontWeight: 600,
                   marginTop: "6px",
-                  letterSpacing: "-0.2px",
+                  letterSpacing: "-0.3px",
                 }}
               >
                 {displaySub}
