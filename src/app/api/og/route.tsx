@@ -93,13 +93,13 @@ export async function GET(req: NextRequest) {
       categoryColor = "#7dd3fc";
     }
 
-    // 4. 제목 길이에 따른 폰트 크기 계산 (최적 줄바꿈 및 가독성)
+    // 4. 모바일 화면 최적화 타이포그래피 폰트 크기 계산 (최소 48px 이상 보장)
     const titleLength = title.length;
-    let titleFontSize = 48;
-    if (titleLength > 46) {
-      titleFontSize = 39;
-    } else if (titleLength > 34) {
-      titleFontSize = 44;
+    let titleFontSize = 58; // 짧은 헤드라인(30자 이하)
+    if (titleLength > 44) {
+      titleFontSize = 48; // 긴 헤드라인(45자 이상): 최소 48px 엄격 보장
+    } else if (titleLength > 30) {
+      titleFontSize = 52; // 중간 헤드라인(31~44자)
     }
 
     // 5. 폰트 로드
@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
             flexDirection: "column",
             justifyContent: "space-between",
             background: "linear-gradient(135deg, #070c14 0%, #0d1a2d 45%, #15253d 80%, #0a111e 100%)",
-            padding: "52px 64px",
+            padding: "46px 56px",
             fontFamily: "Pretendard, sans-serif",
             position: "relative",
             boxSizing: "border-box",
@@ -183,12 +183,12 @@ export async function GET(req: NextRequest) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                padding: "8px 18px",
+                padding: "9px 20px",
                 borderRadius: "30px",
                 backgroundColor: categoryBg,
                 border: `1.5px solid ${categoryBorder}`,
                 color: categoryColor,
-                fontSize: "20px",
+                fontSize: "22px",
                 fontWeight: 700,
                 letterSpacing: "-0.3px",
               }}
@@ -210,12 +210,12 @@ export async function GET(req: NextRequest) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "10px",
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "11px",
                   backgroundColor: "#2563eb",
                   color: "#ffffff",
-                  fontSize: "20px",
+                  fontSize: "21px",
                   fontWeight: 800,
                   boxShadow: "0 4px 12px rgba(37, 99, 235, 0.4)",
                 }}
@@ -253,13 +253,13 @@ export async function GET(req: NextRequest) {
             </div>
           </div>
 
-          {/* [2. 중앙 메인 타이틀 영역 - 카드뉴스 스타일 고가독성 타이포그래피] */}
+          {/* [2. 중앙 메인 타이틀 영역 - 카드뉴스 스타일 고가독성 모바일 최적화 타이포그래피] */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              margin: "24px 0",
+              margin: "20px 0",
               zIndex: 10,
               maxWidth: "100%",
             }}
@@ -269,8 +269,8 @@ export async function GET(req: NextRequest) {
                 color: "#ffffff",
                 fontSize: `${titleFontSize}px`,
                 fontWeight: 700,
-                lineHeight: 1.34,
-                letterSpacing: "-0.6px",
+                lineHeight: 1.36,
+                letterSpacing: "-0.8px",
                 margin: 0,
                 padding: 0,
                 wordBreak: "keep-all",
@@ -278,14 +278,14 @@ export async function GET(req: NextRequest) {
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                textShadow: "0 4px 16px rgba(0, 0, 0, 0.6)",
+                textShadow: "0 4px 20px rgba(0, 0, 0, 0.75)",
               }}
             >
               {title}
             </h1>
           </div>
 
-          {/* [3. 하단 인포그래픽 하이라이트 박스 및 도메인 워터마크] */}
+          {/* [3. 하단 인포그래픽 하이라이트 박스 및 도메인 워터마크 - 모바일 시인성 강화] */}
           <div
             style={{
               display: "flex",
@@ -295,21 +295,21 @@ export async function GET(req: NextRequest) {
               zIndex: 10,
             }}
           >
-            {/* 인포그래픽 하이라이트 박스 */}
+            {/* 인포그래픽 하이라이트 박스 (모바일 축소 시에도 선명하게 보이도록 볼륨 및 폰트 사이즈 상향) */}
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                padding: "14px 24px",
-                borderRadius: "16px",
+                padding: "16px 28px",
+                borderRadius: "18px",
                 backgroundColor: badgeInfo.isSubsidy
-                  ? "rgba(6, 78, 59, 0.55)"
-                  : "rgba(30, 58, 138, 0.45)",
+                  ? "rgba(6, 78, 59, 0.65)"
+                  : "rgba(30, 58, 138, 0.55)",
                 border: badgeInfo.isSubsidy
-                  ? "1.5px solid rgba(16, 185, 129, 0.6)"
-                  : "1.5px solid rgba(59, 130, 246, 0.5)",
-                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.3)",
-                maxWidth: "75%",
+                  ? "2px solid rgba(16, 185, 129, 0.75)"
+                  : "2px solid rgba(59, 130, 246, 0.65)",
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+                maxWidth: "76%",
               }}
             >
               <div
@@ -317,7 +317,7 @@ export async function GET(req: NextRequest) {
                   display: "flex",
                   alignItems: "center",
                   color: badgeInfo.isSubsidy ? "#34d399" : "#60a5fa",
-                  fontSize: "21px",
+                  fontSize: "26px",
                   fontWeight: 700,
                   letterSpacing: "-0.4px",
                 }}
@@ -326,10 +326,11 @@ export async function GET(req: NextRequest) {
               </div>
               <div
                 style={{
-                  color: "#94a3b8",
-                  fontSize: "14px",
+                  color: "#cbd5e1",
+                  fontSize: "16px",
                   fontWeight: 500,
-                  marginTop: "4px",
+                  marginTop: "6px",
+                  letterSpacing: "-0.2px",
                 }}
               >
                 {displaySub}
@@ -347,7 +348,7 @@ export async function GET(req: NextRequest) {
               <span
                 style={{
                   color: "#64748b",
-                  fontSize: "13px",
+                  fontSize: "14px",
                   fontWeight: 600,
                   letterSpacing: "0.5px",
                 }}
@@ -357,7 +358,7 @@ export async function GET(req: NextRequest) {
               <span
                 style={{
                   color: "#38bdf8",
-                  fontSize: "18px",
+                  fontSize: "20px",
                   fontWeight: 700,
                   letterSpacing: "0.2px",
                   marginTop: "2px",
