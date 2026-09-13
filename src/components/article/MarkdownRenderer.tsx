@@ -133,7 +133,7 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
   const cleanMarkdown = preprocessMarkdown(content);
 
   return (
-    <div className={`article-markdown-body space-y-6 text-slate-700 dark:text-slate-300 font-normal leading-relaxed text-[16px] sm:text-[17px] break-keep ${className}`}>
+    <div className={`article-markdown-body space-y-6 text-slate-800 font-normal leading-relaxed text-[16px] sm:text-[17px] break-keep ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
@@ -143,43 +143,43 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
             if (!children || (typeof children === "string" && !children.trim())) return null;
             return (
               <h2
-                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-extrabold text-slate-950 dark:text-slate-50 mt-10 mb-4 tracking-tight leading-snug"
+                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-bold text-slate-900 mt-10 mb-4 tracking-tight leading-snug"
                 {...props}
               >
                 {children}
               </h2>
             );
           },
-          // H2: 대제목 - 왼쪽 블루 포인트 바와 굵은 볼드 폰트, 안정적인 상하 여백
+          // H2: 소제목(h2) - text-slate-900 font-bold (완전한 짙은 검정색으로 파란 바 옆에 또렷하게 표시)
           h2: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
             return (
               <h2
-                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-extrabold text-slate-950 dark:text-slate-50 mt-10 mb-4 tracking-tight leading-snug"
+                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-bold text-slate-900 mt-10 mb-4 tracking-tight leading-snug"
                 {...props}
               >
                 {children}
               </h2>
             );
           },
-          // H3: 중제목/소제목 - 블루 바 없이 깔끔한 중간 볼드 폰트로 확실한 위계 차별화
+          // H3: 소제목(h3) - text-slate-900 font-bold
           h3: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
             return (
               <h3
-                className="block text-[17px] sm:text-[18.5px] font-bold text-slate-800 dark:text-slate-200 mt-7 mb-2.5 tracking-tight leading-snug"
+                className="block text-[17px] sm:text-[18.5px] font-bold text-slate-900 mt-7 mb-2.5 tracking-tight leading-snug"
                 {...props}
               >
                 {children}
               </h3>
             );
           },
-          // 문단(p): 넉넉한 줄간격(leading-[1.85])과 문단 간 여백(mb-5) (빈 문단 방지)
+          // 본문 일반 단락(<p>): text-slate-800 leading-relaxed font-normal (충분한 명도 대비 확보)
           p: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
             return (
               <p
-                className="text-slate-700 dark:text-slate-300 font-normal leading-[1.85] mb-5 text-[16px] sm:text-[17px] break-keep"
+                className="text-slate-800 leading-relaxed font-normal mb-5 text-[16px] sm:text-[17px] break-keep"
                 {...props}
               >
                 {children}
@@ -188,11 +188,11 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           },
           // 수평 구분선(hr): 은은한 그레이 구분선
           hr: ({ node, ...props }) => (
-            <hr className="my-8 border-t border-zinc-200 dark:border-zinc-800" {...props} />
+            <hr className="my-8 border-t border-slate-200" {...props} />
           ),
           // 볼드(strong): 선명한 본문 다크 텍스트
           strong: ({ node, ...props }) => (
-            <strong className="font-semibold text-slate-900 dark:text-slate-100" {...props} />
+            <strong className="font-bold text-slate-900" {...props} />
           ),
           // 순서 없는 리스트(ul)
           ul: ({ node, ...props }) => (
@@ -200,48 +200,62 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           ),
           // 순서 있는 리스트(ol)
           ol: ({ node, ...props }) => (
-            <ol className="my-5 space-y-3 list-decimal pl-5 text-slate-700 dark:text-slate-300" {...props} />
+            <ol className="my-5 space-y-3 list-decimal pl-5 text-slate-800" {...props} />
           ),
-          // 리스트 항목(li)
+          // 불릿 리스트(li): 불릿 기호는 text-blue-600, 리스트 내부 글자는 text-slate-700 font-medium으로 또렷하게 설정
           li: ({ node, children, ...props }) => {
             return (
               <li
-                className="flex items-start text-slate-700 dark:text-slate-300 leading-relaxed gap-2"
+                className="flex items-start text-slate-700 font-medium leading-relaxed gap-2"
                 {...props}
               >
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500/80 mt-2.5 shrink-0 mr-1" />
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-600 text-blue-600 mt-2.5 shrink-0 mr-1" />
                 <div className="flex-1">{children}</div>
               </li>
             );
           },
-          // 핀테크 스타일 고가독성 2px 컬러 테두리 비교표 (Table)
+          // 비교표(Table) 스타일 화이트 톤앤매너로 교체:
+          // 테이블 외곽선: border border-slate-200 rounded-xl overflow-hidden shadow-sm
           table: ({ node, ...props }) => (
-            <div className="w-full my-6 overflow-x-auto rounded-xl border-2 border-blue-200 dark:border-blue-800/80 shadow-xs bg-white dark:bg-slate-900">
+            <div className="w-full my-6 overflow-x-auto border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
               <table className="w-full text-sm border-collapse text-left m-0" {...props} />
             </div>
           ),
-          // 표 헤더(th): 소프트 블루 배경 + 하단 2px 블루 보더 + 열 구분선
+          thead: ({ node, ...props }) => (
+            <thead className="bg-slate-100 border-b border-slate-200" {...props} />
+          ),
+          tbody: ({ node, ...props }) => (
+            <tbody className="bg-white divide-y divide-slate-100" {...props} />
+          ),
+          // 표 상단 캡션/제목: text-slate-900 font-bold text-base mb-3
+          caption: ({ node, ...props }) => (
+            <caption
+              className="text-slate-900 font-bold text-base mb-3 text-left caption-top px-1"
+              {...props}
+            />
+          ),
+          // 표 헤더(<th>): bg-slate-100 text-slate-900 font-semibold py-3 px-4 text-center border-b border-slate-200
           th: ({ node, ...props }) => (
             <th
-              className="bg-blue-50/90 dark:bg-blue-950/70 text-blue-950 dark:text-blue-100 font-bold p-3.5 border-b-2 border-blue-200 dark:border-blue-700/80 border-r border-blue-100 dark:border-blue-900/60 last:border-r-0 text-left text-[13.5px] sm:text-sm whitespace-nowrap tracking-tight"
+              className="bg-slate-100 text-slate-900 font-semibold py-3 px-4 text-center border-b border-slate-200 whitespace-nowrap tracking-tight"
               {...props}
             />
           ),
-          // 표 데이터 셀(td): 블루 틴트 격자선 + 텍스트
+          // 표 데이터 셀(<td>): bg-white text-slate-800 py-3 px-4 text-sm border-b border-slate-100 even:bg-slate-50/50
           td: ({ node, ...props }) => (
             <td
-              className="p-3.5 border-b border-blue-100/80 dark:border-slate-800 border-r border-blue-100/50 dark:border-slate-800/80 last:border-r-0 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900/80 text-[13.5px] sm:text-sm leading-relaxed"
+              className="bg-white text-slate-800 py-3 px-4 text-sm border-b border-slate-100 even:bg-slate-50/50 leading-relaxed"
               {...props}
             />
           ),
-          // 표 행(tr): 호버 효과
+          // 표 행(tr): 호버 및 교차 배경색 지원
           tr: ({ node, ...props }) => (
-            <tr className="transition-colors hover:bg-blue-50/40 dark:hover:bg-blue-950/30" {...props} />
+            <tr className="transition-colors hover:bg-slate-50/80 even:bg-slate-50/50" {...props} />
           ),
           // 인용구(blockquote): 주의사항 콜아웃 스타일
           blockquote: ({ node, ...props }) => (
             <aside
-              className="w-full bg-amber-50/80 dark:bg-amber-950/40 border-l-4 border-amber-400 dark:border-amber-500 p-4 rounded-r-lg my-4 text-amber-900 dark:text-amber-200 text-sm shadow-2xs leading-relaxed"
+              className="w-full bg-amber-50/90 border-l-4 border-amber-400 p-4 rounded-r-lg my-4 text-amber-950 text-sm shadow-2xs leading-relaxed"
               {...props}
             />
           ),

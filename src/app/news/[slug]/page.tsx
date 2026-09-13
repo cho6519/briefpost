@@ -357,7 +357,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
               )
               .filter((line) => line.length >= 5 && !line.includes("<") && !line.includes("http"))
               .map((cleanLine, pIdx) => (
-                <li key={pIdx} className="flex items-start gap-3 text-[15px] sm:text-base leading-[1.75] text-zinc-800 font-medium">
+                <li key={pIdx} className="flex items-start gap-3 text-[15px] sm:text-base leading-[1.75] text-slate-800 font-medium">
                   <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold shadow-2xs mt-0.5">
                     {pIdx + 1}
                   </span>
@@ -369,7 +369,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       )}
 
       {/* 본문 텍스트 영역 (react-markdown + remark-gfm 기반 전문 미디어 표준 렌더러) */}
-      <div className="article-content text-[16px] sm:text-[17px] leading-relaxed text-slate-700 dark:text-slate-300 font-normal tracking-[-0.01em] break-keep">
+      <div className="article-content text-[16px] sm:text-[17px] leading-relaxed text-slate-800 font-normal tracking-[-0.01em] break-keep">
         {isAdsEnabled ? (
           <>
             {/* 본문 1단계: 도입부 및 1번, 2번 H2 섹션 (개요 및 자격 요건) */}
