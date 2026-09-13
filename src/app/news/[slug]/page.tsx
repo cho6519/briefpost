@@ -274,20 +274,21 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
           {article.title}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-[13px] text-zinc-500 border-b border-zinc-200 pb-4">
+        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-[13px] text-slate-500 border-b border-zinc-200 pb-4">
           <time dateTime={article.createdAt} className="font-medium">
             발행: {formattedDate}
           </time>
           {article.sourceUrl && (
             <>
-              <span className="text-zinc-300">•</span>
+              <span className="text-slate-300">·</span>
               <a
                 href={article.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1 font-semibold"
+                className="text-slate-500 hover:text-slate-700 transition-colors inline-flex items-center gap-0.5"
               >
-                출처: {sourceName} ↗
+                <span>출처: {sourceName}</span>
+                <span className="text-[11px] leading-none">↗</span>
               </a>
             </>
           )}
@@ -415,26 +416,6 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       {/* 독자 궁금증 해결 FAQ 섹션 (구글 FAQPage 스키마 연계) */}
       {faqList.length > 0 && <FAQSection faqItems={faqList} />}
 
-      {/* 원문 출처 및 면책 안내 박스 */}
-      {article.sourceUrl && (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 text-xs text-zinc-600 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-zinc-900">출처:</span>
-            <span className="font-medium text-zinc-800 bg-zinc-100 px-2.5 py-1 rounded-md">
-              {sourceName}
-            </span>
-          </div>
-          <a
-            href={article.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1 transition-colors"
-          >
-            <span>원문 확인하기</span>
-            <span className="text-xs">↗</span>
-          </a>
-        </div>
-      )}
 
       {/* 하단 '관련 정책 및 추천 브리핑' 3선 카드 노출 (이탈률 방지 및 체류시간 극대화) */}
       <div className="pt-2 pb-6">
