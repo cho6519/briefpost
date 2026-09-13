@@ -82,6 +82,106 @@ export function stripMediaAndPortalTags(text: string): string {
 }
 
 /**
+ * 마크다운 테이블(비교표) 구조 자동 복원 및 정규화
+ * 1. 한 줄로 뭉개진 테이블 행 분리 (| ... | | :--- | -> 개행 삽입)
+ * 2. 테이블 헤더 열 개수와 구분선(| :--- |) 열 개수 불일치 자동 동기화 (GFM 파서 파괴 방지)
+ * 3. 테이블 시작 전 빈 줄(\n\n) 보장 및 직전 표 제목(예: 주요 ... 비교)을 H3(###)로 정상화
+ * 4. 테이블 종료 후 빈 줄(\n\n) 보장
+ * 5. 테이블 데이터 행의 부족한 열 자동 패딩
+ */
+export function repairMarkdownTables(content: string): string {
+  if (!content || !content.includes("|")) return content;
+
+  // 1. 테이블 행들이 줄바꿈 없이 한 줄로 이어진 경우 분리 (| | :--- | 또는 | | 데이터 |)
+  let text = content.replace(/\|\s*\|\s*(?=[가-힣a-zA-Z0-9\:\-\s\*\#]+\|)/g, "|\n|");
+
+  // 2. 혹시 헤더와 구분선 사이에 빈 줄이 끼어있는 경우 제거
+  text = text.replace(/(\|.+?\|\n)\s*\n+(\|\s*:?-+:?\s*\|)/g, "$1$2");
+
+  const lines = text.split("\n");
+  const resultLines: string[] = [];
+
+  let inTable = false;
+  let headerColCount = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // 파이프로 시작하고 파이프로 끝나는 테이블 행 후보
+    const isTableLine = trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.length >= 3;
+
+    if (isTableLine) {
+      if (!inTable) {
+        // [테이블 시작]
+        inTable = true;
+
+        // 테이블 시작 직전 행 처리: 빈 줄 확보 및 직전 표 제목 H3 승격
+        if (resultLines.length > 0) {
+          const lastIdx = resultLines.length - 1;
+          const prevLine = resultLines[lastIdx].trim();
+
+          if (prevLine !== "") {
+            // 직전 줄이 표 제목(예: "주요 금융 지원 비교", "비교표") 형태인 경우 H3로 승격
+            if (
+              !prevLine.startsWith("#") &&
+              (prevLine.includes("비교") || prevLine.includes("표") || prevLine.includes("현황") || prevLine.includes("조건") || prevLine.includes("기준")) &&
+              prevLine.length <= 40
+            ) {
+              resultLines[lastIdx] = `### ${prevLine}\n`;
+            } else {
+              resultLines.push("");
+            }
+          }
+        }
+
+        // 헤더 행의 열 개수 측정
+        const cols = trimmed.split("|").slice(1, -1);
+        headerColCount = cols.length;
+        resultLines.push(trimmed);
+        continue;
+      }
+
+      // [테이블 내부]
+      // 구분선 행 판별 (예: | :--- | :--- | 또는 | --- | --- |)
+      const isDelimiterRow = /^\|(\s*:?-{2,}:?\s*\|)+$/.test(trimmed);
+      if (isDelimiterRow) {
+        const delimiterCols = trimmed.split("|").slice(1, -1);
+        if (delimiterCols.length !== headerColCount && headerColCount > 0) {
+          // 구분선 열 개수가 헤더 열 개수와 다르면 헤더에 맞춰 재생성
+          const fixedDelimiter = "| " + Array(headerColCount).fill(":---").join(" | ") + " |";
+          resultLines.push(fixedDelimiter);
+          continue;
+        }
+      } else if (headerColCount > 0) {
+        // 일반 데이터 행의 열 개수 확인
+        const dataCols = trimmed.split("|").slice(1, -1);
+        if (dataCols.length < headerColCount) {
+          // 열이 부족한 경우 빈 셀 추가
+          const padding = " |".repeat(headerColCount - dataCols.length);
+          resultLines.push(trimmed.slice(0, -1) + padding + "|");
+          continue;
+        }
+      }
+
+      resultLines.push(trimmed);
+    } else {
+      if (inTable) {
+        // [테이블 종료 직후]
+        inTable = false;
+        headerColCount = 0;
+        if (trimmed !== "") {
+          resultLines.push("");
+        }
+      }
+      resultLines.push(line);
+    }
+  }
+
+  return resultLines.join("\n");
+}
+
+/**
  * 긴 텍스트 덩어리(벽돌글)를 2~3문장 단위로 쪼개어 가독성과 호흡을 확보
  */
 export function breakLongParagraphs(text: string): string {
@@ -316,10 +416,13 @@ export function normalizeArticleContent(raw: string): string {
   text = text.replace(/^#{4,6}\s+([^\n]+)$/gm, "### $1");
   text = text.replace(/<h[4-6]\b[^>]*>(.*?)<\/h[4-6]>/gi, "<h3>$1</h3>");
 
-  // 10. 150자 이상 긴 설명 문단을 2~3문장 단위로 자동 쪼개기
+  // 10. 마크다운 비교표(Table) 구조 자동 복원 및 구분선 컬럼 개수 정규화 (GFM 파서 파괴 방지)
+  text = repairMarkdownTables(text);
+
+  // 11. 150자 이상 긴 설명 문단을 2~3문장 단위로 자동 쪼개기
   text = breakLongParagraphs(text);
 
-  // 11. 연속 빈 줄 정리 (최대 2줄)
+  // 12. 연속 빈 줄 정리 (최대 2줄)
   text = text.replace(/[^\S\r\n]+/g, " ");
   text = text.replace(/\n{3,}/g, "\n\n").trim();
 
