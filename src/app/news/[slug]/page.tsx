@@ -408,6 +408,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         sourceUrl={article.sourceUrl}
         title={article.title}
         category={article.category}
+        content={article.content}
         ctaType={article.ctaType || determineCtaType(article.category, article.title, article.content)}
       />
 

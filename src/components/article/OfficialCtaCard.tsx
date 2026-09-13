@@ -5,30 +5,169 @@ interface OfficialCtaCardProps {
   sourceUrl?: string | null;
   title: string;
   category: string;
+  content?: string | null;
   ctaType?: "subsidy" | "general" | string | null;
+}
+
+export interface OfficialDestination {
+  url: string;
+  buttonText: string;
+  agencyName: string;
+  description: string;
+}
+
+/**
+ * 기사 제목, 카테고리, 본문 키워드를 분석하여 신뢰할 수 있는 공식 정부/공공기관 접수처 외부 URL 매핑
+ * 
+ * 1. 소상공인 정책자금 / 소진공 관련 기사: https://ols.semas.or.kr (소상공인정책자금 누리집)
+ * 2. 기업 지원 / 보조금 / R&D 관련 기사: https://www.bizinfo.go.kr (중소벤처기업부 기업마당)
+ * 3. 청년 / 복지 / 일반 행정 정책 기사: https://www.gov.kr (정부24 포털)
+ * 4. 그 외 일반 정책: 원문 출처(sourceUrl)가 공공기관 도메인(.go.kr, .or.kr)이면 해당 링크, 아닐 경우 https://www.gov.kr
+ */
+export function resolveOfficialDestination(
+  title: string,
+  category: string,
+  sourceUrl?: string | null,
+  content?: string | null
+): OfficialDestination {
+  const cleanTitle = (title || "").toLowerCase();
+  const combined = `${title} ${category} ${sourceUrl || ""} ${content || ""}`.toLowerCase();
+
+  // 1단계: 제목(title) 우선 판별 (기사의 핵심 의제와 타깃이 가장 명확한 곳)
+  if (
+    /소상공인|소진공|소상공인시장진흥공단|자영업|골목상권|희망리턴|새출발기금|일반경영안정자금|노란우산|semas\.or\.kr/i.test(
+      cleanTitle
+    )
+  ) {
+    return {
+      url: "https://ols.semas.or.kr",
+      buttonText: "[공식 접수처] 소상공인정책자금 누리집 바로가기 ↗",
+      agencyName: "소상공인정책자금",
+      description:
+        "자격 요건 충족 여부 모의 조회 및 정식 온라인 신청·접수는 중소벤처기업부 산하 소상공인정책자금 공식 누리집에서 안전하게 진행하실 수 있습니다.",
+    };
+  }
+
+  if (
+    /중소기업|스타트업|벤처기업|기업\s*지원|r&d|연구개발|기술개발|스마트공장|수출바우처|기업마당|고효율\s*설비|산업단지|bizinfo\.go\.kr/i.test(
+      cleanTitle
+    )
+  ) {
+    return {
+      url: "https://www.bizinfo.go.kr",
+      buttonText: "[공식 접수처] 중소벤처기업부 기업마당 바로가기 ↗",
+      agencyName: "중소벤처기업부 기업마당",
+      description:
+        "중소기업·벤처기업 지원사업 및 정책 보조금 상세 공고 조회와 정식 온라인 접수는 기업마당 공식 포털에서 안전하게 진행하실 수 있습니다.",
+    };
+  }
+
+  if (
+    /청년|도약계좌|주택드림|청약통장|청약|복지|기초연금|부모급여|아동수당|국민취업지원|내일배움|일반\s*행정|행정\s*정책/i.test(
+      cleanTitle
+    )
+  ) {
+    return {
+      url: "https://www.gov.kr",
+      buttonText: "[공식 접수처] 정부24 바로가기 ↗",
+      agencyName: "대한민국 정부24",
+      description:
+        "자격 요건 확인 및 정식 온라인 민원 신청·접수는 대한민국 정부 공식 포털 정부24에서 안전하게 진행하실 수 있습니다.",
+    };
+  }
+
+  // 2단계: 본문 및 메타데이터 종합 판별
+  if (
+    /소상공인|소진공|소상공인시장진흥공단|자영업|골목상권|희망리턴|새출발기금|semas\.or\.kr/i.test(
+      combined
+    )
+  ) {
+    return {
+      url: "https://ols.semas.or.kr",
+      buttonText: "[공식 접수처] 소상공인정책자금 누리집 바로가기 ↗",
+      agencyName: "소상공인정책자금",
+      description:
+        "자격 요건 충족 여부 모의 조회 및 정식 온라인 신청·접수는 중소벤처기업부 산하 소상공인정책자금 공식 누리집에서 안전하게 진행하실 수 있습니다.",
+    };
+  }
+
+  if (
+    /중소기업|스타트업|벤처기업|기업\s*지원|r&d|연구개발|기술개발|스마트공장|수출바우처|기업마당|bizinfo\.go\.kr/i.test(
+      combined
+    )
+  ) {
+    return {
+      url: "https://www.bizinfo.go.kr",
+      buttonText: "[공식 접수처] 중소벤처기업부 기업마당 바로가기 ↗",
+      agencyName: "중소벤처기업부 기업마당",
+      description:
+        "중소기업·벤처기업 지원사업 및 정책 보조금 상세 공고 조회와 정식 온라인 접수는 기업마당 공식 포털에서 안전하게 진행하실 수 있습니다.",
+    };
+  }
+
+  if (
+    /청년|도약계좌|주택드림|복지|보조금|장려금|기초연금|부모급여|아동수당|취업지원|내일배움/i.test(
+      combined
+    )
+  ) {
+    return {
+      url: "https://www.gov.kr",
+      buttonText: "[공식 접수처] 정부24 바로가기 ↗",
+      agencyName: "대한민국 정부24",
+      description:
+        "자격 요건 확인 및 정식 온라인 민원 신청·접수는 대한민국 정부 공식 포털 정부24에서 안전하게 진행하실 수 있습니다.",
+    };
+  }
+
+  // 3단계: 원문 출처 링크(source_url)가 공공기관 도메인(.go.kr, .or.kr)인 경우 해당 원문 링크로 연결
+  if (sourceUrl && /^https?:\/\//i.test(sourceUrl.trim())) {
+    try {
+      const parsed = new URL(sourceUrl.trim());
+      const host = parsed.hostname.toLowerCase();
+      if (host.endsWith(".go.kr") || host.endsWith(".or.kr")) {
+        const sourceName = getSourceDisplayName(sourceUrl, title, category);
+        return {
+          url: sourceUrl.trim(),
+          buttonText: `[공식 접수처] ${sourceName} 바로가기 ↗`,
+          agencyName: sourceName,
+          description:
+            "세부 자격 요건 확인 및 공식 온라인 신청·접수는 주관 공공기관 공식 누리집에서 안전하게 진행하실 수 있습니다.",
+        };
+      }
+    } catch {
+      // URL 파싱 오류 시 기본값으로 진행
+    }
+  }
+
+  // 기본값: https://www.gov.kr
+  return {
+    url: "https://www.gov.kr",
+    buttonText: "[공식 접수처] 정부24 바로가기 ↗",
+    agencyName: "대한민국 정부24",
+    description:
+      "지원 자격 확인 및 온라인 민원 신청·접수는 대한민국 정부 공식 포털 정부24에서 안전하게 진행하실 수 있습니다.",
+  };
 }
 
 /**
  * 기사 성격별 스마트 조건부 CTA 콜아웃 컴포넌트 (Smart Conditional CTA)
- * - ctaType === 'subsidy' (지원금, 청약, 환급, 복지 등):
- *   👉 [정부24 및 공식 접수처에서 신청하기] (아이콘과 함께 눈에 띄는 고CTR 강조 스타일)
- * - ctaType === 'general' (일반 경제, 금리, 환율, 사회, 테크 등):
- *   👉 [공식 보도자료 원문 및 상세 출처 확인] (차분하고 신뢰감 있는 저널리즘 링크 스타일)
- * - 안전 장치: URL이 불분명할 경우 깨진 버튼 대신 기관명 공식 브리핑 안내로 우아하게 대체
  */
 export default function OfficialCtaCard({
   sourceUrl,
   title,
   category,
+  content,
   ctaType = "general",
 }: OfficialCtaCardProps) {
   const sourceName = getSourceDisplayName(sourceUrl, title, category);
   const isValidUrl = Boolean(sourceUrl && /^https?:\/\//i.test(sourceUrl.trim()));
 
+  // 정부/공공기관 공식 접수처 외부 URL 및 버튼 문구 판별
+  const officialTarget = resolveOfficialDestination(title, category, sourceUrl, content);
+
   const isSubsidy = ctaType === "subsidy";
 
-  // 1. URL이 유효하지 않고 일반 기사(general)인 경우의 안전 장치:
-  //    어색한 외부 신청 버튼을 숨기고 신뢰할 수 있는 공공 출처 안내 카드로 단정하게 렌더링
+  // 1. URL이 유효하지 않고 일반 기사(general)인 경우의 안전 장치
   if (!isValidUrl && !isSubsidy) {
     return (
       <aside
@@ -49,10 +188,7 @@ export default function OfficialCtaCard({
     );
   }
 
-  // 2. subsidy 타입 대상 URL (출처 URL이 없으면 대한민국 정부24 공식 포털을 안전 대체 링크로 제공)
-  const subsidyTargetUrl = isValidUrl ? sourceUrl!.trim() : "https://www.gov.kr";
-
-  // 3-A. [subsidy] 지원금, 보조금, 청약, 환급, 복지 등 실제 신청/접수가 있는 정책
+  // 2. [subsidy] 지원금, 보조금, 청약, 소상공인 정책자금 등 실제 신청/접수가 수반되는 기사 (파란색 하이라이트 CTA)
   if (isSubsidy) {
     return (
       <aside
@@ -64,47 +200,34 @@ export default function OfficialCtaCard({
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-2xs">
               <span className="inline-block w-2 h-2 rounded-full bg-amber-300 animate-ping" />
-              <span>신청 및 접수 안내</span>
+              <span>공식 접수처 안내</span>
             </div>
 
-            <h3 className="text-base sm:text-lg font-extrabold text-zinc-950 tracking-tight">
-              {sourceName} 공식 접수 및 지원 신청
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+              {officialTarget.agencyName} 공식 접수 및 지원 신청
             </h3>
 
-            <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed max-w-lg font-medium">
-              자격 요건 충족 여부 모의 조회 및 정식 온라인 접수는 정부24 또는 주관 공식 접수처에서 안전하게 진행하실 수 있습니다.
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed max-w-lg font-medium">
+              {officialTarget.description}
             </p>
           </div>
 
-          {/* 우측 High-CTR 강조 CTA 액션 버튼 */}
+          {/* 우측 High-CTR 강조 CTA 액션 버튼: 외부 정규 URL 새 창 열기 */}
           <div className="shrink-0 pt-1 sm:pt-0">
             <a
-              href={subsidyTargetUrl}
+              href={officialTarget.url}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-5 py-3.5 text-sm font-extrabold text-white shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40 hover:brightness-110 transition-all active:scale-[0.98]"
             >
               <span className="text-base">👉</span>
-              <span>정부24 및 공식 접수처에서 신청하기</span>
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                />
-              </svg>
+              <span>{officialTarget.buttonText}</span>
             </a>
           </div>
         </div>
 
         {/* 하단 신뢰 및 보안 안내 라인 */}
-        <div className="mt-4 pt-3 border-t border-blue-200/60 flex items-center gap-2 text-[11px] text-zinc-600 font-medium">
+        <div className="mt-4 pt-3 border-t border-blue-200/60 flex items-center gap-2 text-[11px] text-slate-600 font-medium">
           <svg
             className="w-4 h-4 text-blue-600 shrink-0"
             fill="none"
@@ -126,7 +249,7 @@ export default function OfficialCtaCard({
     );
   }
 
-  // 3-B. [general] 일반 경제, 금리, 환율, 증시, 테크, IT, 사회 등 단순 보도 기사
+  // 3. [general] 일반 경제, 금리, 환율, 증시, 테크 등 단순 보도 기사
   return (
     <aside
       aria-label="공식 보도자료 원문 확인"
@@ -149,28 +272,15 @@ export default function OfficialCtaCard({
           </p>
         </div>
 
-        {/* 우측 차분한 저널리즘 링크 CTA 버튼 */}
+        {/* 우측 저널리즘 링크 CTA 버튼 */}
         <div className="shrink-0 pt-1 sm:pt-0">
           <a
-            href={sourceUrl!}
+            href={officialTarget.url}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-bold text-white shadow-xs hover:bg-zinc-800 transition-all active:scale-[0.98]"
           >
-            <span>👉 공식 보도자료 원문 및 상세 출처 확인</span>
-            <svg
-              className="w-3.5 h-3.5 text-zinc-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-              />
-            </svg>
+            <span>👉 공식 보도자료 원문 및 상세 출처 확인 ↗</span>
           </a>
         </div>
       </div>
