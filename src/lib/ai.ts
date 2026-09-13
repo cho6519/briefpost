@@ -315,16 +315,25 @@ ${cleanInputContent}
 반드시 지정된 JSON 규격 하나만 출력하십시오.`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 40000);
+  const timeoutId = setTimeout(() => controller.abort(), 90000);
 
   try {
     let rawContent = "";
 
     // 2-A. Google Gemini API 분기 처리
     if (geminiKey) {
-      const preferredModel = process.env.AI_MODEL || process.env.GEMINI_MODEL || "gemini-3.8-flash";
+      const preferredModel = process.env.AI_MODEL || process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
       const candidateModels = Array.from(
-        new Set([preferredModel, "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-flash-latest", "gemini-flash-lite-latest", "gemini-pro-latest"])
+        new Set([
+          preferredModel,
+          "gemini-flash-lite-latest",
+          "gemini-3.5-flash-lite",
+          "gemini-3.5-flash",
+          "gemini-3.8-flash",
+          "gemini-3.7-flash",
+          "gemini-flash-latest",
+          "gemini-pro-latest",
+        ])
       );
 
       let lastError: Error | null = null;
@@ -466,9 +475,21 @@ ${cleanInputContent}
       .replace(/```$/i, "")
       .trim();
 
-    const parsed = JSON.parse(cleanedJson);
+    let parsed: Record<string, any>;
+    try {
+      parsed = JSON.parse(cleanedJson);
+    } catch {
+      // 제어문자 및 개행 이스케이프 정제 후 재시도
+      const sanitizedJson = cleanedJson.replace(/[\u0000-\u001F\u007F-\u009F]/g, (c) => {
+        if (c === "\n") return "\\n";
+        if (c === "\r") return "\\r";
+        if (c === "\t") return "\\t";
+        return "";
+      });
+      parsed = JSON.parse(sanitizedJson);
+    }
 
-    if (!parsed.title || !parsed.content || !parsed.summary) {
+    if (!parsed || !parsed.title || !parsed.content || !parsed.summary) {
       throw new Error("AI 응답에 필수 필드(title, content, summary)가 누락되었습니다.");
     }
 

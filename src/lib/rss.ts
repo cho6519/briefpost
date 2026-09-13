@@ -35,15 +35,12 @@ export interface FetchRssResult {
  * 검색률 및 독자 클릭률이 높은 알짜 정보성 보도자료를 선별하기 위한 핵심 키워드
  */
 export const TARGET_KEYWORDS = [
+  // 1. 정책·지원금
   "지원금",
   "보조금",
   "청약",
   "환급",
-  "세제",
-  "소득세",
-  "대출",
   "감면",
-  "분양",
   "바우처",
   "청년",
   "소상공인",
@@ -53,6 +50,50 @@ export const TARGET_KEYWORDS = [
   "정책자금",
   "희망리턴",
   "스마트상점",
+  "복지",
+  "장려금",
+  "수당",
+  // 2. 부동산·세제
+  "세제",
+  "세금",
+  "소득세",
+  "양도세",
+  "취득세",
+  "종부세",
+  "분양",
+  "전세",
+  "월세",
+  "아파트",
+  "주택",
+  "재건축",
+  // 3. 금융·경제
+  "대출",
+  "금리",
+  "환율",
+  "물가",
+  "증시",
+  "주식",
+  "투자",
+  "은행",
+  "기준금리",
+  "한국은행",
+  // 4. 테크·IT
+  "ai",
+  "인공지능",
+  "반도체",
+  "신기술",
+  "플랫폼",
+  "소프트웨어",
+  "스마트폰",
+  "빅테크",
+  // 5. 사회·문화 / 주요 정책 제도
+  "개편",
+  "대책",
+  "제도",
+  "정책",
+  "고용",
+  "일자리",
+  "노동",
 ] as const;
 
 /**
@@ -90,12 +131,12 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
   matchedKeywords: string[];
   excludeReason?: string;
 } {
-  const title = item.title || "";
-  const content = `${item.content || ""} ${item.contentSnippet || ""}`;
+  const title = (item.title || "").toLowerCase();
+  const content = `${item.content || ""} ${item.contentSnippet || ""}`.toLowerCase();
 
   // 1. 단순 기관 동정이나 행사 소식 배제 (제목 기준 우선 검사)
   for (const excludeWord of EXCLUDE_KEYWORDS) {
-    if (title.includes(excludeWord) || title.startsWith(`[${excludeWord}]`)) {
+    if (title.includes(excludeWord.toLowerCase()) || title.startsWith(`[${excludeWord.toLowerCase()}]`)) {
       return {
         isExcluded: true,
         score: 0,
@@ -110,8 +151,9 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
   const matchedKeywords: string[] = [];
 
   for (const keyword of TARGET_KEYWORDS) {
-    const inTitle = title.includes(keyword);
-    const inContent = content.includes(keyword);
+    const kw = keyword.toLowerCase();
+    const inTitle = title.includes(kw);
+    const inContent = content.includes(kw);
 
     if (inTitle || inContent) {
       matchedKeywords.push(keyword);
