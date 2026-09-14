@@ -30,10 +30,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Node.js 20 설치
+      - name: Node.js 22 LTS 설치
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: 의존성 패키지 설치
@@ -42,10 +42,10 @@ jobs:
       - name: 뉴스 수집 및 AI 기사 자동 발행 파이프라인 실행
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          AI_MODEL: ${{ vars.AI_MODEL || vars.GEMINI_MODEL || 'gemini-3.8-flash' }}
+          AI_MODEL: ${{ vars.AI_MODEL || vars.GEMINI_MODEL || 'gemini-flash-lite-latest' }}
           PUBLISH_LIMIT: ${{ github.event.inputs.limit }}
         run: |
-          npm run publish:cron ${{ github.event.inputs.limit }}
+          npm run publish:cron
 
       - name: 변경된 news.db 데이터베이스 자동 커밋 및 푸시
         run: |
