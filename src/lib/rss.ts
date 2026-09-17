@@ -35,21 +35,26 @@ export interface FetchRssResult {
  * 검색률 및 독자 클릭률이 높은 알짜 정보성 보도자료를 선별하기 위한 핵심 키워드
  */
 export const TARGET_KEYWORDS = [
-  // 1. 정책·지원금
-  "지원금",
-  "보조금",
-  "청약",
-  "환급",
-  "감면",
-  "바우처",
-  "청년",
+  // 1. 정책·지원금 (소상공인 경영자금·경영애로 최우선)
+  "경영애로",
+  "일시적 경영애로",
+  "일반경영자금",
+  "경영안정",
   "소상공인",
   "자영업자",
   "소진공",
   "기업마당",
   "정책자금",
   "희망리턴",
+  "대환대출",
+  "이차보전",
   "스마트상점",
+  "지원금",
+  "보조금",
+  "환급",
+  "감면",
+  "바우처",
+  "청년",
   "복지",
   "장려금",
   "수당",
@@ -146,7 +151,19 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
     }
   }
 
-  // 2. 타겟 키워드 검사 및 가중치 점수 산정 (제목 매칭: 3점, 본문 매칭: 1점)
+  // 2. 타겟 키워드 검사 및 가중치 점수 산정
+  // - 일반 키워드: 제목 3점, 본문 1점
+  // - 소상공인 경영자금/경영애로 슈퍼 키워드: 제목 +10점, 본문 +5점 대폭 가산
+  const SUPER_SMALL_BIZ_KEYWORDS = [
+    "일시적 경영애로",
+    "경영애로",
+    "일반경영자금",
+    "경영안정자금",
+    "소상공인 정책자금",
+    "대환대출",
+    "이차보전",
+  ];
+
   let score = 0;
   const matchedKeywords: string[] = [];
 
@@ -162,11 +179,70 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
     }
   }
 
+  // 소상공인 경영애로/경영자금 우선순위 슈퍼 가산점 부여
+  for (const superKw of SUPER_SMALL_BIZ_KEYWORDS) {
+    const skw = superKw.toLowerCase();
+    if (title.includes(skw)) {
+      score += 10;
+      if (!matchedKeywords.includes(superKw)) matchedKeywords.unshift(superKw);
+    } else if (content.includes(skw)) {
+      score += 5;
+      if (!matchedKeywords.includes(superKw)) matchedKeywords.push(superKw);
+    }
+  }
+
   return {
     isExcluded: false,
     score,
     matchedKeywords,
   };
+}
+
+/**
+ * 소상공인이 가장 관심을 둘 만한 '일시적 경영애로', '일반경영자금', '소상공인 정책자금' 기사 판별
+ */
+export function isSmallBizPriorityArticle(item: ParsedRssItem): boolean {
+  const text = `${item.title || ""} ${item.content || ""} ${item.contentSnippet || ""} ${item.category || ""}`.toLowerCase();
+  return (
+    text.includes("경영애로") ||
+    text.includes("일반경영자금") ||
+    text.includes("경영안정자금") ||
+    text.includes("대환대출") ||
+    text.includes("소상공인 정책자금") ||
+    text.includes("소진공") ||
+    (text.includes("소상공인") && (text.includes("자금") || text.includes("대출") || text.includes("지원금") || text.includes("지원사업")))
+  );
+}
+
+/**
+ * 발행 후보 선별 시 소상공인 경영자금/애로자금 기사를 최소 1건 이상 반드시 포함(Quota Allocation)하도록 보장
+ */
+export function selectCandidatesWithQuota<T extends ParsedRssItem>(
+  items: T[],
+  limit: number
+): T[] {
+  if (items.length <= limit) {
+    return items;
+  }
+
+  const smallBizCandidates = items.filter(isSmallBizPriorityArticle);
+  const result: T[] = [];
+
+  // 1. 소상공인 경영자금/애로자금 기사가 있으면 1순위로 최소 1건을 무조건 우선 확보!
+  if (smallBizCandidates.length > 0) {
+    result.push(smallBizCandidates[0]);
+    console.log(`🎯 [Quota] 소상공인 경영자금/애로자금 기사 1건 최우선 쿼터 배정: "${smallBizCandidates[0].title.slice(0, 40)}"`);
+  }
+
+  // 2. 나머지 슬롯은 기존 점수순 정렬 목록에서 중복 없이 채움
+  for (const item of items) {
+    if (result.length >= limit) break;
+    if (!result.some((r) => r.link === item.link)) {
+      result.push(item);
+    }
+  }
+
+  return result;
 }
 
 export const DEFAULT_RSS_FEEDS = RSS_FEEDS;

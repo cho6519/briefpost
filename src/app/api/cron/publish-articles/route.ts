@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchRssFeeds, ParsedRssItem } from "@/lib/rss";
+import { fetchRssFeeds, ParsedRssItem, selectCandidatesWithQuota } from "@/lib/rss";
 import { rewriteArticleWithAI } from "@/lib/ai";
 import {
   createArticle,
@@ -87,7 +87,7 @@ async function handlePublishArticles(request: NextRequest) {
       customFeedUrl ? [{ url: customFeedUrl, category: customCategory }] : undefined
     );
 
-    candidates = rssResult.items.slice(0, limit);
+    candidates = selectCandidatesWithQuota(rssResult.items, limit);
     console.log(
       `[PUBLISH CRON] [3/5] RSS 수집 결과: 원문 ${rssResult.totalFetched}건 중 신규 ${rssResult.newItemsCount}건 확보 (상위 ${candidates.length}건 AI 재가공 대상 선정)`
     );

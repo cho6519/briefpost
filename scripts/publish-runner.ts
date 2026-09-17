@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { fetchRssFeeds } from "../src/lib/rss";
+import { fetchRssFeeds, selectCandidatesWithQuota } from "../src/lib/rss";
 import { rewriteArticleWithAI } from "../src/lib/ai";
 import {
   createArticle,
@@ -68,7 +68,7 @@ async function main() {
   console.log(`• 타겟 키워드 미포함 제외:  ${rssResult.noKeywordSkippedCount ?? 0}건`);
   console.log(`• 🎯 알짜 키워드 매칭 후보:  ${rssResult.newItemsCount}건`);
 
-  const candidates = rssResult.items.slice(0, limit);
+  const candidates = selectCandidatesWithQuota(rssResult.items, limit);
   if (candidates.length === 0) {
     console.log("\nℹ️ 새로 발행할 신규 기사 후보가 없어 작업을 정상 종료합니다.");
     process.exit(0);

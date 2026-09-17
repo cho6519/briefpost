@@ -20,6 +20,22 @@ export interface RssFeedConfig {
 export const RSS_FEEDS: RssFeedConfig[] = [
   // --- 1. 소상공인시장진흥공단(소진공) 및 중기부 기업마당 소상공인 전용 정책자금 피드 ---
   {
+    id: "portal-semas-general-management",
+    name: "소상공인 일반경영자금 및 일시적 경영애로자금",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8+%EC%9D%BC%EB%B0%98%EA%B2%BD%EC%98%81%EC%9E%90%EA%B8%88+OR+%EA%B2%BD%EC%98%81%EC%95%A0%EB%A1%9C%EC%9E%90%EA%B8%88+OR+%EC%A0%95%EC%B1%85%EC%9E%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    description: "소상공인시장진흥공단 및 금융권의 일반경영자금, 일시적 경영애로자금, 긴급경영안정자금 실시간 접수 피드",
+  },
+  {
+    id: "portal-semas-recovery-debt",
+    name: "소상공인 대환대출 및 경영안정 금융지원",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8%EC%8B%9C%EC%9E%A5%EC%A7%84%ED%9D%A5%EA%B3%B5%EB%8B%A8+%EC%9D%BC%EC%8B%9C%EC%A0%81+%EA%B2%BD%EC%98%81%EC%95%A0%EB%A1%9C+OR+%EB%8C%80%ED%99%98%EB%8C%80%EC%B6%9C+OR+%EC%9D%B4%EC%B0%A8%EB%B3%B4%EC%A0%84&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    description: "소진공 고금리 대환대출, 일시적 경영애로 긴급자금, 이자 환급 및 이차보전 지원 피드",
+  },
+  {
     id: "portal-semas",
     name: "소상공인시장진흥공단 (semas.or.kr 정책자금/지원사업)",
     category: "정책·지원금",
