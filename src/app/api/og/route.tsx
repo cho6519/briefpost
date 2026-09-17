@@ -68,10 +68,29 @@ export async function GET(req: NextRequest) {
       title = "소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원)";
     }
 
-    // 2. 카드뉴스 전용 키워드 타이틀(card_title 우선) 및 서브 캐치프레이즈
+    // 2. 카드뉴스 전용 키워드 타이틀 및 서브 캐치프레이즈
+    // (모바일에서 이미지가 꽉 차 보이도록, 지나치게 짧은 축약 대신 풍성한 핵심 헤드라인 내용을 2~3줄로 꽉 채움)
     const catchphraseData = generateCardCatchphrase(title, category);
     const queryCardTitle = searchParams.get("card_title") || searchParams.get("keyword");
-    const cardMainTitle = queryCardTitle || cardTitleFromDb || catchphraseData.keywordTitle || title;
+    let cardMainTitle = queryCardTitle || cardTitleFromDb;
+    if (!cardMainTitle || cardMainTitle.length < 15) {
+      cardMainTitle = title;
+    }
+
+    // 불필요한 언론사명, 바깥 따옴표, 괄호 등 깔끔하게 정제
+    cardMainTitle = cardMainTitle
+      .replace(/^[“"'\s]+|[”"'\s]+$/g, "")
+      .replace(
+        /\s*(?:Martin Cid Magazine|위키트리|연합뉴스|뉴시스|머니투데이|한국경제|매일경제|조선일보|동아일보|중앙일보|한국무역협회|종합[0-9]?보)\s*$/gi,
+        ""
+      )
+      .replace(/\s*\([^)]*\)\s*$/g, "")
+      .replace(/\.{2,}[^\n]*$/g, "")
+      .replace(/…[^\n]*$/g, "")
+      .replace(/[.…:\-\s]+$/, "")
+      .replace(/^[“"']+|[”"']+$/g, "")
+      .trim();
+
     const cardSubCatchphrase = searchParams.get("catchphrase") || catchphraseData.subCatchphrase;
 
     // 3. 인포그래픽 하이라이트 배지 추출
@@ -132,13 +151,20 @@ export async function GET(req: NextRequest) {
       watermarkText = "BRIEF";
     }
 
-    // 5. 모바일 화면 최적화 타이포그래피 폰트 크기 대폭 상향 (최소 64px ~ 72px 볼드/블랙 수준)
+    // 5. 모바일 화면 최적화 타이포그래피 폰트 크기 대폭 상향 (이미지를 꽉 채우는 68px ~ 96px 초특대형 볼드)
     const titleLength = cardMainTitle.length;
-    let titleFontSize = 72; // 17자 이하: 압도적 72px (모바일에서도 한눈에 꽂힘)
-    if (titleLength > 22) {
-      titleFontSize = 54; // 23자 이상: 3줄 넘침 방지 54px 자동 축소
-    } else if (titleLength > 17) {
-      titleFontSize = 66; // 18~22자: 66px
+    let titleFontSize = 96; // 15자 이하: 압도적인 96px
+    let titleLineHeight = 1.15;
+
+    if (titleLength > 32) {
+      titleFontSize = 68; // 33자 이상 긴 제목: 68px
+      titleLineHeight = 1.18;
+    } else if (titleLength > 23) {
+      titleFontSize = 78; // 24~32자: 78px
+      titleLineHeight = 1.16;
+    } else if (titleLength > 15) {
+      titleFontSize = 86; // 16~23자: 86px
+      titleLineHeight = 1.15;
     }
 
     // 6. 폰트 로드
@@ -165,7 +191,7 @@ export async function GET(req: NextRequest) {
             flexDirection: "column",
             justifyContent: "space-between",
             background: "linear-gradient(145deg, #020617 0%, #070e1b 40%, #0d1a2d 75%, #020617 100%)",
-            padding: "44px 64px",
+            padding: "30px 46px",
             fontFamily: "Pretendard, sans-serif",
             position: "relative",
             boxSizing: "border-box",
@@ -279,17 +305,17 @@ export async function GET(req: NextRequest) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                padding: "9px 20px",
+                padding: "9px 22px",
                 borderRadius: "30px",
                 backgroundColor: categoryBg,
                 border: `1.5px solid ${categoryBorder}`,
                 color: categoryColor,
-                fontSize: "22px",
+                fontSize: "24px",
                 fontWeight: 700,
                 letterSpacing: "-0.3px",
               }}
             >
-              <span style={{ marginRight: "8px", fontSize: "14px" }}>●</span>
+              <span style={{ marginRight: "8px", fontSize: "16px" }}>●</span>
               {category}
             </div>
 
@@ -349,27 +375,27 @@ export async function GET(req: NextRequest) {
             </div>
           </div>
 
-          {/* [2. 중앙 메인 타이틀 영역 - 서브 캐치프레이즈 & 키워드 헤드라인 (h1과의 중복 제거)] */}
+          {/* [2. 중앙 메인 타이틀 영역 - 서브 캐치프레이즈 & 키워드 헤드라인 (이미지를 꽉 채우는 특대형 헤드라인)] */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              margin: "14px 0 18px 0",
+              margin: "8px 0 10px 0",
               maxWidth: "100%",
             }}
           >
-            {/* 세련된 서브 캐치프레이즈 (예: 소상공인 정책자금 긴급 브리핑, 2026년 정부 지원 사업 안내) */}
+            {/* 세련된 서브 캐치프레이즈 (32px 대형 폰트) */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 color: categoryColor,
-                fontSize: "28px",
+                fontSize: "32px",
                 fontWeight: 700,
                 letterSpacing: "-0.5px",
-                marginBottom: "14px",
-                textShadow: "0 2px 12px rgba(0, 0, 0, 0.7)",
+                marginBottom: "10px",
+                textShadow: "0 2px 14px rgba(0, 0, 0, 0.8)",
               }}
             >
               <span
@@ -377,13 +403,13 @@ export async function GET(req: NextRequest) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "9px",
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
                   backgroundColor: categoryBg,
                   border: `1.5px solid ${categoryBorder}`,
                   marginRight: "12px",
-                  fontSize: "17px",
+                  fontSize: "19px",
                 }}
               >
                 ⚡
@@ -391,22 +417,22 @@ export async function GET(req: NextRequest) {
               {cardSubCatchphrase}
             </div>
 
-            {/* 카드 중앙 메인 키워드 타이틀 (66px~72px 압도적 대형 폰트, 타이트한 1.22 줄간격) */}
+            {/* 카드 중앙 메인 타이틀 (68px~96px 초특대형 볼드 폰트, 이미지를 꽉 채우는 2~3줄 헤드라인) */}
             <h1
               style={{
                 color: "#ffffff",
                 fontSize: `${titleFontSize}px`,
                 fontWeight: 900,
-                lineHeight: 1.22,
-                letterSpacing: "-1.5px",
+                lineHeight: titleLineHeight,
+                letterSpacing: "-2px",
                 margin: 0,
                 padding: 0,
                 wordBreak: "keep-all",
                 display: "-webkit-box",
-                WebkitLineClamp: 2,
+                WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                textShadow: "0 6px 28px rgba(0, 0, 0, 0.9)",
+                textShadow: "0 8px 32px rgba(0, 0, 0, 0.95)",
               }}
             >
               {cardMainTitle}
@@ -422,21 +448,21 @@ export async function GET(req: NextRequest) {
               width: "100%",
             }}
           >
-            {/* 인포그래픽 하이라이트 박스 (모바일 축소 시에도 뭉개지지 않도록 28px 대형 폰트 및 넉넉한 패딩) */}
+            {/* 인포그래픽 하이라이트 박스 (모바일 축소 시에도 뭉개지지 않도록 32px 대형 폰트 및 넉넉한 패딩) */}
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                padding: "18px 32px",
-                borderRadius: "20px",
+                padding: "15px 28px",
+                borderRadius: "18px",
                 backgroundColor: badgeInfo.isSubsidy
-                  ? "rgba(6, 78, 59, 0.7)"
-                  : "rgba(30, 58, 138, 0.6)",
+                  ? "rgba(6, 78, 59, 0.75)"
+                  : "rgba(30, 58, 138, 0.65)",
                 border: badgeInfo.isSubsidy
                   ? "2.5px solid rgba(16, 185, 129, 0.85)"
                   : "2.5px solid rgba(59, 130, 246, 0.75)",
-                boxShadow: "0 8px 26px rgba(0, 0, 0, 0.45)",
-                maxWidth: "78%",
+                boxShadow: "0 8px 26px rgba(0, 0, 0, 0.5)",
+                maxWidth: "76%",
               }}
             >
               <div
@@ -444,7 +470,7 @@ export async function GET(req: NextRequest) {
                   display: "flex",
                   alignItems: "center",
                   color: badgeInfo.isSubsidy ? "#34d399" : "#60a5fa",
-                  fontSize: "28px",
+                  fontSize: "32px",
                   fontWeight: 800,
                   letterSpacing: "-0.5px",
                 }}
@@ -454,9 +480,9 @@ export async function GET(req: NextRequest) {
               <div
                 style={{
                   color: "#cbd5e1",
-                  fontSize: "18px",
+                  fontSize: "20px",
                   fontWeight: 600,
-                  marginTop: "6px",
+                  marginTop: "5px",
                   letterSpacing: "-0.3px",
                 }}
               >
@@ -475,7 +501,7 @@ export async function GET(req: NextRequest) {
               <span
                 style={{
                   color: "#64748b",
-                  fontSize: "14px",
+                  fontSize: "15px",
                   fontWeight: 600,
                   letterSpacing: "0.5px",
                 }}
@@ -485,7 +511,7 @@ export async function GET(req: NextRequest) {
               <span
                 style={{
                   color: "#38bdf8",
-                  fontSize: "20px",
+                  fontSize: "22px",
                   fontWeight: 700,
                   letterSpacing: "0.2px",
                   marginTop: "2px",
