@@ -396,14 +396,18 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         )}
       </div>
 
-      {/* 공식 신청 및 안내 바로가기 스마트 조건부 콜아웃 카드 (CTA) */}
-      <OfficialCtaCard
-        sourceUrl={article.sourceUrl}
-        title={article.title}
-        category={article.category}
-        content={article.content}
-        ctaType={article.ctaType || determineCtaType(article.category, article.title, article.content)}
-      />
+      {/* 공식 신청 및 안내 바로가기 스마트 콜아웃 카드 (CTA) - 정책·지원금 카테고리 기사에서만 노출 */}
+      {(article.category === "정책·지원금" ||
+        article.category?.includes("정책") ||
+        article.category?.includes("지원금")) && (
+        <OfficialCtaCard
+          sourceUrl={article.sourceUrl}
+          title={article.title}
+          category={article.category}
+          content={article.content}
+          ctaType={article.ctaType || determineCtaType(article.category, article.title, article.content)}
+        />
+      )}
 
       {/* 독자 궁금증 해결 FAQ 섹션 (구글 FAQPage 스키마 연계) */}
       {faqList.length > 0 && <FAQSection faqItems={faqList} />}

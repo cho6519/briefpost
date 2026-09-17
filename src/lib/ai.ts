@@ -71,8 +71,15 @@ export interface RewrittenArticleResult {
 
 /**
  * 기사 카테고리, 제목, 본문 키워드를 분석하여 액션 CTA 버튼 타입('subsidy' vs 'general')을 스마트하게 판별
+ * - 오직 '정책·지원금' 카테고리 기사만 'subsidy'(공식 접수처/신청)로 판별될 수 있으며, 타 카테고리는 무조건 'general'
  */
 export function determineCtaType(category?: string, title?: string, content?: string): "subsidy" | "general" {
+  // 정책·지원금 카테고리가 아니면 절대로 subsidy가 될 수 없음 (정부24 등 오연결 방지)
+  const isPolicySubsidy = category === "정책·지원금" || category?.includes("정책") || category?.includes("지원금");
+  if (!isPolicySubsidy) {
+    return "general";
+  }
+
   const text = `${category || ""} ${title || ""} ${content || ""}`;
 
   // 실제 신청, 접수, 수혜, 대상자 모집이 수반되는 키워드 패턴
@@ -207,9 +214,9 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
 - 답변(answer): 기사 팩트에 기반한 친절하고 명확한 2~3문장의 완결된 설명
 
 [CRITICAL 5: 기사 성격별 CTA 버튼 타입 판별 (ctaType)]
-기사의 성격을 판단하여 "ctaType" 필드에 아래 두 가지 중 하나를 반드시 지정하십시오:
-- "subsidy": 지원금, 보조금, 청약, 환급, 복지 혜택, 감면 등 독자의 '실제 신청이나 접수'가 수반되는 정책 기사
-- "general": 일반 경제, 금리, 환율, 증시, 테크, IT, 사회, 문화 등 '단순 보도, 시황, 정책 발표, 통계, 시사' 기사
+기사의 카테고리와 성격을 판단하여 "ctaType" 필드에 아래 규칙을 엄격히 적용하십시오:
+- "subsidy": 오직 '정책·지원금' 카테고리이면서 지원금, 보조금, 청약, 환급, 복지 혜택, 감면 등 독자의 '실제 신청이나 접수'가 수반되는 정책 기사
+- "general": 그 외 모든 기사 (부동산·세제, 금융·경제, 테크·IT, 사회·문화 및 단순 시황, 정책 발표, 통계, 시사 기사)는 반드시 "general"로 지정하십시오. (절대 subsidy 지정 금지)
 
 [CRITICAL 6: 한국형 대표 실사 썸네일 테마 태그 (imageTheme)]
 기사의 핵심 소재 및 주제에 가장 적합한 실사 스톡 사진 테마를 다음 5가지 중 하나로 반드시 선택하십시오:
@@ -524,11 +531,13 @@ ${cleanInputContent}
       metaDescription: parsed.metaDescription ? stripMediaAndPortalTags(parsed.metaDescription) : null,
     });
 
-    // CTA 버튼 성격 결정 ('subsidy' vs 'general')
-    const finalCtaType: "subsidy" | "general" =
-      parsed.ctaType === "subsidy" || parsed.ctaType === "general"
-        ? parsed.ctaType
-        : determineCtaType(assignedCategory, sanitizedAiTitle, sanitizedAiContent);
+    // CTA 버튼 성격 결정: 오직 '정책·지원금' 카테고리 기사만 'subsidy' 가능, 그 외는 무조건 'general'
+    const isPolicySubsidyCat = assignedCategory === "정책·지원금" || assignedCategory.includes("정책") || assignedCategory.includes("지원금");
+    const finalCtaType: "subsidy" | "general" = isPolicySubsidyCat
+      ? (parsed.ctaType === "subsidy" || parsed.ctaType === "general"
+          ? parsed.ctaType
+          : determineCtaType(assignedCategory, sanitizedAiTitle, sanitizedAiContent))
+      : "general";
 
     // 대표 실사 이미지 테마 태그 결정 ('housing' | 'finance' | 'youth' | 'policy' | 'economy')
     let finalImageTheme: ImageTheme = "policy";

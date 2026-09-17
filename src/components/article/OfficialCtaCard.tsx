@@ -157,15 +157,23 @@ export default function OfficialCtaCard({
   title,
   category,
   content,
-  ctaType = "general",
+  ctaType = "subsidy",
 }: OfficialCtaCardProps) {
+  // 정책·지원금 카테고리 이외에는 공식신청 사이트 카드 노출을 엄격히 차단
+  const isPolicyCategory =
+    category === "정책·지원금" || category?.includes("정책") || category?.includes("지원금");
+
+  if (!isPolicyCategory) {
+    return null;
+  }
+
   const sourceName = getSourceDisplayName(sourceUrl, title, category);
   const isValidUrl = Boolean(sourceUrl && /^https?:\/\//i.test(sourceUrl.trim()));
 
   // 정부/공공기관 공식 접수처 외부 URL 및 버튼 문구 판별
   const officialTarget = resolveOfficialDestination(title, category, sourceUrl, content);
 
-  const isSubsidy = ctaType === "subsidy";
+  const isSubsidy = ctaType === "subsidy" || isPolicyCategory;
 
   // 1. URL이 유효하지 않고 일반 기사(general)인 경우의 안전 장치
   if (!isValidUrl && !isSubsidy) {
