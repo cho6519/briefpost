@@ -35,6 +35,27 @@ export interface FetchRssResult {
  * 검색률 및 독자 클릭률이 높은 알짜 정보성 보도자료를 선별하기 위한 핵심 키워드
  */
 export const TARGET_KEYWORDS = [
+  // 0. [초특급 핫이슈] 추석 민생지원금 및 지역별 민생회복지원금
+  "민생지원금",
+  "추석민생지원금",
+  "추석 민생지원금",
+  "민생회복지원금",
+  "민생회복 지원금",
+  "민생지원금신청",
+  "민생지원금 신청",
+  "민생지원금조회",
+  "민생지원금 조회",
+  "경기도 민생지원금",
+  "민생지원금 경기도",
+  "경기 민생지원금",
+  "민생지원금 부산",
+  "민생지원금 인천",
+  "지자체 민생지원금",
+  "민생회복",
+  "지역화폐",
+  "소비쿠폰",
+  "재난지원금",
+
   // 1. 정책·지원금 (소상공인 경영자금·경영애로 최우선)
   "경영애로",
   "일시적 경영애로",
@@ -153,7 +174,27 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
 
   // 2. 타겟 키워드 검사 및 가중치 점수 산정
   // - 일반 키워드: 제목 3점, 본문 1점
-  // - 소상공인 경영자금/경영애로 슈퍼 키워드: 제목 +10점, 본문 +5점 대폭 가산
+  // - [초특급 핫이슈] 민생지원금/추석지원금 슈퍼 키워드: 제목 +15점, 본문 +8점 파격 가산
+  // - [핵심 정책] 소상공인 경영자금/경영애로 슈퍼 키워드: 제목 +10점, 본문 +5점 대폭 가산
+  const SUPER_MINSAENG_KEYWORDS = [
+    "민생지원금",
+    "추석민생지원금",
+    "추석 민생지원금",
+    "민생회복지원금",
+    "민생회복 지원금",
+    "민생지원금신청",
+    "민생지원금 신청",
+    "민생지원금조회",
+    "민생지원금 조회",
+    "경기도 민생지원금",
+    "민생지원금 경기도",
+    "경기 민생지원금",
+    "민생지원금 부산",
+    "민생지원금 인천",
+    "지자체 민생지원금",
+    "민생회복",
+  ];
+
   const SUPER_SMALL_BIZ_KEYWORDS = [
     "일시적 경영애로",
     "경영애로",
@@ -179,7 +220,19 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
     }
   }
 
-  // 소상공인 경영애로/경영자금 우선순위 슈퍼 가산점 부여
+  // 1) 민생지원금 / 추석지원금 초특급 가산점
+  for (const minsaengKw of SUPER_MINSAENG_KEYWORDS) {
+    const mkw = minsaengKw.toLowerCase();
+    if (title.includes(mkw)) {
+      score += 15;
+      if (!matchedKeywords.includes(minsaengKw)) matchedKeywords.unshift(minsaengKw);
+    } else if (content.includes(mkw)) {
+      score += 8;
+      if (!matchedKeywords.includes(minsaengKw)) matchedKeywords.push(minsaengKw);
+    }
+  }
+
+  // 2) 소상공인 경영애로/경영자금 슈퍼 가산점
   for (const superKw of SUPER_SMALL_BIZ_KEYWORDS) {
     const skw = superKw.toLowerCase();
     if (title.includes(skw)) {
@@ -199,11 +252,14 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
 }
 
 /**
- * 소상공인이 가장 관심을 둘 만한 '일시적 경영애로', '일반경영자금', '소상공인 정책자금' 기사 판별
+ * 전 국민·소상공인이 가장 관심을 둘 만한 '민생지원금' 또는 '소상공인 경영자금/애로자금' 기사 판별
  */
-export function isSmallBizPriorityArticle(item: ParsedRssItem): boolean {
+export function isPriorityPolicyArticle(item: ParsedRssItem): boolean {
   const text = `${item.title || ""} ${item.content || ""} ${item.contentSnippet || ""} ${item.category || ""}`.toLowerCase();
   return (
+    text.includes("민생지원금") ||
+    text.includes("민생회복") ||
+    text.includes("추석지원금") ||
     text.includes("경영애로") ||
     text.includes("일반경영자금") ||
     text.includes("경영안정자금") ||
@@ -214,8 +270,26 @@ export function isSmallBizPriorityArticle(item: ParsedRssItem): boolean {
   );
 }
 
+// 하위 호환성 유지
+export const isSmallBizPriorityArticle = isPriorityPolicyArticle;
+
 /**
- * 발행 후보 선별 시 소상공인 경영자금/애로자금 기사를 최소 1건 이상 반드시 포함(Quota Allocation)하도록 보장
+ * 전 국민·지역 주민이 주목하는 '추석 및 지역별 민생지원금/민생회복지원금' 기사 판별
+ */
+export function isMinsaengArticle(item: ParsedRssItem): boolean {
+  const text = `${item.title || ""} ${item.content || ""} ${item.contentSnippet || ""}`.toLowerCase();
+  return (
+    text.includes("민생지원금") ||
+    text.includes("민생회복") ||
+    text.includes("추석지원금") ||
+    text.includes("민생지원금신청") ||
+    text.includes("민생지원금조회") ||
+    text.includes("재난지원금")
+  );
+}
+
+/**
+ * 발행 후보 선별 시 추석 민생지원금(신청·조회·지역별) 및 소상공인 경영자금 기사를 최우선 쿼터(Quota Allocation)로 배정
  */
 export function selectCandidatesWithQuota<T extends ParsedRssItem>(
   items: T[],
@@ -225,16 +299,29 @@ export function selectCandidatesWithQuota<T extends ParsedRssItem>(
     return items;
   }
 
-  const smallBizCandidates = items.filter(isSmallBizPriorityArticle);
+  const minsaengCandidates = items.filter(isMinsaengArticle);
+  const smallBizCandidates = items.filter((it) => isPriorityPolicyArticle(it) && !isMinsaengArticle(it));
   const result: T[] = [];
 
-  // 1. 소상공인 경영자금/애로자금 기사가 있으면 1순위로 최소 1건을 무조건 우선 확보!
-  if (smallBizCandidates.length > 0) {
-    result.push(smallBizCandidates[0]);
-    console.log(`🎯 [Quota] 소상공인 경영자금/애로자금 기사 1건 최우선 쿼터 배정: "${smallBizCandidates[0].title.slice(0, 40)}"`);
+  // 1. [초특급 트렌드] 민생지원금(추석/신청/조회/지역별) 기사를 1~2건 최우선 쿼터로 배정
+  for (const item of minsaengCandidates) {
+    if (result.length >= Math.min(2, limit)) break;
+    if (!result.some((r) => r.link === item.link)) {
+      result.push(item);
+      console.log(`🎯 [Quota] 추석/지역별 민생지원금 기사 최우선 쿼터 배정 (#${result.length}): "${item.title.slice(0, 40)}"`);
+    }
   }
 
-  // 2. 나머지 슬롯은 기존 점수순 정렬 목록에서 중복 없이 채움
+  // 2. [핵심 정책] 소상공인 경영자금/애로자금 기사를 1건 쿼터 배정
+  if (result.length < limit && smallBizCandidates.length > 0) {
+    const sb = smallBizCandidates[0];
+    if (!result.some((r) => r.link === sb.link)) {
+      result.push(sb);
+      console.log(`🎯 [Quota] 소상공인 경영자금/애로자금 쿼터 배정: "${sb.title.slice(0, 40)}"`);
+    }
+  }
+
+  // 3. 나머지 슬롯은 전체 점수순 정렬 목록에서 중복 없이 채움 (민생지원금 남은 것들도 높은 점수로 우선 진입)
   for (const item of items) {
     if (result.length >= limit) break;
     if (!result.some((r) => r.link === item.link)) {

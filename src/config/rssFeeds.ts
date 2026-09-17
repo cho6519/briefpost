@@ -18,6 +18,24 @@ export interface RssFeedConfig {
 }
 
 export const RSS_FEEDS: RssFeedConfig[] = [
+  // --- 0. [초특급 트렌드] 추석 민생지원금 및 지역별(경기·부산·인천 등) 민생회복지원금 피드 ---
+  {
+    id: "portal-minsaeng-chuseok",
+    name: "추석 민생회복지원금 및 민생지원금 신청·조회",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%EC%B6%94%EC%84%9D+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+OR+%EB%AF%BC%EC%83%9D%ED%9A%8C%EB%B3%B5%EC%A7%80%EC%9B%90%EA%B8%88+OR+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EC%8B%A0%EC%B2%AD+OR+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EC%A1%B0%ED%9A%8C&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    description: "전 국민 및 취약계층 대상 추석 민생지원금, 민생회복지원금 25만원, 신청 자격 및 온라인 조회 피드",
+  },
+  {
+    id: "portal-minsaeng-regions",
+    name: "지역별 민생지원금 (경기도·부산·인천 등 지자체 지원금)",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EA%B2%BD%EA%B8%B0%EB%8F%84+OR+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EB%B6%80%EC%82%B0+OR+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EC%9D%B8%EC%B2%9C+OR+%EC%A7%80%EC%9E%90%EC%B2%B4+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    description: "경기도, 부산시, 인천시 등 지자체별 민생지원금 및 재난지원금, 지역화폐 충전 혜택 피드",
+  },
+
   // --- 1. 소상공인시장진흥공단(소진공) 및 중기부 기업마당 소상공인 전용 정책자금 피드 ---
   {
     id: "portal-semas-general-management",
