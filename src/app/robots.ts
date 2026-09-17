@@ -10,13 +10,23 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/api/"],
+        allow: ["/", "/api/og"],
+        disallow: ["/api/cron/", "/api/articles/"],
       },
       {
         userAgent: "Googlebot",
-        allow: "/",
-        disallow: ["/api/"],
+        allow: ["/", "/api/og"],
+        disallow: ["/api/cron/", "/api/articles/"],
+      },
+      {
+        userAgent: "Yeti", // 네이버 크롤러 봇
+        allow: ["/", "/api/og"],
+        disallow: ["/api/cron/", "/api/articles/"],
+      },
+      {
+        userAgent: "Daumoa", // 다음/카카오 크롤러 봇
+        allow: ["/", "/api/og"],
+        disallow: ["/api/cron/", "/api/articles/"],
       },
       {
         userAgent: "Mediapartners-Google",
