@@ -65,7 +65,7 @@ export default function ContactPage() {
           <div className="rounded-xl border border-zinc-200 p-4 space-y-1">
             <h3 className="font-bold text-zinc-900">3) 콘텐츠 제휴 및 비즈니스 협력</h3>
             <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed">
-              Brief Post의 1단 뉴스레터 포맷을 활용한 제휴, 데이터 연동, 비즈니스 협업 제안을 환영합니다.
+              Brief Post의 공공.경제 정책 전문 브리핑 포맷을 활용한 제휴, 데이터 연동, 비즈니스 협업 제안을 환영합니다.
             </p>
           </div>
         </div>

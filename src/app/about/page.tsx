@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "매체 소개 (About Us) | Brief Post",
-  description: "공공 정책, 경제, 금융, 주거 등 핵심 이슈를 전문적이고 신속하게 전달하는 1단 요약 뉴스레터 Brief Post의 운영 목적과 편집 원칙을 소개합니다.",
+  description: "공공 정책, 경제, 금융, 주거 등 핵심 이슈를 전문적이고 신속하게 전달하는 공공.경제 정책 전문 브리핑 Brief Post의 운영 목적과 편집 원칙을 소개합니다.",
 };
 
 export default function AboutPage() {

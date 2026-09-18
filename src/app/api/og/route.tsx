@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
     // 3. 인포그래픽 하이라이트 배지 추출
     const badgeInfo = extractCardBadge(title, content, category, highlightBadge);
     const displayBadge = highlightBadge || badgeInfo.badgeText;
-    const displaySub = badgeInfo.subText || "신속하고 정확한 1단 핵심 요약 브리핑";
+    const displaySub = badgeInfo.subText || "신속하고 정확한 공공.경제 정책 전문 브리핑";
 
     // 4. 기사 고유 해시 기반 다이내믹 배경 & 카테고리별 테마 설정
     const getHash = (str: string) => {

@@ -100,7 +100,7 @@ export function extractCardBadge(
   }
 
   return {
-    badgeText: "📌 Brief Post 1단 요약 뉴스레터",
+    badgeText: "📌 Brief Post 공공.경제 정책 전문 브리핑",
     subText: "3줄 핵심 요약 & 심층 배경 브리핑",
     isSubsidy: false,
   };

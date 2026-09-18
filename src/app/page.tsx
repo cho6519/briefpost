@@ -63,7 +63,7 @@ export default async function HomePage({ searchParams }: PageProps) {
     "@type": "WebSite",
     name: "Brief Post",
     url: siteUrl,
-    description: "정책, 경제, 테크 핵심 뉴스를 3줄 요약과 함께 빠르게 전달하는 1단 뉴스레터",
+    description: "정책, 경제, 테크 핵심 뉴스를 빠르게 전달하는 공공.경제 정책 전문 브리핑",
     publisher: {
       "@type": "Organization",
       name: "Brief Post",
