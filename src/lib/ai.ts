@@ -593,7 +593,7 @@ ${cleanInputContent}
  * 기사 제목 및 카테고리에 완벽히 일치하는 소제목과 문맥을 지능적으로 합성
  */
 export function generateFallbackParaphrase(raw: RawArticleInput): RewrittenArticleResult {
-  const cleanTitle = cleanseHeadline(sanitizePlainText(raw.title || ""));
+  const cleanTitle = stripMediaAndPortalTags(cleanseHeadline(sanitizePlainText(raw.title || "")));
   const finalCategory = normalizeCategory(raw.category);
 
   // 자연스러운 정통 경제·정책 완결형 헤드라인 (말줄임표 절삭 없는 온전한 문장 보존)
@@ -609,9 +609,14 @@ export function generateFallbackParaphrase(raw: RawArticleInput): RewrittenArtic
     .filter((s) => s.length >= 15 && /[가-힣]/.test(s) && !s.includes("http"));
 
   // 3줄 요약 문장 (1. 핵심 내용 -> 2. 세부 내용/수치 -> 3. 전망/영향)
-  const s1 =
-    sentences[0] ||
-    `${cleanTitle} 관련 정부 부처 및 주요 관계 기관의 공식 발표가 나왔습니다.`;
+  let rawS1 = sentences[0] || `${cleanTitle} 관련 정부 부처 및 주요 관계 기관의 공식 발표가 나왔습니다.`;
+  // 만약 s1에 도메인이나 불완전한 문장 끝단이 남아있다면 정제
+  rawS1 = stripMediaAndPortalTags(rawS1).replace(/[a-zA-Z0-9.-]+\.(?:com|co\.kr|net|org|kr)/gi, "").trim();
+  if (!/[.?!]$/.test(rawS1)) {
+    rawS1 += ".";
+  }
+
+  const s1 = rawS1;
   const s2 =
     sentences[1] ||
     "지원 요건과 세부 적용 기준이 구체화되면서 실수요자 및 관련 업계의 실질적 혜택이 확대될 전망입니다.";
@@ -639,8 +644,6 @@ export function generateFallbackParaphrase(raw: RawArticleInput): RewrittenArtic
   if (isSmallBiz) {
     content = `
 ## 1. 지원 사업 개요 및 목적
-
-${s1}
 
 중소벤처기업부와 소상공인시장진흥공단(소진공)이 고금리·고물가로 경영 애로를 겪고 있는 소상공인 및 자영업자의 자금 유동성을 보강하고 경영 안정을 돕기 위해 '소상공인 정책자금 및 맞춤형 지원 사업'을 본격 가동합니다.
 

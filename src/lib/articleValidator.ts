@@ -73,8 +73,13 @@ export function stripMediaAndPortalTags(text: string): string {
   return text
     // 1. 대괄호 안의 언론사 및 도메인 태그 제거 (예: [연합뉴스], [v.daum.net], [한겨레], [아시아경제])
     .replace(/\[\s*(?:v\.daum\.net|연합뉴스(?:TV)?|연합인포맥스|이데일리(?:TV)?|더게임스|YTN|조선일보|중앙일보|동아일보|경향신문|한겨레|매일경제|한국경제|스포츠조선|아시아경제|전자신문|머니투데이|뉴시스|newsis(?:\.com)?|[a-zA-Z0-9.-]+\.(?:com|net|kr|co\.kr)|[가-힣]{2,6}(?:일보|신문|뉴스|경제|방송|미디어|TV))\s*\]/gi, "")
-    // 2. 텍스트 중간/끝에 단독 노출되는 포털 및 언론사 도메인 제거
-    .replace(/\b(?:v\.daum\.net|edaily\.co\.kr|newsis\.com|yna\.co\.kr|ytn\.co\.kr)\b/gi, "")
+    // 2. 텍스트 중간/끝에 단독 노출되는 일반 언론사/포털 도메인(예: bplusnews.com, eanews.kr, gukjenews.com 등) 전면 제거 (공식 정부/공공기관 제외)
+    .replace(/\b[a-zA-Z0-9.-]+\.(?:com|co\.kr|net|org|kr|asia|news|tv|cc)\b/gi, (match) => {
+      if (/go\.kr|gov\.kr|semas\.or\.kr|bizinfo\.go\.kr|bok\.or\.kr|kostat\.go\.kr|nts\.go\.kr/i.test(match)) {
+        return match; // 공공기관 공식 사이트 안내는 보존
+      }
+      return "";
+    })
     // 3. 기사 끝자락의 ' - 언론사명' 또는 ' 언론사명:' 제거
     .replace(/[^\S\r\n]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
