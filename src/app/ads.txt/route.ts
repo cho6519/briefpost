@@ -10,11 +10,11 @@ export async function GET() {
   const rawClientId =
     process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ||
     process.env.ADSENSE_PUB_ID ||
-    "";
+    "ca-pub-5916106612077152";
 
   // ca-pub-1234567890123456 또는 pub-1234567890123456 에서 숫자 부분 추출
   const pubMatch = rawClientId.match(/pub-(\d+)/i);
-  const pubId = pubMatch ? `pub-${pubMatch[1]}` : "pub-XXXXXXXXXXXXXXXX";
+  const pubId = pubMatch ? `pub-${pubMatch[1]}` : "pub-5916106612077152";
 
   const content = `# Google AdSense ads.txt for Brief Post\ngoogle.com, ${pubId}, DIRECT, f08c47fec0942fa0\n`;
 

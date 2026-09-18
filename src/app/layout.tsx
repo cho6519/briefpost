@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 const siteUrl = getSiteUrl();
-const adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+const adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "ca-pub-5916106612077152";
 
 export const viewport: Viewport = {
   themeColor: "#ffffff",
@@ -54,6 +54,7 @@ export const metadata: Metadata = {
     google: "kQuFAyO0YE_YE_v2Hn2MPjHdG6HkXW_lAGPs-E2g0So",
     other: {
       "naver-site-verification": "d82d4537edb61c62c480aee081f939b9cb57cc18",
+      "google-adsense-account": "ca-pub-5916106612077152",
     },
   },
 };
