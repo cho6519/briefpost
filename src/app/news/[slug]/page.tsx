@@ -18,6 +18,11 @@ interface ArticlePageProps {
   params: Promise<{ slug: string }>;
 }
 
+// 신규 발행 기사가 빌드 시점에 없었더라도 404 없이 서버에서 즉시 DB를 조회해 렌더링하도록 설정
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 const siteUrl = getSiteUrl();
 
 /**
@@ -72,12 +77,27 @@ function splitMarkdownForAdSense(markdown: string): {
  * SEO 최적화 동적 메타데이터 생성
  */
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
-  const { slug } = await params;
-  if (slug === "subsidy-welfare" || slug.includes("column") || slug.includes("opinion")) {
+  const { slug: rawSlug } = await params;
+  let decodedSlug = rawSlug;
+  try {
+    decodedSlug = decodeURIComponent(rawSlug);
+  } catch {
+    // 디코딩 실패 시 rawSlug 유지
+  }
+
+  if (
+    rawSlug === "subsidy-welfare" ||
+    decodedSlug === "subsidy-welfare" ||
+    rawSlug.includes("column") ||
+    decodedSlug.includes("column") ||
+    rawSlug.includes("opinion") ||
+    decodedSlug.includes("opinion")
+  ) {
     notFound();
   }
 
-  const article = getArticleBySlug(slug);
+  // 디코딩된 슬러그 우선 조회 후 원본 슬러그 조회
+  const article = getArticleBySlug(decodedSlug) || getArticleBySlug(rawSlug);
 
   if (!article) {
     return {
@@ -145,12 +165,27 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 }
 
 export default async function ArticleDetailPage({ params }: ArticlePageProps) {
-  const { slug } = await params;
-  if (slug === "subsidy-welfare" || slug.includes("column") || slug.includes("opinion")) {
+  const { slug: rawSlug } = await params;
+  let decodedSlug = rawSlug;
+  try {
+    decodedSlug = decodeURIComponent(rawSlug);
+  } catch {
+    // 디코딩 실패 시 rawSlug 유지
+  }
+
+  if (
+    rawSlug === "subsidy-welfare" ||
+    decodedSlug === "subsidy-welfare" ||
+    rawSlug.includes("column") ||
+    decodedSlug.includes("column") ||
+    rawSlug.includes("opinion") ||
+    decodedSlug.includes("opinion")
+  ) {
     notFound();
   }
 
-  const article = getArticleBySlug(slug);
+  // 디코딩된 슬러그 우선 조회 후 원본 슬러그 조회
+  const article = getArticleBySlug(decodedSlug) || getArticleBySlug(rawSlug);
 
   if (!article) {
     notFound();

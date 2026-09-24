@@ -88,19 +88,37 @@ export const BANNED_SLUGS = new Set(["subsidy-welfare"]);
 
 /**
  * Slug 기반 단일 기사 상세 조회 (SEO용 메타데이터 생성 및 상세 렌더링에 사용)
+ * - URL 디코딩(decodeURIComponent)과 원본 슬러그 양방향 매칭 지원
  */
 export function getArticleBySlug(slug: string): Article | null {
-  if (BANNED_SLUGS.has(slug) || slug.includes("column") || slug.includes("opinion")) {
+  if (!slug) return null;
+  const rawSlug = slug.trim();
+  let decodedSlug = rawSlug;
+  try {
+    decodedSlug = decodeURIComponent(rawSlug);
+  } catch {
+    // 디코딩 실패 시 rawSlug 유지
+  }
+
+  if (
+    BANNED_SLUGS.has(rawSlug) ||
+    BANNED_SLUGS.has(decodedSlug) ||
+    rawSlug.includes("column") ||
+    decodedSlug.includes("column") ||
+    rawSlug.includes("opinion") ||
+    decodedSlug.includes("opinion")
+  ) {
     try {
-      db.prepare("DELETE FROM articles WHERE slug = ?").run(slug);
+      db.prepare("DELETE FROM articles WHERE slug = ? OR slug = ?").run(rawSlug, decodedSlug);
     } catch {
       // 무시
     }
     return null;
   }
 
-  const stmt = db.prepare("SELECT * FROM articles WHERE slug = ? LIMIT 1");
-  const article = stmt.get(slug) as Article | undefined;
+  // 디코딩 슬러그 우선 조회 및 원본 인코딩 슬러그 듀얼 매칭
+  const stmt = db.prepare("SELECT * FROM articles WHERE slug = ? OR slug = ? LIMIT 1");
+  const article = stmt.get(decodedSlug, rawSlug) as Article | undefined;
   if (!article) return null;
 
   // 혹시라도 칼럼/사설 글이 감지되면 DB에서 영구 삭제하고 404(null) 반환
