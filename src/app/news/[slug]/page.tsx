@@ -108,7 +108,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const title = article.metaTitle || article.title;
   const description = article.metaDescription || article.summary || "";
   const canonicalUrl = `${siteUrl}/news/${article.slug}`;
-  const cardImageUrl = `${siteUrl}/api/og?slug=${article.slug}&v=3`;
+  const cardImageUrl = `${siteUrl}/api/og?slug=${article.slug}&v=4`;
 
   return {
     title,
@@ -222,8 +222,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     day: "numeric",
   });
 
-  // 서버 내부 렌더링 맞춤형 타이포그래피 카드뉴스 URL (v=3 다이내믹 배경 갱신으로 소급 적용 완벽 보장)
-  const cardImageUrl = `/api/og?slug=${article.slug}&v=3`;
+  // 서버 내부 렌더링 맞춤형 타이포그래피 카드뉴스 URL (v=4 캐시 갱신으로 정제된 card_title 소급 적용 완벽 보장)
+  const cardImageUrl = `/api/og?slug=${article.slug}&v=4`;
 
   // 1. 기사 표준 구조화 데이터 (NewsArticle & BlogPosting)
   const jsonLd = {
@@ -231,7 +231,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     "@type": ["NewsArticle", "BlogPosting"],
     headline: article.title,
     description: article.metaDescription || article.summary || article.title,
-    image: [`${siteUrl}/api/og?slug=${article.slug}&v=3`],
+    image: [`${siteUrl}/api/og?slug=${article.slug}&v=4`],
     datePublished: article.createdAt,
     dateModified: article.updatedAt || article.createdAt,
     articleSection: article.category,

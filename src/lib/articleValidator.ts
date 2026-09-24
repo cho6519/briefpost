@@ -487,6 +487,33 @@ export function cleanseHeadline(title: string): string {
 }
 
 /**
+ * 카드뉴스 전용 헤드라인(card_title) 강력 정제기
+ * - 괄호, 대괄호 및 내부 텍스트 완전 제거
+ * - 불필요한 금액/접수 수식어((최대 OO만 원), [신청 안내], 2026년 공고 등) 원천 차단
+ * - 특수문자 정리 및 12자~16자 내외의 정갈한 핵심 단문으로 제한
+ */
+export function cleanseCardTitle(rawTitle: string): string {
+  if (!rawTitle) return "";
+  let clean = rawTitle
+    // 1. 괄호, 대괄호 및 내부 내용 완전 제거
+    .replace(/[\(\[\{【<].*?[\)\]\}】>]/g, "")
+    // 2. 흔한 접두/접미 수식어 정리 (예: 2026년, 종합 안내, 공고 등)
+    .replace(/\b202[0-9]년?\b/g, "")
+    .replace(/\s*:\s*.*$/, "")
+    // 3. 특수문자 제거 (한글, 영문, 숫자, 공백만 보존)
+    .replace(/[^\w\sㄱ-ㅎ가-힣]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // 4. 최대 16자 제한
+  if (clean.length > 16) {
+    clean = clean.slice(0, 16).trim();
+  }
+
+  return clean;
+}
+
+/**
  * 3줄 요약 전용 정규화 및 무결성 보정
  * HTML 태그, 마크다운 링크, 불필요한 공백, 언론사 태그를 완전히 배제하고
  * '1. ...\n2. ...\n3. ...' 포맷으로 통일

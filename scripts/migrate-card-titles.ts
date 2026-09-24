@@ -1,42 +1,49 @@
-import Database from "better-sqlite3";
-import path from "path";
-import { extractKeywordTitle } from "../src/lib/catchphraseExtractor";
+import Database from 'better-sqlite3';
+import path from 'path';
+import { cleanseCardTitle } from '../src/lib/articleValidator';
 
-const dbPath = path.join(process.cwd(), "data", "news.db");
+const dbPath = path.join(process.cwd(), 'data', 'news.db');
 const db = new Database(dbPath);
 
-// 1. 컬럼 존재 여부 확인 및 컬럼 추가
-const tableInfo = db.pragma("table_info(articles)") as { name: string }[];
-const hasCardTitle = tableInfo.some((col) => col.name === "card_title");
-if (!hasCardTitle) {
-  console.log("Adding card_title column to articles table...");
-  db.exec("ALTER TABLE articles ADD COLUMN card_title TEXT");
-}
-
-// 2. 전체 기사 조회
-const articles = db.prepare("SELECT id, title, category, card_title FROM articles").all() as {
-  id: number;
+interface ArticleRow {
+  id: string;
+  slug: string;
   title: string;
-  category: string;
   card_title: string | null;
-}[];
-
-console.log(`\n총 ${articles.length}건의 기사에 대해 card_title 소급 마이그레이션을 시작합니다...\n`);
-
-const updateStmt = db.prepare("UPDATE articles SET card_title = ? WHERE id = ?");
-
-let updatedCount = 0;
-for (const article of articles) {
-  const generatedCardTitle = extractKeywordTitle(article.title);
-
-  updateStmt.run(generatedCardTitle, article.id);
-  updatedCount++;
-
-  console.log(`[ID ${article.id}]`);
-  console.log(`  원문 제목(h1): ${article.title}`);
-  console.log(`  ➔ card_title: "${generatedCardTitle}" (${generatedCardTitle.length}자)\n`);
 }
 
-console.log(`================================================================`);
-console.log(`🎉 성공적으로 ${updatedCount}건의 기사 card_title 마이그레이션 완료!`);
-console.log(`================================================================`);
+function runMigration() {
+  console.log('=== [카드뉴스 타이틀(card_title) 전수 일괄 정제 시작] ===');
+  
+  const articles = db.prepare('SELECT id, slug, title, card_title FROM articles').all() as ArticleRow[];
+  console.log(`총 대상 기사 수: ${articles.length}건`);
+
+  const updateStmt = db.prepare('UPDATE articles SET card_title = ? WHERE id = ?');
+  
+  let updatedCount = 0;
+  
+  const updateMany = db.transaction((rows: ArticleRow[]) => {
+    for (const article of rows) {
+      const originalCardTitle = article.card_title || article.title;
+      const cleaned = cleanseCardTitle(originalCardTitle);
+
+      if (article.card_title !== cleaned) {
+        updateStmt.run(cleaned, article.id);
+        updatedCount++;
+        console.log(`[UPDATE] ${article.slug}`);
+        console.log(`   기존: "${article.card_title || '(없음)'}"`);
+        console.log(`   변경: "${cleaned}"`);
+      }
+    }
+  });
+
+  updateMany(articles);
+
+  // 최적화 실행
+  db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+  
+  console.log(`\n=== [마이그레이션 완료] ===`);
+  console.log(`총 업데이트된 기사: ${updatedCount}건 / 전체: ${articles.length}건`);
+}
+
+runMigration();

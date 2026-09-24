@@ -68,29 +68,32 @@ export async function GET(req: NextRequest) {
       title = "소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원)";
     }
 
-    // 2. 카드뉴스 전용 키워드 타이틀 및 서브 캐치프레이즈
-    // (모바일에서 이미지가 꽉 차 보이도록, 지나치게 짧은 축약 대신 풍성한 핵심 헤드라인 내용을 2~3줄로 꽉 채움)
+    // 2. 카드뉴스 전용 헤드라인(card_title) 안전장치(Sanitizer) 강제 적용
+    // 괄호, 대괄호 및 내부 텍스트 완전 제거, 특수문자 정리, 최대 16자 제한
     const catchphraseData = generateCardCatchphrase(title, category);
     const queryCardTitle = searchParams.get("card_title") || searchParams.get("keyword");
-    let cardMainTitle = queryCardTitle || cardTitleFromDb;
-    if (!cardMainTitle || cardMainTitle.length < 15) {
-      cardMainTitle = title;
-    }
+    const rawCardTitle = queryCardTitle || cardTitleFromDb || title;
 
-    // 불필요한 언론사명, 바깥 따옴표, 괄호 등 깔끔하게 정제
-    cardMainTitle = cardMainTitle
-      .replace(/^[“"'\s]+|[”"'\s]+$/g, "")
-      .replace(
-        /\s*(?:Martin Cid Magazine|위키트리|연합뉴스|뉴시스|머니투데이|한국경제|매일경제|조선일보|동아일보|중앙일보|한국무역협회|종합[0-9]?보)\s*$/gi,
-        ""
-      )
-      .replace(/\s*\([^)]*\)\s*$/g, "")
-      .replace(/\.{2,}[^\n]*$/g, "")
-      .replace(/…[^\n]*$/g, "")
-      .replace(/[.…:\-\s]+$/, "")
-      .replace(/^[“"']+|[”"']+$/g, "")
+    let cleanTitle = (rawCardTitle || "")
+      .replace(/[\(\[\{【<].*?[\)\]\}】>]/g, "")
+      .replace(/\b202[0-9]년?\b/g, "")
+      .replace(/[^\w\sㄱ-ㅎ가-힣]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 16)
       .trim();
 
+    if (!cleanTitle || cleanTitle.length < 4) {
+      cleanTitle = (title || "")
+        .replace(/[\(\[\{【<].*?[\)\]\}】>]/g, "")
+        .replace(/[^\w\sㄱ-ㅎ가-힣]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 16)
+        .trim();
+    }
+
+    const cardMainTitle = cleanTitle;
     const cardSubCatchphrase = searchParams.get("catchphrase") || catchphraseData.subCatchphrase;
 
     // 3. 인포그래픽 하이라이트 배지 추출

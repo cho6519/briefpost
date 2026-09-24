@@ -14,6 +14,7 @@ import {
   sanitizePlainText,
   extractTitleKeywords,
   cleanseHeadline,
+  cleanseCardTitle,
   stripMediaAndPortalTags,
 } from "./articleValidator";
 import { detectImageTheme, ImageTheme } from "../utils/imageMapper";
@@ -162,8 +163,11 @@ const SYSTEM_PROMPT = `당신은 대한민국 1등 경제·정책·생활비타�
 
 [CRITICAL 1-1: 카드뉴스 전용 헤드라인 규칙 (card_title Rule) - 절대 준수]
 1. 카드 이미지 중앙에 들어갈 "card_title" 필드를 반드시 별도로 생성하십시오.
-2. card_title은 반드시 "15자~22자 내외"의 간결하고 임팩트 있는 카드뉴스 전용 헤드라인이어야 합니다.
-3. 불필요한 수식어, 긴 기관명 접두어, 말줄임표(...)를 과감히 제거하고, "핵심 키워드와 액션 중심"으로 작성하십시오.
+2. 괄호 (...), 대괄호 [...], 불필요한 금액/접수 수식어(예: '(최대 7,000만 원 저리 융자)', '[신청 안내]', '2026년 공고' 등)를 일체 넣지 마십시오.
+3. 순수 핵심 주제어만 "12자~16자 내외의 깔끔한 단문"으로 추출하십시오.
+   - 예시 1: '소진공 경영안정자금 접수 개시'
+   - 예시 2: '경남 민생지원금 지급 논란'
+   - 예시 3: '청년 일자리 바우처 접수 개시'
 
 [CRITICAL 1-2: 영문 슬러그 규칙 (slug Rule) - 절대 준수]
 1. 'brief-yr4y5', 'article-1234' 같은 무의미한 해시 문자열을 절대 생성하지 마십시오.
@@ -584,16 +588,13 @@ ${cleanInputContent}
       finalHighlightBadge = cardBadge.badgeText;
     }
 
-    // 카드뉴스 전용 헤드라인 card_title 추출 및 정제 (15~22자 내외)
+    // 카드뉴스 전용 헤드라인 card_title 추출 및 정제 (12~16자 내외, 괄호/잡음 완전 제거)
     let finalCardTitle = "";
     if (parsed.card_title && typeof parsed.card_title === "string") {
-      finalCardTitle = parsed.card_title
-        .replace(/^[“"'\s]+|[”"'\s]+$/g, "")
-        .replace(/\.{2,}/g, "")
-        .trim();
+      finalCardTitle = cleanseCardTitle(parsed.card_title);
     }
-    if (!finalCardTitle || finalCardTitle.length < 5 || finalCardTitle.length > 28) {
-      finalCardTitle = extractKeywordTitle(validated.sanitized.title);
+    if (!finalCardTitle || finalCardTitle.length < 4) {
+      finalCardTitle = cleanseCardTitle(validated.sanitized.title);
     }
 
     return {
@@ -1124,7 +1125,7 @@ ${s3}
 
   return {
     title: validated.sanitized.title,
-    card_title: extractKeywordTitle(validated.sanitized.title),
+    card_title: cleanseCardTitle(validated.sanitized.title),
     slug: validated.sanitized.slug,
     summary: validated.sanitized.summary,
     content: validated.sanitized.content,
