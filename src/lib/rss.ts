@@ -20,6 +20,8 @@ export interface FetchRssResult {
   skippedCount: number;
   expiredCount?: number;
   noticeSkippedCount?: number;
+  opinionSkippedCount?: number;
+  nonWhitelistedSkippedCount?: number;
   noKeywordSkippedCount?: number;
   items: (ParsedRssItem & { keywordScore?: number; matchedKeywords?: string[] })[];
   feedStatuses: {
@@ -123,6 +125,187 @@ export const TARGET_KEYWORDS = [
 ] as const;
 
 /**
+ * [칼럼/오피니언/사설 원천 배제 패턴]
+ * 개인 블로그, 기자 칼럼, 사설, 오피니언, 주관적 주장글을 완벽히 차단
+ */
+export const OPINION_COLUMN_PATTERNS = [
+  /(?:\[|\(|【|\<)\s*(?:칼럼|사설|오피니언|시론|기고|데스크(?:\s*칼럼)?|기자수첩|취재수첩|만평|논평|독자투고|전문가진단|기자의\s*눈|시각|사견)\s*(?:\]|\)|】|\>)/i,
+  /(?:칼럼|사설|오피니언|시론|기고|논평|데스크칼럼)\s*[:：]/i,
+  /(?:기자|교수|대표|변호사|회장|원장|소장|연구위원|위원장|전문위원)\s*칼럼/i,
+  /\b(?:칼럼니스트|외부필진|사설·칼럼|오피니언)\b/i,
+];
+
+/**
+ * [공식 공공기관/정부부처 화이트리스트 도메인 및 식별자]
+ * 정책브리핑, 소진공, 기업마당, 정부24, 온통청년, 각 부처/지자체 공식 보도자료만 허용
+ */
+export const OFFICIAL_PUBLIC_DOMAINS = [
+  "korea.kr",
+  "semas.or.kr",
+  "bizinfo.go.kr",
+  "gov.kr",
+  "plus.gov.kr",
+  "youthcenter.go.kr",
+  "bok.or.kr",
+  "fsc.go.kr",
+  "fss.or.kr",
+  "kodit.co.kr",
+  "kibo.or.kr",
+  "sbiz.or.kr",
+  "moef.go.kr",
+  "mss.go.kr",
+  "moel.go.kr",
+  "molit.go.kr",
+  "nts.go.kr",
+  "mois.go.kr",
+  "mohw.go.kr",
+  "seoul.go.kr",
+  "gg.go.kr",
+  "busan.go.kr",
+  "incheon.go.kr",
+  "daegu.go.kr",
+  "gwangju.go.kr",
+  "daejeon.go.kr",
+  "ulsan.go.kr",
+  "sejong.go.kr",
+];
+
+/**
+ * 기사의 제목과 본문에서 칼럼, 사설, 오피니언, 주관적 주장글 여부 판별
+ */
+export function isOpinionOrColumnArticle(item: ParsedRssItem): { isOpinion: boolean; reason?: string } {
+  const title = item.title || "";
+  const content = `${item.content || ""} ${item.contentSnippet || ""}`;
+  const feedTitle = item.feedTitle || "";
+
+  // 1. 피드 이름 검사
+  if (/칼럼|오피니언|사설|기고|시론/i.test(feedTitle)) {
+    return { isOpinion: true, reason: `오피니언/칼럼 피드 출처 ('${feedTitle}')` };
+  }
+
+  // 2. 제목 패턴 정밀 검사
+  for (const pattern of OPINION_COLUMN_PATTERNS) {
+    if (pattern.test(title)) {
+      return { isOpinion: true, reason: `제목에 칼럼/오피니언 패턴 검출` };
+    }
+  }
+
+  // 3. 제목 내 직접적인 머릿말 검사
+  const rawOpinionWords = ["칼럼", "사설", "오피니언", "시론", "기자수첩", "취재수첩", "만평", "사견", "기고문", "칼럼니스트"];
+  for (const word of rawOpinionWords) {
+    if (title.includes(`[${word}]`) || title.includes(`(${word})`) || title.includes(`【${word}】`) || title.startsWith(`${word}:`)) {
+      return { isOpinion: true, reason: `제목 머릿말에 '${word}' 표기 검출` };
+    }
+  }
+
+  // 4. 본문 서두 200자 내 칼럼니스트/기고 표기 검사
+  const intro = content.slice(0, 200);
+  if (/기고\s*=|글\s*=|정리\s*=|외부\s*필진|칼럼니스트/i.test(intro) && /칼럼|기고|사설/i.test(title)) {
+    return { isOpinion: true, reason: `본문 서두에 기고/칼럼 표기 검출` };
+  }
+
+  return { isOpinion: false };
+}
+
+/**
+ * 기사의 출처가 공식 공공기관/정부부처/지자체 화이트리스트에 부합하는지 검증
+ */
+export function isWhitelistedPublicSource(item: ParsedRssItem): { isWhitelisted: boolean; reason?: string } {
+  const link = (item.link || "").toLowerCase();
+  const feedTitle = (item.feedTitle || "").toLowerCase();
+  const title = (item.title || "").toLowerCase();
+  const content = (item.contentSnippet || item.content || "").toLowerCase();
+
+  // 1. 개인 블로그 및 비공식 커뮤니티 원천 차단
+  const BLOCKED_DOMAINS = [
+    "tistory.com",
+    "blog.naver.com",
+    "brunch.co.kr",
+    "daum.net/blog",
+    "velog.io",
+    "medium.com",
+    "cafe.naver.com",
+    "cafe.daum.net",
+  ];
+  for (const blocked of BLOCKED_DOMAINS) {
+    if (link.includes(blocked)) {
+      return { isWhitelisted: false, reason: `개인 블로그/카페 링크(${blocked}) 제외` };
+    }
+  }
+
+  // 2. 링크 URL 내 공공기관 도메인 검증
+  for (const domain of OFFICIAL_PUBLIC_DOMAINS) {
+    if (link.includes(domain)) {
+      return { isWhitelisted: true };
+    }
+  }
+
+  // 3. 일반 *.go.kr / *.gov.kr 도메인 검증
+  if (/\.go\.kr\b/i.test(link) || /\.gov\.kr\b/i.test(link)) {
+    return { isWhitelisted: true };
+  }
+
+  // 4. Google News RSS 링크인 경우 (news.google.com):
+  //    - 피드 타이틀이나 기사 본문/스니펫에 공식 공공기관 출처가 명시되었는지 확인
+  const isGoogleNews = link.includes("news.google.com");
+  if (isGoogleNews) {
+    const publicKeywords = [
+      "정책브리핑",
+      "korea.kr",
+      "소상공인시장진흥공단",
+      "소진공",
+      "semas.or.kr",
+      "기업마당",
+      "bizinfo.go.kr",
+      "정부24",
+      "보조금24",
+      "온통청년",
+      "youthcenter.go.kr",
+      "중소벤처기업부",
+      "기획재정부",
+      "금융위원회",
+      "고용노동부",
+      "국토교통부",
+      "국세청",
+      "행정안전부",
+      "보건복지부",
+      "서울시",
+      "경기도",
+      "부산시",
+      "인천시",
+      "대구시",
+      "광주시",
+      "대전시",
+      "울산시",
+      "세종시",
+      "강원도",
+      "충북도",
+      "충남도",
+      "전북도",
+      "전남도",
+      "경북도",
+      "경남도",
+      "제주도",
+      "시청",
+      "도청",
+      "구청",
+      "보도자료",
+      "공고",
+    ];
+
+    const sourceContext = `${feedTitle} ${title} ${content}`;
+    const hasPublicSource = publicKeywords.some((kw) => sourceContext.includes(kw.toLowerCase()));
+
+    if (hasPublicSource) {
+      return { isWhitelisted: true };
+    }
+  }
+
+  // 공공기관 출처가 아닌 경우 차단
+  return { isWhitelisted: false, reason: `공공/공식 기관 화이트리스트 출처 미확인` };
+}
+
+/**
  * [제외(Skip) 키워드 목록]
  * 단순 기관 동정, 의전, 행사, 기념식 등 독자 실익이 낮은 보도자료를 자동 폐기하기 위한 필터
  */
@@ -149,18 +332,44 @@ export const EXCLUDE_KEYWORDS = [
 
 /**
  * 기사의 제목과 본문에서 타겟 키워드 포함 여부 및 가중치를 평가하고
- * 단순 기관 동정/행사 소식은 자동 폐기(Skip) 대상으로 판정
+ * 칼럼/사설/오피니언, 공공기관 미해당, 단순 기관 동정/행사는 자동 폐기(Skip) 대상으로 판정
  */
 export function evaluateArticleKeywords(item: ParsedRssItem): {
   isExcluded: boolean;
   score: number;
   matchedKeywords: string[];
   excludeReason?: string;
+  isOpinion?: boolean;
+  isNonWhitelisted?: boolean;
 } {
+  // 1. [절대 배제 1단계] 개인 칼럼, 사설, 오피니언, 주관적 주장글 차단
+  const opinionCheck = isOpinionOrColumnArticle(item);
+  if (opinionCheck.isOpinion) {
+    return {
+      isExcluded: true,
+      score: 0,
+      matchedKeywords: [],
+      excludeReason: opinionCheck.reason || "칼럼/사설/오피니언 배제",
+      isOpinion: true,
+    };
+  }
+
+  // 2. [절대 배제 2단계] 공공/공식 기관 화이트리스트 출처 강제
+  const whitelistCheck = isWhitelistedPublicSource(item);
+  if (!whitelistCheck.isWhitelisted) {
+    return {
+      isExcluded: true,
+      score: 0,
+      matchedKeywords: [],
+      excludeReason: whitelistCheck.reason || "공공기관 공식 출처 화이트리스트 미해당",
+      isNonWhitelisted: true,
+    };
+  }
+
   const title = (item.title || "").toLowerCase();
   const content = `${item.content || ""} ${item.contentSnippet || ""}`.toLowerCase();
 
-  // 1. 단순 기관 동정이나 행사 소식 배제 (제목 기준 우선 검사)
+  // 3. [절대 배제 3단계] 단순 기관 동정이나 행사 소식 배제 (제목 기준 우선 검사)
   for (const excludeWord of EXCLUDE_KEYWORDS) {
     if (title.includes(excludeWord.toLowerCase()) || title.startsWith(`[${excludeWord.toLowerCase()}]`)) {
       return {
@@ -172,7 +381,7 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
     }
   }
 
-  // 2. 타겟 키워드 검사 및 가중치 점수 산정
+  // 4. 타겟 키워드 검사 및 가중치 점수 산정
   // - 일반 키워드: 제목 3점, 본문 1점
   // - [초특급 핫이슈] 민생지원금/추석지원금 슈퍼 키워드: 제목 +15점, 본문 +8점 파격 가산
   // - [핵심 정책] 소상공인 경영자금/경영애로 슈퍼 키워드: 제목 +10점, 본문 +5점 대폭 가산
@@ -844,21 +1053,36 @@ export async function fetchRssFeeds(
   );
 
   // --- 🎯 [키워드 가중치 필터] 타겟 키워드 1개 이상 포함 여부 검증 및 단순 기관 동정/행사 폐기 ---
+  // --- 🎯 [키워드 가중치 필터] 타겟 키워드 1개 이상 포함 여부 검증 및 단순 기관 동정/행사/칼럼/오피니언 폐기 ---
   type ScoredRssItem = ParsedRssItem & { keywordScore: number; matchedKeywords: string[] };
   const targetQualifiedItems: ScoredRssItem[] = [];
   let noticeSkippedCount = 0;
+  let opinionSkippedCount = 0;
+  let nonWhitelistedSkippedCount = 0;
   let noKeywordSkippedCount = 0;
 
   for (const item of validRecentItems) {
     const evaluation = evaluateArticleKeywords(item);
 
-    // 1) 단순 기관 동정이나 행사 소식은 자동 폐기(Skip)
+    // 1) 칼럼, 사설, 오피니언, 주관적 주장글 자동 폐기(Skip)
+    if (evaluation.isOpinion) {
+      opinionSkippedCount++;
+      continue;
+    }
+
+    // 2) 공공기관 공식 출처 화이트리스트 미해당 자동 폐기(Skip)
+    if (evaluation.isNonWhitelisted) {
+      nonWhitelistedSkippedCount++;
+      continue;
+    }
+
+    // 3) 단순 기관 동정이나 행사 소식은 자동 폐기(Skip)
     if (evaluation.isExcluded) {
       noticeSkippedCount++;
       continue;
     }
 
-    // 2) 타겟 키워드가 1개 이상 포함된 알짜 기사만 선별
+    // 4) 타겟 키워드가 1개 이상 포함된 알짜 기사만 선별
     if (evaluation.score > 0) {
       targetQualifiedItems.push({
         ...item,
@@ -881,13 +1105,15 @@ export async function fetchRssFeeds(
   });
 
   console.log(`\n------------------------------------------------------`);
-  console.log(`🎯 [키워드 가중치 필터 선별 결과 요약]`);
+  console.log(`🎯 [키워드 가중치 & 공식 공공기관 필터 선별 결과 요약]`);
   console.log(`• 7일 이내 전체 후보:               ${validRecentItems.length}건`);
   console.log(`• ✅ 타겟 키워드 통과(발행 대상):     ${targetQualifiedItems.length}건`);
+  console.log(`• 🚫 칼럼/오피니언/사설 폐기(Skip):   ${opinionSkippedCount}건`);
+  console.log(`• 🏛️ 비공식 출처(화이트리스트 외) 폐기: ${nonWhitelistedSkippedCount}건`);
   console.log(`• 🗑️ 단순 기관 동정/행사 폐기(Skip):  ${noticeSkippedCount}건`);
   console.log(`• ⏩ 타겟 키워드 미포함 폐기(Skip):   ${noKeywordSkippedCount}건`);
   if (targetQualifiedItems.length > 0) {
-    console.log(`• 🌟 최우선 추천 알짜 기사 TOP 3:`);
+    console.log(`• 🌟 최우선 추천 알짜 공공 보도 TOP 3:`);
     targetQualifiedItems.slice(0, 3).forEach((item, idx) => {
       console.log(
         `  [#${idx + 1}] (가중치: ${item.keywordScore}점 | 매칭 키워드: [${item.matchedKeywords.join(", ")}]) "${item.title.slice(0, 45)}..."`
@@ -903,6 +1129,8 @@ export async function fetchRssFeeds(
     skippedCount,
     expiredCount,
     noticeSkippedCount,
+    opinionSkippedCount,
+    nonWhitelistedSkippedCount,
     noKeywordSkippedCount,
     items: targetQualifiedItems,
     feedStatuses,

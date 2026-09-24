@@ -1,8 +1,10 @@
 /**
  * ==============================================================================
- * [RSS 피드 설정 파일]
- * IT, 경제, 부동산, 보도자료 등 원하는 분야의 RSS 피드를 이곳에 자유롭게 추가/수정/삭제할 수 있습니다.
- * enabled: false로 설정하면 해당 피드 수집을 임시로 중단할 수 있습니다.
+ * [RSS 피드 설정 파일 - 공공·공식 기관 화이트리스트 전용]
+ * 개인 블로그, 기자 칼럼, 사설, 오피니언 섹션을 원천 배제하고
+ * 대한민국 정책브리핑(korea.kr), 소상공인시장진흥공단(semas.or.kr),
+ * 기업마당(bizinfo.go.kr), 정부24(gov.kr), 지자체 공식 보도자료 등
+ * 공식 공공기관 및 정부 부처에서 발표한 '공식 보도·공고문'으로만 한정합니다.
  * ==============================================================================
  */
 
@@ -15,172 +17,132 @@ export interface RssFeedConfig {
   url: string;
   enabled: boolean;
   description?: string;
+  officialDomain?: string; // 공공기관 공식 도메인 (korea.kr, semas.or.kr, bizinfo.go.kr, gov.kr 등)
 }
 
 export const RSS_FEEDS: RssFeedConfig[] = [
-  // --- 0. [초특급 트렌드] 추석 민생지원금 및 지역별(경기·부산·인천 등) 민생회복지원금 피드 ---
-  {
-    id: "portal-minsaeng-chuseok",
-    name: "추석 민생회복지원금 및 민생지원금 신청·조회",
-    category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%B6%94%EC%84%9D+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+OR+%EB%AF%BC%EC%83%9D%ED%9A%8C%EB%B3%B5%EC%A7%80%EC%9B%90%EA%B8%88+OR+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EC%8B%A0%EC%B2%AD+OR+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EC%A1%B0%ED%9A%8C&hl=ko&gl=KR&ceid=KR:ko",
-    enabled: true,
-    description: "전 국민 및 취약계층 대상 추석 민생지원금, 민생회복지원금 25만원, 신청 자격 및 온라인 조회 피드",
-  },
-  {
-    id: "portal-minsaeng-regions",
-    name: "지역별 민생지원금 (경기도·부산·인천 등 지자체 지원금)",
-    category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EA%B2%BD%EA%B8%B0%EB%8F%84+OR+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EB%B6%80%EC%82%B0+OR+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88+%EC%9D%B8%EC%B2%9C+OR+%EC%A7%80%EC%9E%90%EC%B2%B4+%EB%AF%BC%EC%83%9D%EC%A7%80%EC%9B%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
-    enabled: true,
-    description: "경기도, 부산시, 인천시 등 지자체별 민생지원금 및 재난지원금, 지역화폐 충전 혜택 피드",
-  },
-
-  // --- 1. 소상공인시장진흥공단(소진공) 및 중기부 기업마당 소상공인 전용 정책자금 피드 ---
+  // --- 1. 소상공인시장진흥공단 (semas.or.kr) 및 기업마당 (bizinfo.go.kr) 공식 공고·보도 ---
   {
     id: "portal-semas-general-management",
-    name: "소상공인 일반경영자금 및 일시적 경영애로자금",
+    name: "소상공인시장진흥공단 일반경영자금 및 경영애로자금 (공식 공고)",
     category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8+%EC%9D%BC%EB%B0%98%EA%B2%BD%EC%98%81%EC%9E%90%EA%B8%88+OR+%EA%B2%BD%EC%98%81%EC%95%A0%EB%A1%9C%EC%9E%90%EA%B8%88+OR+%EC%A0%95%EC%B1%85%EC%9E%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=(site:semas.or.kr+OR+site:bizinfo.go.kr+OR+site:mss.go.kr)+소상공인+(일반경영자금+OR+경영애로자금+OR+정책자금)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "소상공인시장진흥공단 및 금융권의 일반경영자금, 일시적 경영애로자금, 긴급경영안정자금 실시간 접수 피드",
+    officialDomain: "semas.or.kr",
+    description: "소상공인시장진흥공단(semas.or.kr) 및 중기부 공식 일반경영자금, 일시적 경영애로자금 공고",
   },
   {
     id: "portal-semas-recovery-debt",
-    name: "소상공인 대환대출 및 경영안정 금융지원",
+    name: "소진공 대환대출 및 경영안정 금융지원 (공식 보도·공고)",
     category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8%EC%8B%9C%EC%9E%A5%EC%A7%84%ED%9D%A5%EA%B3%B5%EB%8B%A8+%EC%9D%BC%EC%8B%9C%EC%A0%81+%EA%B2%BD%EC%98%81%EC%95%A0%EB%A1%9C+OR+%EB%8C%80%ED%99%98%EB%8C%80%EC%B6%9C+OR+%EC%9D%B4%EC%B0%A8%EB%B3%B4%EC%A0%84&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=(site:semas.or.kr+OR+site:bizinfo.go.kr)+소상공인+(대환대출+OR+이차보전+OR+경영안정)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "소진공 고금리 대환대출, 일시적 경영애로 긴급자금, 이자 환급 및 이차보전 지원 피드",
+    officialDomain: "semas.or.kr",
+    description: "소진공 고금리 대환대출, 이차보전 지원, 희망리턴패키지 공식 공고",
   },
   {
-    id: "portal-semas",
-    name: "소상공인시장진흥공단 (semas.or.kr 정책자금/지원사업)",
+    id: "portal-semas-direct",
+    name: "소상공인시장진흥공단 소상공인 지원사업 (semas.or.kr 공식)",
     category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8%EC%8B%9C%EC%9E%A5%EC%A7%84%ED%9D%A5%EA%B3%B5%EB%8B%A8+%EC%A0%95%EC%B1%85%EC%9E%90%EA%B8%88+%EC%A7%80%EC%9B%90%EC%82%AC%EC%97%85&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=site:semas.or.kr+(정책자금+OR+지원사업+OR+스마트상점+OR+공고)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "소상공인시장진흥공단(semas.or.kr) 소상공인 정책자금 대출, 희망리턴패키지, 스마트상점 등 실시간 공고 피드",
+    officialDomain: "semas.or.kr",
+    description: "소상공인시장진흥공단(semas.or.kr) 소상공인 지원사업 및 정책자금 실시간 공식 발표",
   },
   {
-    id: "portal-bizinfo",
-    name: "중소벤처기업부 기업마당 (bizinfo.go.kr 소상공인 지원사업)",
+    id: "portal-bizinfo-direct",
+    name: "중소벤처기업부 기업마당 지원사업 공고 (bizinfo.go.kr 공식)",
     category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EA%B8%B0%EC%97%85%EB%A7%88%EB%8B%B9+%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8+%EC%A7%80%EC%9B%90%EC%82%AC%EC%97%85+%EC%A0%95%EC%B1%85%EC%9E%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=site:bizinfo.go.kr+(소상공인+OR+지원사업+OR+정책자금+OR+보조금)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "중소벤처기업부 기업마당(bizinfo.go.kr) 전국 소상공인·자영업자 중앙 및 지자체 지원사업 공고 피드",
+    officialDomain: "bizinfo.go.kr",
+    description: "중소벤처기업부 기업마당(bizinfo.go.kr) 전국 소상공인·자영업자 중앙 및 지자체 공식 지원사업 공고",
+  },
+
+  // --- 2. 대한민국 정책브리핑 (korea.kr) 정부 부처 공식 보도자료 ---
+  {
+    id: "portal-korea-kr-minsaeng",
+    name: "대한민국 정책브리핑 민생회복·민생지원금 공식 발표 (korea.kr)",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=site:korea.kr+(민생지원금+OR+민생회복지원금+OR+소상공인+지원)&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    officialDomain: "korea.kr",
+    description: "대한민국 공식 정책브리핑(korea.kr) 범정부 민생지원금, 민생회복 프로젝트 공식 보도자료",
   },
   {
     id: "portal-korea-kr-smallbiz",
-    name: "대한민국 정책브리핑 (korea.kr 소상공인 정책자금)",
+    name: "대한민국 정책브리핑 소상공인·자영업자 정책 (korea.kr)",
     category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%A0%95%EC%B1%85%EB%B8%8C%EB%A6%AC%ED%95%91+%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8+%EC%A7%80%EC%9B%90%EA%B8%88+%EC%A0%95%EC%B1%85%EC%9E%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=site:korea.kr+(소상공인+정책자금+OR+경영안정+OR+지원대책)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "대한민국 공식 정책브리핑(korea.kr) 소상공인 금융지원 및 경영안정 정책 속보 피드",
+    officialDomain: "korea.kr",
+    description: "대한민국 공식 정책브리핑(korea.kr) 중기부·기재부·금융위 소상공인 공식 정책 보도",
+  },
+  {
+    id: "portal-korea-kr-welfare",
+    name: "대한민국 정책브리핑 복지·지원금 공식 발표 (korea.kr)",
+    category: "정책·지원금",
+    url: "https://news.google.com/rss/search?q=site:korea.kr+(정부지원금+OR+보조금+OR+바우처+OR+환급금)&hl=ko&gl=KR&ceid=KR:ko",
+    enabled: true,
+    officialDomain: "korea.kr",
+    description: "대한민국 공식 정책브리핑(korea.kr) 국민 체감 복지 지원제도 및 환급금 공식 보도자료",
   },
 
-  // --- 2. 정부 및 공공기관 핵심 정책 포털 전용 피드 ---
+  // --- 3. 정부24 / 보조금24 (gov.kr) & 온통청년 (youthcenter.go.kr) 공식 포털 ---
   {
-    id: "portal-korea-kr",
-    name: "대한민국 정책브리핑 (korea.kr 정책 뉴스)",
+    id: "portal-gov-kr-benefit",
+    name: "정부24 및 보조금24 맞춤형 혜택 공고 (gov.kr 공식)",
     category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%A0%95%EC%B1%85%EB%B8%8C%EB%A6%AC%ED%95%91+%EC%A0%95%EB%B6%80+%EC%A7%80%EC%9B%90%EA%B8%88&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=(site:gov.kr+OR+site:plus.gov.kr)+(보조금24+OR+혜택알리미+OR+지원금+OR+환급)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "대한민국 공식 정책브리핑(korea.kr) 최신 정부 정책 및 보도자료 실시간 피드",
+    officialDomain: "gov.kr",
+    description: "정부24·보조금24(gov.kr) 국민 맞춤형 공공서비스 혜택, 정부 보조금, 감면·환급 공식 공고",
   },
   {
-    id: "portal-youth-seoul",
-    name: "서울시 청년몽땅정보통 (youth.seoul.go.kr)",
+    id: "portal-youth-center-official",
+    name: "국무조정실 온통청년 청년지원제도 (youthcenter.go.kr 공식)",
     category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%84%9C%EC%9A%B8%EC%8B%9C+%EC%B2%AD%EB%85%84+%EC%A7%80%EC%9B%90%EA%B8%88+%EC%B2%AD%EB%85%84%EB%AA%BD%EB%95%85%EC%A0%95%EB%B3%B4%ED%86%B5&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=site:youthcenter.go.kr+(청년정책+OR+청년수당+OR+일자리+OR+주거지원)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "서울청년포털(youth.seoul.go.kr) 청년수당, 청년안심주택, 교통비 지원 등 핵심 정책 피드",
-  },
-  {
-    id: "portal-bojo-gov",
-    name: "정부24 혜택알리미·보조금24 (plus.gov.kr/portal/benefitV2)",
-    category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%ED%98%9C%ED%83%9D%EC%95%8C%EB%A6%AC%EB%AF%B8+%EB%B3%B4%EC%A1%B0%EA%B8%8824+%EC%A0%95%EB%B6%8024+%EC%A7%80%EC%9B%90%EA%B8%88+%ED%98%9C%ED%83%9D&hl=ko&gl=KR&ceid=KR:ko",
-    enabled: true,
-    description: "정부24 혜택알리미·보조금24(plus.gov.kr/portal/benefitV2) 국민 맞춤형 공공서비스 혜택, 정부 보조금, 숨은 환급금 실시간 피드",
-  },
-  {
-    id: "portal-youth-center",
-    name: "온통청년 청년센터 (youthcenter.go.kr)",
-    category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%98%A8%ED%86%B5%EC%B2%AD%EB%85%84+%EC%B2%AD%EB%85%84%EC%A0%95%EC%B1%85+%EC%B2%AD%EB%85%84%EC%84%BC%ED%84%B0&hl=ko&gl=KR&ceid=KR:ko",
-    enabled: true,
-    description: "국무조정실 온통청년(youthcenter.go.kr) 전국 청년 지원 정책 및 일자리·주거 지원 피드",
+    officialDomain: "youthcenter.go.kr",
+    description: "국무조정실 온통청년(youthcenter.go.kr) 전국 청년 지원 정책 및 일자리·주거 지원 공식 공고",
   },
 
-  // --- 2. 정책·지원금·금융 실시간 뉴스 피드 (안정적인 실시간 공급망) ---
+  // --- 4. 지자체(서울, 경기, 부산 등 go.kr) 공식 보도자료 및 공고문 ---
   {
-    id: "google-news-policy",
-    name: "구글 뉴스 (정부 지원금/복지 정책)",
+    id: "portal-local-gov-minsaeng",
+    name: "전국 지자체 공식 보도자료 (지자체 지원금·지역화폐)",
     category: "정책·지원금",
-    url: "https://news.google.com/rss/search?q=%EC%A0%95%EB%B6%80+%EC%A7%80%EC%9B%90%EA%B8%88+%EB%B3%B5%EC%A7%80+%ED%98%9C%ED%83%9D&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=(site:seoul.go.kr+OR+site:gg.go.kr+OR+site:busan.go.kr+OR+site:incheon.go.kr)+(민생지원금+OR+재난지원금+OR+소상공인+지원+OR+지역화폐)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "정부 지원금, 서민 금융, 청년 바우처 등 실시간 복지 속보",
+    officialDomain: "go.kr",
+    description: "서울시, 경기도, 부산시, 인천시 등 지자체 공식 포털(go.kr)의 민생지원금 및 소상공인 보도자료",
   },
+
+  // --- 5. 부동산·세제 / 금융·경제 공공기관 공식 보도 (국토부, 기재부, 금융위, 국세청) ---
   {
-    id: "google-news-realestate-tax",
-    name: "구글 뉴스 (부동산/세제 트렌드)",
+    id: "portal-realestate-tax-official",
+    name: "국토교통부·국세청 부동산 세제 및 청약 공식 발표",
     category: "부동산·세제",
-    url: "https://news.google.com/rss/search?q=%EB%B6%80%EB%8F%99%EC%82%B0+%EC%84%B8%EC%A0%9C+%EC%96%91%EB%8F%84%EC%84%B8+%EC%B2%AD%EC%95%BD&hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=(site:molit.go.kr+OR+site:nts.go.kr+OR+site:moef.go.kr)+(부동산+대책+OR+양도세+OR+취득세+OR+공공분양+OR+청약)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "취득세·양도세 개편, 아파트 분양 및 청약 실시간 동향",
+    officialDomain: "go.kr",
+    description: "국토교통부, 국세청, 기획재정부 공식 보도자료 기반 부동산 정책 및 세제 개편 발표",
   },
   {
-    id: "google-news-finance",
-    name: "구글 뉴스 (금융/경제)",
+    id: "portal-finance-official",
+    name: "금융위원회·한국은행 금융 지원 및 제도 공식 발표",
     category: "금융·경제",
-    url: "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=ko&gl=KR&ceid=KR:ko",
+    url: "https://news.google.com/rss/search?q=(site:fsc.go.kr+OR+site:bok.or.kr+OR+site:fss.or.kr)+(서민금융+OR+소상공인+대출+OR+금리+OR+채무조정)&hl=ko&gl=KR&ceid=KR:ko",
     enabled: true,
-    description: "금리 변동, 대출 규제 완화, 가계 경제 동향 피드",
-  },
-  {
-    id: "google-news-tech",
-    name: "구글 뉴스 (테크/IT)",
-    category: "테크·IT",
-    url: "https://news.google.com/rss/headlines/section/topic/SCITECH?hl=ko&gl=KR&ceid=KR:ko",
-    enabled: true,
-    description: "AI 및 디지털 신기술 산업 속보 피드",
-  },
-  {
-    id: "google-news-society",
-    name: "구글 뉴스 (사회/문화)",
-    category: "사회·문화",
-    url: "https://news.google.com/rss/headlines/section/topic/NATION?hl=ko&gl=KR&ceid=KR:ko",
-    enabled: true,
-    description: "사회 복지, 교육, 문화 트렌드 종합 피드",
+    officialDomain: "fsc.go.kr",
+    description: "금융위원회, 금융감독원, 한국은행 공식 보도자료 기반 금융 지원 및 금리 정책 발표",
   },
 ];
 
 /**
- * 활성화(enabled: true)된 RSS 피드 목록만 반환
- * .env 환경변수(RSS_FEED_URLS)가 지정되어 있을 경우 해당 URL들을 최우선 결합/반영
+ * 활성화(enabled: true)된 공공기관 공식 RSS 피드 목록만 반환
  */
 export function getActiveRssFeeds(): RssFeedConfig[] {
-  // 1. 설정 파일의 활성화된 피드 필터링
-  const activeFeeds = RSS_FEEDS.filter((feed) => feed.enabled);
-
-  // 2. 환경변수 RSS_FEED_URLS가 존재할 경우 추가 병합 (쉼표 구분)
-  const envFeedUrls = process.env.RSS_FEED_URLS;
-  if (envFeedUrls) {
-    const customUrls = envFeedUrls
-      .split(",")
-      .map((u) => u.trim())
-      .filter(Boolean);
-
-    customUrls.forEach((url, idx) => {
-      activeFeeds.push({
-        id: `env-feed-${idx + 1}`,
-        name: `환경변수 지정 피드 #${idx + 1}`,
-        category: "Tech",
-        url,
-        enabled: true,
-      });
-    });
-  }
-
-  return activeFeeds;
+  return RSS_FEEDS.filter((feed) => feed.enabled);
 }
