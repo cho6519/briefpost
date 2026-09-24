@@ -73,6 +73,10 @@ function splitMarkdownForAdSense(markdown: string): {
  */
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (slug === "subsidy-welfare" || slug.includes("column") || slug.includes("opinion")) {
+    notFound();
+  }
+
   const article = getArticleBySlug(slug);
 
   if (!article) {
@@ -142,6 +146,10 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 
 export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   const { slug } = await params;
+  if (slug === "subsidy-welfare" || slug.includes("column") || slug.includes("opinion")) {
+    notFound();
+  }
+
   const article = getArticleBySlug(slug);
 
   if (!article) {

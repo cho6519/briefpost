@@ -49,3 +49,8 @@ if (targetsToDelete.length > 0) {
 
 const remaining = db.prepare("SELECT count(*) as count FROM articles").get() as { count: number };
 console.log(`\n남은 기사 수: ${remaining.count}건`);
+
+console.log("VACUUM 실행 중...");
+db.exec("VACUUM");
+console.log("✅ VACUUM 완료 (DB 디스크 공간 정리 완료)");
+

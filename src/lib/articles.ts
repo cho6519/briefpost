@@ -84,13 +84,40 @@ export function getArticles(options: GetArticlesOptions = {}): PaginatedArticles
   };
 }
 
+export const BANNED_SLUGS = new Set(["subsidy-welfare"]);
+
 /**
  * Slug 기반 단일 기사 상세 조회 (SEO용 메타데이터 생성 및 상세 렌더링에 사용)
  */
 export function getArticleBySlug(slug: string): Article | null {
+  if (BANNED_SLUGS.has(slug) || slug.includes("column") || slug.includes("opinion")) {
+    try {
+      db.prepare("DELETE FROM articles WHERE slug = ?").run(slug);
+    } catch {
+      // 무시
+    }
+    return null;
+  }
+
   const stmt = db.prepare("SELECT * FROM articles WHERE slug = ? LIMIT 1");
   const article = stmt.get(slug) as Article | undefined;
-  return article || null;
+  if (!article) return null;
+
+  // 혹시라도 칼럼/사설 글이 감지되면 DB에서 영구 삭제하고 404(null) 반환
+  if (
+    article.title.includes("칼럼") ||
+    article.title.includes("사설") ||
+    article.title.includes("오피니언")
+  ) {
+    try {
+      db.prepare("DELETE FROM articles WHERE id = ?").run(article.id);
+    } catch {
+      // 무시
+    }
+    return null;
+  }
+
+  return article;
 }
 
 /**
@@ -341,7 +368,17 @@ export function ensureUniqueSlug(baseSlug: string): string {
  * sitemap 생성 및 사전 렌더링용 전체 slug 목록 조회
  */
 export function getAllArticleSlugs(): { slug: string; updatedAt: string }[] {
-  const stmt = db.prepare("SELECT slug, updatedAt FROM articles ORDER BY createdAt DESC");
+  const stmt = db.prepare(`
+    SELECT slug, updatedAt FROM articles 
+    WHERE slug != 'subsidy-welfare' 
+      AND slug NOT LIKE '%opinion%' 
+      AND slug NOT LIKE '%column%'
+      AND title NOT LIKE '%[칼럼]%'
+      AND title NOT LIKE '%[사설]%'
+      AND title NOT LIKE '%[오피니언]%'
+      AND title NOT LIKE '%칼럼%'
+    ORDER BY createdAt DESC
+  `);
   return stmt.all() as { slug: string; updatedAt: string }[];
 }
 

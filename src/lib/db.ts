@@ -14,14 +14,14 @@ if (!fs.existsSync(DB_DIR)) {
   fs.mkdirSync(DB_DIR, { recursive: true });
 }
 
-// 서버리스 환경에서 /tmp에 DB가 없고 원본 프로젝트에 시드된 DB가 있다면 복사하여 초기 기사 데이터 보존
-if (isServerless && !fs.existsSync(/*turbopackIgnore: true*/ DB_PATH)) {
+// 서버리스 환경에서 빌드 시점의 최신 seed DB를 /tmp로 강제 동기화 (오래된 캐시 /tmp 잔여물 방지)
+if (isServerless) {
   const seedDbPath = path.join(process.cwd(), "data", "news.db");
   if (fs.existsSync(/*turbopackIgnore: true*/ seedDbPath)) {
     try {
       fs.copyFileSync(seedDbPath, DB_PATH);
     } catch (err) {
-      console.warn("[DB] 기존 SQLite 파일 /tmp 복사 실패, 새로 생성합니다:", err);
+      console.warn("[DB] 최신 SQLite 파일 /tmp 동기화 실패:", err);
     }
   }
 }
@@ -107,6 +107,19 @@ function initSchema(db: Database.Database) {
     if (!hasCardTitle) {
       db.exec("ALTER TABLE articles ADD COLUMN card_title TEXT");
     }
+
+    // 칼럼/사설/오피니언 기사 및 특정 차단 슬러그(subsidy-welfare 등) 영구 삭제 강제
+    db.exec(`
+      DELETE FROM articles 
+      WHERE slug = 'subsidy-welfare' 
+         OR slug LIKE '%opinion%' 
+         OR slug LIKE '%column%'
+         OR title LIKE '%[칼럼]%'
+         OR title LIKE '%[사설]%'
+         OR title LIKE '%[오피니언]%'
+         OR title LIKE '%칼럼%'
+         OR title LIKE '%사설%';
+    `);
   } catch (err) {
     console.warn("[DB] 컬럼 확인/마이그레이션 스킵:", err);
   }
