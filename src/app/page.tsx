@@ -118,8 +118,8 @@ export default async function HomePage({ searchParams }: PageProps) {
             const summaryPoints = parseSummaryPoints(article.summary);
             const isHero = isHeroPage && index === 0;
             const sourceName = getSourceDisplayName(article.sourceUrl, article.title, article.category);
-            // 맞춤형 동적 타이포그래피 카드뉴스 썸네일 (v=4 캐시 갱신으로 정제된 card_title 소급 적용 완벽 보장)
-            const cardImageUrl = `/api/og?slug=${article.slug}&v=4`;
+            // 맞춤형 동적 타이포그래피 카드뉴스 썸네일 (v=5 캐시 갱신으로 2026 보존 card_title 즉시 반영)
+            const cardImageUrl = `/api/og?slug=${article.slug}&v=5`;
 
             // 1) 히어로 피처드 스토리 (메인 첫 페이지 1위 기사)
             if (isHero) {

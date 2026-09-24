@@ -497,10 +497,9 @@ export function cleanseCardTitle(rawTitle: string): string {
   let clean = rawTitle
     // 1. 괄호, 대괄호 및 내부 내용 완전 제거
     .replace(/[\(\[\{【<].*?[\)\]\}】>]/g, "")
-    // 2. 흔한 접두/접미 수식어 정리 (예: 2026년, 종합 안내, 공고 등)
-    .replace(/\b202[0-9]년?\b/g, "")
+    // 2. 흔한 콜론 뒤 부연 설명 정리
     .replace(/\s*:\s*.*$/, "")
-    // 3. 특수문자 제거 (한글, 영문, 숫자, 공백만 보존)
+    // 3. 특수문자 제거 (한글, 영문, 숫자, 공백 보존 - 2026 등 연도 보존)
     .replace(/[^\w\sㄱ-ㅎ가-힣]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
