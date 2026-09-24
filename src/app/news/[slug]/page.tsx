@@ -12,6 +12,7 @@ import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
 import { normalizeArticleContent } from "@/lib/articleValidator";
 import { ArticleFaqItem, determineCtaType } from "@/lib/ai";
+import { extractCardBadge } from "@/lib/cardBadgeExtractor";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -316,16 +317,23 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       </div>
 
       {/* [도입부 핵심 타깃 뱃지] 독자가 3초 만에 본인 해당 여부를 파악하고 체류하도록 유도 */}
-      {article.highlightBadge && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50/70 border border-amber-200/90 text-amber-950 text-xs sm:text-[13px] font-semibold shadow-xs">
-          <span className="text-sm shrink-0">💡</span>
-          <span className="tracking-tight leading-snug">
-            {article.highlightBadge.startsWith("💡")
-              ? article.highlightBadge.slice(2).trim()
-              : article.highlightBadge}
-          </span>
-        </div>
-      )}
+      {(() => {
+        const rawBadge = article.highlightBadge || extractCardBadge(article.title, article.content, article.category).badgeText;
+        if (!rawBadge) return null;
+        const cleanText = rawBadge.replace(/^[💡\s]+/, "").trim();
+        const badgeLabel = cleanText.startsWith("핵심 지원 대상:") || cleanText.startsWith("핵심 분석 대상:") || cleanText.startsWith("핵심 타깃:")
+          ? cleanText
+          : `핵심 지원 대상: ${cleanText}`;
+
+        return (
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50/70 border border-amber-200/90 text-amber-950 text-xs sm:text-[13px] font-semibold shadow-xs">
+            <span className="text-sm shrink-0">💡</span>
+            <span className="tracking-tight leading-snug font-medium">
+              {badgeLabel}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* 가독성 특화: 3줄 핵심 요약 블루 틴트 박스 (모바일 Above the Fold 최적화) */}
       {article.summary && (
