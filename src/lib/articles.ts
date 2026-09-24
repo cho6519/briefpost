@@ -176,6 +176,77 @@ export function createArticle(input: CreateArticleInput): Article {
   return getStmt.get(info.lastInsertRowid) as Article;
 }
 
+/**
+ * 기존 기사 필드 일괄 업데이트 (롱폼 재가공 및 DB 갱신용)
+ */
+export function updateArticle(
+  id: number,
+  data: Partial<CreateArticleInput>
+): void {
+  const fields: string[] = [];
+  const params: Record<string, unknown> = { id };
+
+  if (data.title !== undefined) {
+    fields.push("title = @title");
+    params.title = data.title;
+  }
+  if (data.slug !== undefined) {
+    fields.push("slug = @slug");
+    params.slug = data.slug;
+  }
+  if (data.content !== undefined) {
+    fields.push("content = @content");
+    params.content = data.content;
+  }
+  if (data.summary !== undefined) {
+    fields.push("summary = @summary");
+    params.summary = data.summary;
+  }
+  if (data.category !== undefined) {
+    fields.push("category = @category");
+    params.category = data.category;
+  }
+  if (data.metaTitle !== undefined) {
+    fields.push("metaTitle = @metaTitle");
+    params.metaTitle = data.metaTitle;
+  }
+  if (data.metaDescription !== undefined) {
+    fields.push("metaDescription = @metaDescription");
+    params.metaDescription = data.metaDescription;
+  }
+  if (data.thumbnailUrl !== undefined) {
+    fields.push("thumbnailUrl = @thumbnailUrl");
+    params.thumbnailUrl = data.thumbnailUrl;
+  }
+  if (data.faq !== undefined) {
+    fields.push("faq = @faq");
+    params.faq = typeof data.faq === "object" && data.faq !== null ? JSON.stringify(data.faq) : data.faq;
+  }
+  if (data.ctaType !== undefined) {
+    fields.push("ctaType = @ctaType");
+    params.ctaType = data.ctaType;
+  }
+  if (data.imageTheme !== undefined) {
+    fields.push("imageTheme = @imageTheme");
+    params.imageTheme = data.imageTheme;
+  }
+  if (data.highlightBadge !== undefined) {
+    fields.push("highlightBadge = @highlightBadge");
+    params.highlightBadge = data.highlightBadge;
+  }
+  if (data.card_title !== undefined) {
+    fields.push("card_title = @card_title");
+    params.card_title = data.card_title;
+  }
+
+  if (fields.length === 0) return;
+
+  fields.push("updatedAt = CURRENT_TIMESTAMP");
+
+  const query = `UPDATE articles SET ${fields.join(", ")} WHERE id = @id`;
+  db.prepare(query).run(params);
+}
+
 import { ALLOWED_CATEGORIES } from "./ai";
 
 /**
