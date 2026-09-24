@@ -29,6 +29,27 @@ export function extractCardBadge(
     cat.includes("정책") ||
     /소상공인|자영업자|지원금|정책자금|보조금|바우처|대출|환급|장려금/.test(title);
 
+  // 0. 타깃 대상(수혜자) 패턴 우선 감지 (핵심 타깃 뱃지)
+  const targetPatterns = [
+    { regex: /소상공인|자영업자|소진공|골목상권|전통시장/, text: "💡 핵심 지원 대상: 소상공인 및 골목상권 자영업자" },
+    { regex: /만\s*19.*34|청년|대학생|취업준비생|구직단념/, text: "💡 핵심 지원 대상: 만 19~34세 청년 및 구직자" },
+    { regex: /중소기업|벤처기업|스타트업/, text: "💡 핵심 지원 대상: 중소·벤처기업 및 재직 근로자" },
+    { regex: /신혼부부|출산|임산부|영유아|다자녀/, text: "💡 핵심 지원 대상: 신혼부부 및 다자녀·출산 가구" },
+    { regex: /무주택|청약|임차인|세입자|전세/, text: "💡 핵심 지원 대상: 무주택 세대주 및 실수요자" },
+    { regex: /어르신|고령자|노인|시니어|연금/, text: "💡 핵심 지원 대상: 만 65세 이상 고령자 및 연금 수급자" },
+    { regex: /취약계층|기초생활|차상위|한부모|장애인/, text: "💡 핵심 지원 대상: 취약계층 및 기초생활수급 가구" },
+  ];
+
+  for (const item of targetPatterns) {
+    if (item.regex.test(combinedText)) {
+      return {
+        badgeText: item.text,
+        subText: "신청 자격 요건 및 맞춤 혜택 가이드",
+        isSubsidy: isSmallBizOrSubsidy,
+      };
+    }
+  }
+
   // 1. 금액 패턴 감지 (예: 최대 1억~2억 원, 최대 7,000만 원, 지원금 100만 원 등)
   const amountPatterns = [
     /최대\s*([0-9,]+(?:\s*억|\s*천만|\s*백만|\s*만)?(?:\s*~\s*[0-9,]+)?\s*원)/,
@@ -43,7 +64,7 @@ export function extractCardBadge(
     if (match && match[0]) {
       const cleanMatch = match[0].trim().slice(0, 30);
       return {
-        badgeText: `💰 핵심 지원: ${cleanMatch}`,
+        badgeText: `💡 핵심 지원 대상: ${cleanMatch} 혜택 대상자`,
         subText: "소상공인·국민 맞춤 정책 가이드",
         isSubsidy: true,
       };
@@ -54,13 +75,13 @@ export function extractCardBadge(
   if (isSmallBizOrSubsidy) {
     if (cat.includes("소상공인") || title.includes("소상공인") || title.includes("소진공")) {
       return {
-        badgeText: "💰 2026 소상공인 우대 정책자금",
+        badgeText: "💡 핵심 지원 대상: 경영 애로 소상공인·자영업자",
         subText: "저리 융자 및 경영안정 종합 지원",
         isSubsidy: true,
       };
     }
     return {
-      badgeText: "📋 정부 맞춤형 정책 지원 가이드",
+      badgeText: "💡 핵심 지원 대상: 정부 정책 지원 대상 국민 및 기업",
       subText: "자격 요건 및 비대면 온라인 신청 안내",
       isSubsidy: true,
     };

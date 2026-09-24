@@ -239,7 +239,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   const sourceName = getSourceDisplayName(article.sourceUrl, article.title, article.category);
 
   return (
-    <article className="mx-auto max-w-2xl px-1 sm:px-0 space-y-6 sm:space-y-8">
+    <article className="mx-auto max-w-2xl px-2 sm:px-0 space-y-3.5 sm:space-y-6">
       {/* 구조화 데이터 주입 (기사 스키마 & 구글 FAQPage 스키마) */}
       <script
         type="application/ld+json"
@@ -253,7 +253,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
       )}
 
       {/* 상단 네비게이션 & 카테고리 태그 */}
-      <div className="flex items-center justify-between pt-1">
+      <div className="flex items-center justify-between pt-0 pb-0.5">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-950 transition-colors"
@@ -262,19 +262,19 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
         </Link>
         <Link
           href={`/?category=${encodeURIComponent(article.category)}`}
-          className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200/80 hover:bg-blue-100 transition-colors"
+          className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200/80 hover:bg-blue-100 transition-colors"
         >
           {article.category}
         </Link>
       </div>
 
       {/* 기사 헤더 (H1 제목, 작성일, 출처 링크) */}
-      <header className="space-y-3 sm:space-y-4">
-        <h1 className="text-[22px] sm:text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-950 leading-[1.35] sm:leading-[1.25]">
+      <header className="space-y-2 sm:space-y-3">
+        <h1 className="text-[20px] sm:text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-950 leading-[1.3] sm:leading-[1.25]">
           {article.title}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-[13px] text-slate-500 border-b border-zinc-200 pb-4">
+        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-[13px] text-slate-500 border-b border-zinc-200/80 pb-2 sm:pb-3">
           <time dateTime={article.createdAt} className="font-medium">
             발행: {formattedDate}
           </time>
@@ -293,12 +293,12 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
           slotId="ad-top-headline"
           format="horizontal"
           label="광고 영역 (AdSense Slot ① - 상단)"
-          className="my-4"
+          className="my-2"
         />
       )}
 
-      {/* 상단 대표 썸네일: 서버 내부 렌더링 맞춤형 타이포그래피 카드뉴스 */}
-      <div className="w-full mb-6">
+      {/* 상단 대표 썸네일: 서버 내부 렌더링 맞춤형 타이포그래피 카드뉴스 (모바일 여백 컴팩트화) */}
+      <div className="w-full my-2 sm:my-3">
         <div className="relative w-full aspect-[1200/630] overflow-hidden rounded-xl shadow-md border border-zinc-200/80 bg-zinc-950">
           <Image
             src={cardImageUrl}
@@ -310,24 +310,36 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
             className="w-full h-full object-cover rounded-xl"
           />
         </div>
-        <p className="mt-2 text-right text-xs text-zinc-400 tracking-tight font-normal">
+        <p className="mt-1 text-right text-[11px] text-zinc-400 tracking-tight font-normal">
           Brief Post 맞춤형 카드뉴스 브리핑
         </p>
       </div>
 
-      {/* 가독성 특화: 3줄 핵심 요약 블루 틴트 박스 */}
+      {/* [도입부 핵심 타깃 뱃지] 독자가 3초 만에 본인 해당 여부를 파악하고 체류하도록 유도 */}
+      {article.highlightBadge && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50/70 border border-amber-200/90 text-amber-950 text-xs sm:text-[13px] font-semibold shadow-xs">
+          <span className="text-sm shrink-0">💡</span>
+          <span className="tracking-tight leading-snug">
+            {article.highlightBadge.startsWith("💡")
+              ? article.highlightBadge.slice(2).trim()
+              : article.highlightBadge}
+          </span>
+        </div>
+      )}
+
+      {/* 가독성 특화: 3줄 핵심 요약 블루 틴트 박스 (모바일 Above the Fold 최적화) */}
       {article.summary && (
-        <section className="summary-box rounded-2xl p-5 sm:p-6 shadow-2xs">
-          <div className="flex items-center justify-between border-b border-blue-200/70 pb-3 mb-3.5">
-            <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-900">
+        <section className="summary-box rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-2xs">
+          <div className="flex items-center justify-between border-b border-blue-200/70 pb-2 mb-2.5">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-900">
               <span className="text-blue-600 text-sm">⚡</span>
               <span>3줄 핵심 요약</span>
             </div>
-            <span className="text-[10px] sm:text-[11px] font-mono font-bold tracking-wider text-blue-700 uppercase bg-blue-100/80 px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-mono font-bold tracking-wider text-blue-700 uppercase bg-blue-100/80 px-2 py-0.5 rounded-full">
               EXECUTIVE BRIEF
             </span>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-2 sm:space-y-2.5">
             {article.summary
               .split(/(?:^|\n|\s+)(?:[1-3][.)\-]\s+|[•\-*]\s+)/)
               .map((line) => line.trim())
@@ -350,8 +362,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
               )
               .filter((line) => line.length >= 5 && !line.includes("<") && !line.includes("http"))
               .map((cleanLine, pIdx) => (
-                <li key={pIdx} className="flex items-start gap-3 text-[15px] sm:text-base leading-[1.75] text-slate-800 font-medium">
-                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold shadow-2xs mt-0.5">
+                <li key={pIdx} className="flex items-start gap-2.5 text-[14px] sm:text-[15.5px] leading-[1.65] text-slate-800 font-medium">
+                  <span className="inline-flex h-4.5 w-4.5 sm:h-5 sm:w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] sm:text-xs font-bold shadow-2xs mt-0.5">
                     {pIdx + 1}
                   </span>
                   <span>{cleanLine}</span>
