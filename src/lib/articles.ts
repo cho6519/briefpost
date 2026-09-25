@@ -294,9 +294,69 @@ export function updateArticle(
 
 import { ALLOWED_CATEGORIES } from "./ai";
 
+export const CORE_CATEGORIES = ["정책·지원금", "금융·경제", "테크·IT", "사회·문화"] as const;
+
 /**
- * 등록된 카테고리 중 기사 수가 minCount(기본 3건) 이상인 알짜 카테고리만 조회
- * - 콘텐츠 부족(3건 미만) 카테고리의 노출을 원천 차단하여 애드센스 심사 감점 방지
+ * 당일(또는 최근 24시간) 카테고리별 발행된 기사 건수 조회 (균등 쿼터 배정용)
+ */
+export function getCategoryCountsToday(): Record<string, number> {
+  const result: Record<string, number> = {
+    "정책·지원금": 0,
+    "금융·경제": 0,
+    "테크·IT": 0,
+    "사회·문화": 0,
+  };
+
+  try {
+    const stmt = db.prepare(`
+      SELECT category, COUNT(*) as cnt 
+      FROM articles 
+      WHERE createdAt >= datetime('now', '-24 hours')
+      GROUP BY category
+    `);
+    const rows = stmt.all() as { category: string; cnt: number }[];
+    for (const r of rows) {
+      if (r.category in result) {
+        result[r.category] = r.cnt;
+      }
+    }
+  } catch (err) {
+    console.warn("[DB] 당일 카테고리 통계 조회 예외:", err);
+  }
+
+  return result;
+}
+
+/**
+ * DB 전체 카테고리별 총 누적 기사 수 조회 (카테고리 균형도 평가용)
+ */
+export function getCategoryTotalCounts(): Record<string, number> {
+  const result: Record<string, number> = {
+    "정책·지원금": 0,
+    "금융·경제": 0,
+    "테크·IT": 0,
+    "사회·문화": 0,
+  };
+
+  try {
+    const stmt = db.prepare(`
+      SELECT category, COUNT(*) as cnt 
+      FROM articles 
+      GROUP BY category
+    `);
+    const rows = stmt.all() as { category: string; cnt: number }[];
+    for (const r of rows) {
+      result[r.category] = r.cnt;
+    }
+  } catch (err) {
+    console.warn("[DB] 카테고리 전체 통계 조회 예외:", err);
+  }
+
+  return result;
+}
+
+/**
+ * 등록된 카테고리 목록 조회 (4대 핵심 카테고리 고정 노출 보장)
  */
 export function getAllCategories(minCount: number = 3): string[] {
   const stmt = db.prepare(`
@@ -308,16 +368,22 @@ export function getAllCategories(minCount: number = 3): string[] {
   `);
   const rows = stmt.all(minCount) as { category: string; cnt: number }[];
 
-  // 표준 카테고리 우선순위 순서대로 정렬
-  const priorityOrder = ["정책·지원금", "금융·경제", "부동산·세제", "테크·IT", "사회·문화"];
-  const validCategories = rows.map((r) => r.category);
+  // 4대 핵심 카테고리 고정 우선순위 순서대로 정렬
+  const priorityOrder = ["정책·지원금", "금융·경제", "테크·IT", "사회·문화"];
+  const validCategories = new Set(rows.map((r) => r.category));
 
-  const ordered = priorityOrder.filter((cat) => validCategories.includes(cat));
-  validCategories.forEach((cat) => {
+  // 4대 핵심 카테고리는 기사가 1건 이상 존재하면 무조건 상단에 고르게 노출
+  const ordered: string[] = [];
+  for (const cat of priorityOrder) {
+    ordered.push(cat);
+  }
+
+  // 그 외 3건 이상 등록된 카테고리(예: 부동산·세제 등)가 있다면 뒤에 추가
+  for (const cat of validCategories) {
     if (!ordered.includes(cat)) {
       ordered.push(cat);
     }
-  });
+  }
 
   return ordered;
 }
@@ -347,6 +413,105 @@ export function isSlugExists(slug: string): boolean {
   if (!slug) return false;
   const stmt = db.prepare("SELECT 1 FROM articles WHERE slug = ? LIMIT 1");
   return Boolean(stmt.get(slug.trim()));
+}
+
+/**
+ * 특정 ID의 기사 삭제
+ */
+export function deleteArticleById(id: number): boolean {
+  if (!id) return false;
+  const stmt = db.prepare("DELETE FROM articles WHERE id = ?");
+  const result = stmt.run(id);
+  return result.changes > 0;
+}
+
+/**
+ * DB 내 본문 중복 여부 판별 (동일 본문 또는 80% 이상 유사한 본문 중복 원천 차단)
+ */
+export function isDuplicateArticleContent(content: string, excludeId?: number): boolean {
+  if (!content) return false;
+  const clean = content
+    .replace(/^#+.*$/gm, "")
+    .replace(/[|:\-_*~`]/g, " ")
+    .replace(/\s+/g, "")
+    .trim();
+  if (clean.length < 50) return false;
+
+  const sample1 = clean.slice(0, 150);
+  const sample2 = clean.slice(150, 300);
+
+  const stmt = db.prepare(`
+    SELECT id, content FROM articles 
+    ${excludeId ? "WHERE id != ?" : ""}
+    ORDER BY id DESC LIMIT 100
+  `);
+  const rows = (excludeId ? stmt.all(excludeId) : stmt.all()) as { id: number; content: string }[];
+
+  for (const r of rows) {
+    if (r.content === content) return true;
+    const rClean = r.content
+      .replace(/^#+.*$/gm, "")
+      .replace(/[|:\-_*~`]/g, " ")
+      .replace(/\s+/g, "")
+      .trim();
+    if (rClean.length < 50) continue;
+
+    if (rClean.includes(sample1) || (sample2.length > 50 && rClean.includes(sample2))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 동일 카테고리 내 최근 기사 제목과의 유사도 판별 (동일 이슈 중복 발행 원천 차단)
+ */
+export function isDuplicateArticleTitle(
+  title: string,
+  category: string,
+  threshold = 0.48,
+  excludeId?: number
+): boolean {
+  if (!title) return false;
+  const clean = (t: string) => t.replace(/[^가-힣a-zA-Z0-9]/g, "").toLowerCase();
+  const cTarget = clean(title);
+  if (!cTarget || cTarget.length < 6) return false;
+
+  const stmt = db.prepare(`
+    SELECT id, title FROM articles 
+    WHERE category = ? 
+    ${excludeId ? "AND id != ?" : ""}
+    ORDER BY id DESC LIMIT 40
+  `);
+  const recents = (excludeId ? stmt.all(category, excludeId) : stmt.all(category)) as {
+    id: number;
+    title: string;
+  }[];
+
+  const getBigrams = (s: string) => {
+    const set = new Set<string>();
+    for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2));
+    return set;
+  };
+  const bTarget = getBigrams(cTarget);
+  if (bTarget.size === 0) return false;
+
+  for (const r of recents) {
+    const cOther = clean(r.title);
+    if (cOther === cTarget) return true;
+    const bOther = getBigrams(cOther);
+    if (bOther.size === 0) continue;
+
+    let intersection = 0;
+    for (const b of bTarget) {
+      if (bOther.has(b)) intersection++;
+    }
+    const dice = (2 * intersection) / (bTarget.size + bOther.size);
+    if (dice >= threshold) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**

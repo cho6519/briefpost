@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       limit:
-        description: '발행할 최대 기사 개수 (미입력 시 3~4개 자동 발행)'
+        description: '발행할 최대 기사 개수 (미입력 시 4대 카테고리 균등 4개 자동 발행)'
         required: false
         default: ''
 

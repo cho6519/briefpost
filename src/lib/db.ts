@@ -108,10 +108,11 @@ function initSchema(db: Database.Database) {
       db.exec("ALTER TABLE articles ADD COLUMN card_title TEXT");
     }
 
-    // 칼럼/사설/오피니언 기사 및 특정 차단 슬러그(subsidy-welfare 등) 영구 삭제 강제
+    // 중복 복제 기사(ID 36, 85, 86, 90, 109) 및 칼럼/사설/오피니언 기사 영구 삭제 강제
     db.exec(`
       DELETE FROM articles 
-      WHERE slug = 'subsidy-welfare' 
+      WHERE id IN (36, 85, 86, 90, 109)
+         OR slug = 'subsidy-welfare' 
          OR slug LIKE '%opinion%' 
          OR slug LIKE '%column%'
          OR title LIKE '%[칼럼]%'

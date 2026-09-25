@@ -7,6 +7,8 @@ import {
   ensureUniqueSlug,
   articleExistsBySourceUrl,
   getRecentThumbnailUrls,
+  isDuplicateArticleContent,
+  isDuplicateArticleTitle,
 } from "../src/lib/articles";
 import { verifyAndSanitizeArticle } from "../src/lib/articleValidator";
 import { getStockImage } from "../src/utils/imageMapper";
@@ -50,12 +52,11 @@ async function main() {
     console.log(`✅ Google Gemini API Key 확인 완료 (지정 모델: ${aiModel})`);
   }
 
-  // 한 번에 발행할 기사 개수 (명령줄 인자 우선, 없으면 환경변수, 없으면 3~4개 자연스러운 수량 자동 배정)
+  // 한 번에 발행할 기사 개수 (명령줄 인자 우선, 없으면 환경변수, 기본 4건으로 4대 카테고리 1:1:1:1 균등 발행)
   const argLimit = parseInt(process.argv[2], 10);
   const envLimit = parseInt(process.env.PUBLISH_LIMIT || "", 10);
-  const defaultRandomLimit = Math.floor(Math.random() * 2) + 3; // 3 또는 4건 자연스러운 분배
-  const limit = !isNaN(argLimit) && argLimit > 0 ? argLimit : (!isNaN(envLimit) && envLimit > 0 ? envLimit : defaultRandomLimit);
-  console.log(`• 1회 최대 발행 목표 수량(limit): ${limit}건 (설정 기준: 1회당 3~4건)`);
+  const limit = !isNaN(argLimit) && argLimit > 0 ? argLimit : (!isNaN(envLimit) && envLimit > 0 ? envLimit : 4);
+  console.log(`• 1회 발행 목표 수량(limit): ${limit}건 (4대 카테고리 1:1:1:1 균등 배정 목표)`);
 
   // 2. 활성화된 RSS 피드 전체 수집
   console.log("\n📡 [1/3] 등록된 공공·언론사 RSS 피드 수집 시작...");
@@ -122,6 +123,26 @@ async function main() {
       }
 
       const validArticle = validation.sanitized;
+
+      // 본문 중복 및 동일 주제 중복 발행 원천 차단 게이트
+      if (isDuplicateArticleContent(validArticle.content)) {
+        console.warn(`⚠️ ${indexStr} 동일/유사 본문이 이미 DB에 존재하여 발행 제외: "${validArticle.title}"`);
+        failedItems.push({
+          title: rawItem.title,
+          error: "DUPLICATE_CONTENT",
+        });
+        continue;
+      }
+
+      if (isDuplicateArticleTitle(validArticle.title, validArticle.category)) {
+        console.warn(`⚠️ ${indexStr} 동일 카테고리에 매우 유사한 주제가 최근 발행되어 중복 제외: "${validArticle.title}"`);
+        failedItems.push({
+          title: rawItem.title,
+          error: "DUPLICATE_TOPIC",
+        });
+        continue;
+      }
+
       const uniqueSlug = ensureUniqueSlug(validArticle.slug);
 
       // 3-1. 실사 고화질 스톡 이미지 1:1 고유 배정 (최근 60개 기사와 중복 원천 차단)
@@ -170,9 +191,15 @@ async function main() {
   }
 
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
+  const categoryCounts: Record<string, number> = {};
+  for (const a of publishedArticles) {
+    categoryCounts[a.category] = (categoryCounts[a.category] || 0) + 1;
+  }
+
   console.log("\n================================================================================");
   console.log(`🎉 [3/3] 파이프라인 완료! (총 소요시간: ${durationSec}초)`);
   console.log(`• 최종 발행 성공: ${publishedArticles.length}건`);
+  console.log("• 발행 카테고리 분포:", Object.entries(categoryCounts).map(([cat, c]) => `${cat}: ${c}건`).join(" | ") || "없음");
   console.log(`• 처리 실패 건수: ${failedItems.length}건`);
   console.log("================================================================================\n");
 

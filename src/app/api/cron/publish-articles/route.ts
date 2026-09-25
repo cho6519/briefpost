@@ -6,6 +6,8 @@ import {
   ensureUniqueSlug,
   articleExistsBySourceUrl,
   getRecentThumbnailUrls,
+  isDuplicateArticleContent,
+  isDuplicateArticleTitle,
 } from "@/lib/articles";
 import { verifyCronAuth } from "@/lib/cronAuth";
 import { verifyAndSanitizeArticle } from "@/lib/articleValidator";
@@ -75,8 +77,8 @@ async function handlePublishArticles(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    // 한 번의 실행에서 처리할 최대 기사 수 (기본값: 3개, 최대 10개)
-    const limit = Math.min(10, Math.max(1, parseInt(searchParams.get("limit") || "3", 10)));
+    // 한 번의 실행에서 처리할 최대 기사 수 (기본값: 4개 - 4대 카테고리 1:1:1:1 균등 배정)
+    const limit = Math.min(10, Math.max(1, parseInt(searchParams.get("limit") || "4", 10)));
     const customFeedUrl = searchParams.get("url") || undefined;
     const customCategory = searchParams.get("category") || undefined;
 
@@ -172,6 +174,33 @@ async function handlePublishArticles(request: NextRequest) {
         }
 
         const validArticle = validation.sanitized;
+
+        // 본문 중복 및 동일 주제 중복 발행 원천 차단 게이트
+        if (isDuplicateArticleContent(validArticle.content)) {
+          console.warn(
+            `[PUBLISH CRON REJECT] ${itemIndexStr} 동일/유사 본문이 이미 DB에 존재하여 발행 제외: "${validArticle.title}"`
+          );
+          failedItems.push({
+            title: rawItem.title,
+            link: rawItem.link,
+            stage: currentStage,
+            error: "DUPLICATE_CONTENT: 동일하거나 매우 유사한 본문이 이미 존재함",
+          });
+          continue;
+        }
+
+        if (isDuplicateArticleTitle(validArticle.title, validArticle.category)) {
+          console.warn(
+            `[PUBLISH CRON REJECT] ${itemIndexStr} 동일 카테고리에 매우 유사한 주제가 최근 발행되어 중복 제외: "${validArticle.title}"`
+          );
+          failedItems.push({
+            title: rawItem.title,
+            link: rawItem.link,
+            stage: currentStage,
+            error: "DUPLICATE_TOPIC: 최근 동일 카테고리에 유사한 주제가 이미 발행됨",
+          });
+          continue;
+        }
 
         currentStage = "DB_SAVE";
         // 고유 슬러그 검증 및 중복 방지 타임스탬프 처리

@@ -1,5 +1,10 @@
 import Parser from "rss-parser";
-import { getAllSourceUrls } from "./articles";
+import {
+  getAllSourceUrls,
+  getCategoryCountsToday,
+  getCategoryTotalCounts,
+  CORE_CATEGORIES,
+} from "./articles";
 import { getActiveRssFeeds, RSS_FEEDS } from "@/config/rssFeeds";
 
 export interface ParsedRssItem {
@@ -33,95 +38,48 @@ export interface FetchRssResult {
 }
 
 /**
- * [타겟 키워드 목록]
- * 검색률 및 독자 클릭률이 높은 알짜 정보성 보도자료를 선별하기 위한 핵심 키워드
+ * [카테고리별 특화 타겟 키워드 맵]
+ * 4대 핵심 카테고리별 공공 보도자료 특성에 맞춘 전문 키워드
+ */
+export const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  "정책·지원금": [
+    "지원금", "보조금", "환급", "감면", "바우처", "청년", "복지", "장려금", "수당",
+    "소상공인", "자영업자", "소진공", "기업마당", "정책자금", "경영자금", "경영애로",
+    "일시적 경영애로", "일반경영자금", "경영안정", "희망리턴", "대환대출", "이차보전",
+    "스마트상점", "민생지원금", "민생회복", "지역화폐", "재난지원금", "정부24", "보조금24",
+    "청년정책", "청년수당", "지원사업", "공고", "모집", "접수", "신청"
+  ],
+  "금융·경제": [
+    "기준금리", "금리", "한국은행", "통화정책", "금융위원회", "금융감독원", "대출",
+    "물가", "환율", "가계부채", "채무조정", "서민금융", "예금", "적금", "채권",
+    "증시", "주식", "투자", "은행", "kdi", "경제전망", "거시경제", "경제동향",
+    "수출", "금융지원", "부채", "코픽스", "특례보금자리", "디딤돌", "금융정책", "자금시장"
+  ],
+  "테크·IT": [
+    "ai", "인공지능", "반도체", "과학기술", "과기정통부", "소프트웨어", "클라우드",
+    "정보보안", "보안", "사이버", "데이터", "네트워크", "5g", "6g", "양자", "로봇",
+    "모바일", "플랫폼", "ict", "it", "연구개발", "r&d", "kisa", "nipa",
+    "생성형", "빅테크", "초거대", "디지털", "신기술", "미래산업", "통신"
+  ],
+  "사회·문화": [
+    "보건", "복지", "의료", "건강보험", "국민연금", "돌봄", "저출생", "일자리",
+    "고용", "노동", "최저임금", "근로", "고용노동부", "보건복지부", "문화체육관광부",
+    "문화", "관광", "k컬처", "콘텐츠", "예술", "체육", "청년", "고용보험",
+    "직업훈련", "사회안전망", "돌봄서비스", "문화누리", "육아", "출산", "사회복지"
+  ],
+};
+
+/**
+ * [전체 타겟 키워드 통합 목록]
  */
 export const TARGET_KEYWORDS = [
-  // 0. [초특급 핫이슈] 추석 민생지원금 및 지역별 민생회복지원금
-  "민생지원금",
-  "추석민생지원금",
-  "추석 민생지원금",
-  "민생회복지원금",
-  "민생회복 지원금",
-  "민생지원금신청",
-  "민생지원금 신청",
-  "민생지원금조회",
-  "민생지원금 조회",
-  "경기도 민생지원금",
-  "민생지원금 경기도",
-  "경기 민생지원금",
-  "민생지원금 부산",
-  "민생지원금 인천",
-  "지자체 민생지원금",
-  "민생회복",
-  "지역화폐",
-  "소비쿠폰",
-  "재난지원금",
-
-  // 1. 정책·지원금 (소상공인 경영자금·경영애로 최우선)
-  "경영애로",
-  "일시적 경영애로",
-  "일반경영자금",
-  "경영안정",
-  "소상공인",
-  "자영업자",
-  "소진공",
-  "기업마당",
-  "정책자금",
-  "희망리턴",
-  "대환대출",
-  "이차보전",
-  "스마트상점",
-  "지원금",
-  "보조금",
-  "환급",
-  "감면",
-  "바우처",
-  "청년",
-  "복지",
-  "장려금",
-  "수당",
-  // 2. 부동산·세제
-  "세제",
-  "세금",
-  "소득세",
-  "양도세",
-  "취득세",
-  "종부세",
-  "분양",
-  "전세",
-  "월세",
-  "아파트",
-  "주택",
-  "재건축",
-  // 3. 금융·경제
-  "대출",
-  "금리",
-  "환율",
-  "물가",
-  "증시",
-  "주식",
-  "투자",
-  "은행",
-  "기준금리",
-  "한국은행",
-  // 4. 테크·IT
-  "ai",
-  "인공지능",
-  "반도체",
-  "신기술",
-  "플랫폼",
-  "소프트웨어",
-  "스마트폰",
-  "빅테크",
-  // 5. 사회·문화 / 주요 정책 제도
-  "개편",
-  "대책",
-  "제도",
-  "정책",
-  "고용",
-  "일자리",
-  "노동",
+  ...new Set([
+    ...CATEGORY_KEYWORDS["정책·지원금"],
+    ...CATEGORY_KEYWORDS["금융·경제"],
+    ...CATEGORY_KEYWORDS["테크·IT"],
+    ...CATEGORY_KEYWORDS["사회·문화"],
+    "개편", "대책", "제도", "정책", "세제", "세금", "소득세", "분양", "전세", "월세", "아파트", "주택"
+  ])
 ] as const;
 
 /**
@@ -137,7 +95,7 @@ export const OPINION_COLUMN_PATTERNS = [
 
 /**
  * [공식 공공기관/정부부처 화이트리스트 도메인 및 식별자]
- * 정책브리핑, 소진공, 기업마당, 정부24, 온통청년, 각 부처/지자체 공식 보도자료만 허용
+ * 정책브리핑, 소진공, 기업마당, 정부24, 온통청년, 한국은행, 금융위, 금감원, KDI, 과기정통부, KISA, NIPA, 문체부, 복지부, 노동부 공식 보도자료 허용
  */
 export const OFFICIAL_PUBLIC_DOMAINS = [
   "korea.kr",
@@ -149,16 +107,21 @@ export const OFFICIAL_PUBLIC_DOMAINS = [
   "bok.or.kr",
   "fsc.go.kr",
   "fss.or.kr",
+  "kdi.re.kr",
+  "msit.go.kr",
+  "kisa.or.kr",
+  "nipa.or.kr",
+  "mcst.go.kr",
+  "mohw.go.kr",
+  "moel.go.kr",
   "kodit.co.kr",
   "kibo.or.kr",
   "sbiz.or.kr",
   "moef.go.kr",
   "mss.go.kr",
-  "moel.go.kr",
   "molit.go.kr",
   "nts.go.kr",
   "mois.go.kr",
-  "mohw.go.kr",
   "seoul.go.kr",
   "gg.go.kr",
   "busan.go.kr",
@@ -262,13 +225,45 @@ export function isWhitelistedPublicSource(item: ParsedRssItem): { isWhitelisted:
       "온통청년",
       "youthcenter.go.kr",
       "중소벤처기업부",
+      "중기부",
       "기획재정부",
+      "기재부",
+      "한국은행",
+      "한은",
+      "bok.or.kr",
       "금융위원회",
+      "금융위",
+      "fsc.go.kr",
+      "금융감독원",
+      "금감원",
+      "fss.or.kr",
+      "kdi",
+      "한국개발연구원",
+      "kdi.re.kr",
+      "과학기술정보통신부",
+      "과기정통부",
+      "과기부",
+      "msit.go.kr",
+      "한국인터넷진흥원",
+      "kisa",
+      "kisa.or.kr",
+      "정보통신산업진흥원",
+      "nipa",
+      "nipa.or.kr",
       "고용노동부",
+      "노동부",
+      "moel.go.kr",
+      "보건복지부",
+      "복지부",
+      "mohw.go.kr",
+      "문화체육관광부",
+      "문체부",
+      "mcst.go.kr",
       "국토교통부",
+      "국토부",
       "국세청",
       "행정안전부",
-      "보건복지부",
+      "행안부",
       "서울시",
       "경기도",
       "부산시",
@@ -381,76 +376,41 @@ export function evaluateArticleKeywords(item: ParsedRssItem): {
     }
   }
 
-  // 4. 타겟 키워드 검사 및 가중치 점수 산정
-  // - 일반 키워드: 제목 3점, 본문 1점
-  // - [초특급 핫이슈] 민생지원금/추석지원금 슈퍼 키워드: 제목 +15점, 본문 +8점 파격 가산
-  // - [핵심 정책] 소상공인 경영자금/경영애로 슈퍼 키워드: 제목 +10점, 본문 +5점 대폭 가산
-  const SUPER_MINSAENG_KEYWORDS = [
-    "민생지원금",
-    "추석민생지원금",
-    "추석 민생지원금",
-    "민생회복지원금",
-    "민생회복 지원금",
-    "민생지원금신청",
-    "민생지원금 신청",
-    "민생지원금조회",
-    "민생지원금 조회",
-    "경기도 민생지원금",
-    "민생지원금 경기도",
-    "경기 민생지원금",
-    "민생지원금 부산",
-    "민생지원금 인천",
-    "지자체 민생지원금",
-    "민생회복",
-  ];
-
-  const SUPER_SMALL_BIZ_KEYWORDS = [
-    "일시적 경영애로",
-    "경영애로",
-    "일반경영자금",
-    "경영안정자금",
-    "소상공인 정책자금",
-    "대환대출",
-    "이차보전",
-  ];
-
+  // 4. 카테고리별 전문 키워드 검사 및 공정한 점수 산정
   let score = 0;
   const matchedKeywords: string[] = [];
 
+  // 1) 해당 카테고리의 전용 키워드 우선 가산 (제목 +4점, 본문 +2점)
+  const categoryKws = CATEGORY_KEYWORDS[item.category] || [];
+  for (const keyword of categoryKws) {
+    const kw = keyword.toLowerCase();
+    const inTitle = title.includes(kw);
+    const inContent = content.includes(kw);
+
+    if (inTitle || inContent) {
+      if (!matchedKeywords.includes(keyword)) matchedKeywords.push(keyword);
+      if (inTitle) score += 4;
+      if (inContent) score += 2;
+    }
+  }
+
+  // 2) 전체 공통 타겟 키워드 검사 (제목 +2점, 본문 +1점)
   for (const keyword of TARGET_KEYWORDS) {
     const kw = keyword.toLowerCase();
     const inTitle = title.includes(kw);
     const inContent = content.includes(kw);
 
     if (inTitle || inContent) {
-      matchedKeywords.push(keyword);
-      if (inTitle) score += 3;
+      if (!matchedKeywords.includes(keyword)) matchedKeywords.push(keyword);
+      if (inTitle) score += 2;
       if (inContent) score += 1;
     }
   }
 
-  // 1) 민생지원금 / 추석지원금 초특급 가산점
-  for (const minsaengKw of SUPER_MINSAENG_KEYWORDS) {
-    const mkw = minsaengKw.toLowerCase();
-    if (title.includes(mkw)) {
-      score += 15;
-      if (!matchedKeywords.includes(minsaengKw)) matchedKeywords.unshift(minsaengKw);
-    } else if (content.includes(mkw)) {
-      score += 8;
-      if (!matchedKeywords.includes(minsaengKw)) matchedKeywords.push(minsaengKw);
-    }
-  }
-
-  // 2) 소상공인 경영애로/경영자금 슈퍼 가산점
-  for (const superKw of SUPER_SMALL_BIZ_KEYWORDS) {
-    const skw = superKw.toLowerCase();
-    if (title.includes(skw)) {
-      score += 10;
-      if (!matchedKeywords.includes(superKw)) matchedKeywords.unshift(superKw);
-    } else if (content.includes(skw)) {
-      score += 5;
-      if (!matchedKeywords.includes(superKw)) matchedKeywords.push(superKw);
-    }
+  // 3) 공식 공공기관/정부부처 출처 기본 점수 보장 (공식 보도자료는 팩트성이 확실하므로 기본 3점 부여)
+  if (whitelistCheck.isWhitelisted && score === 0) {
+    score = 3;
+    matchedKeywords.push("공식보도");
   }
 
   return {
@@ -498,44 +458,181 @@ export function isMinsaengArticle(item: ParsedRssItem): boolean {
 }
 
 /**
- * 발행 후보 선별 시 추석 민생지원금(신청·조회·지역별) 및 소상공인 경영자금 기사를 최우선 쿼터(Quota Allocation)로 배정
+ * 후보 목록 내 유사 제목/동일 이슈 기사 중복 방지 판별 (2-gram Dice 유사도)
  */
-export function selectCandidatesWithQuota<T extends ParsedRssItem>(
+function hasSimilarTitleInList<T extends ParsedRssItem>(item: T, list: T[]): boolean {
+  const clean = (t: string) => t.replace(/[^가-힣a-zA-Z0-9]/g, "").toLowerCase();
+  const cTarget = clean(item.title);
+  if (!cTarget || cTarget.length < 5) return false;
+
+  const getBigrams = (s: string) => {
+    const set = new Set<string>();
+    for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2));
+    return set;
+  };
+  const bTarget = getBigrams(cTarget);
+
+  for (const existing of list) {
+    if (existing.link === item.link) return true;
+    const cOther = clean(existing.title);
+    if (cOther === cTarget) return true;
+    const bOther = getBigrams(cOther);
+    if (bOther.size === 0) continue;
+
+    let intersection = 0;
+    for (const b of bTarget) {
+      if (bOther.has(b)) intersection++;
+    }
+    const dice = (2 * intersection) / (bTarget.size + bOther.size);
+    if (dice >= 0.45) return true;
+  }
+  return false;
+}
+
+/**
+ * [카테고리별 균등 쿼터제(Quota) 수집 및 선별 시스템]
+ * 1. 4개 카테고리(정책·지원금, 금융·경제, 테크·IT, 사회·문화)에 골고루 균형 있게 발행
+ * 2. 1회 실행 시 각 카테고리당 최대 1~2건씩 선별 수집
+ * 3. 당일 특정 카테고리가 이미 정원(2건)을 채웠다면, 부족한 타 카테고리를 우선 탐색
+ * 4. 하루 전체 1:1:1:1 비율에 가깝게 유지 보장
+ */
+export function selectCandidatesWithQuota<T extends ParsedRssItem & { keywordScore?: number }>(
   items: T[],
   limit: number
 ): T[] {
-  if (items.length <= limit) {
-    return items;
-  }
+  if (items.length === 0) return [];
 
-  const minsaengCandidates = items.filter(isMinsaengArticle);
-  const smallBizCandidates = items.filter((it) => isPriorityPolicyArticle(it) && !isMinsaengArticle(it));
-  const result: T[] = [];
+  // 1. 당일(최근 24시간) 발행 현황 및 DB 전체 누적 통계 확인
+  const todayCounts = getCategoryCountsToday();
+  const totalCounts = getCategoryTotalCounts();
+  console.log("\n📊 [Quota] 당일(최근 24시간) 카테고리별 기사 발행 현황:", todayCounts);
+  console.log("📊 [Quota] DB 전체 카테고리 누적 통계:", totalCounts);
 
-  // 1. [초특급 트렌드] 민생지원금(추석/신청/조회/지역별) 기사를 1~2건 최우선 쿼터로 배정
-  for (const item of minsaengCandidates) {
-    if (result.length >= Math.min(2, limit)) break;
-    if (!result.some((r) => r.link === item.link)) {
-      result.push(item);
-      console.log(`🎯 [Quota] 추석/지역별 민생지원금 기사 최우선 쿼터 배정 (#${result.length}): "${item.title.slice(0, 40)}"`);
-    }
-  }
+  // 2. 수집된 후보군을 카테고리별로 분류
+  const categoriesMap: Record<string, T[]> = {
+    "정책·지원금": [],
+    "금융·경제": [],
+    "테크·IT": [],
+    "사회·문화": [],
+  };
 
-  // 2. [핵심 정책] 소상공인 경영자금/애로자금 기사를 1건 쿼터 배정
-  if (result.length < limit && smallBizCandidates.length > 0) {
-    const sb = smallBizCandidates[0];
-    if (!result.some((r) => r.link === sb.link)) {
-      result.push(sb);
-      console.log(`🎯 [Quota] 소상공인 경영자금/애로자금 쿼터 배정: "${sb.title.slice(0, 40)}"`);
-    }
-  }
-
-  // 3. 나머지 슬롯은 전체 점수순 정렬 목록에서 중복 없이 채움 (민생지원금 남은 것들도 높은 점수로 우선 진입)
   for (const item of items) {
-    if (result.length >= limit) break;
-    if (!result.some((r) => r.link === item.link)) {
-      result.push(item);
+    const cat = item.category || "정책·지원금";
+    if (cat in categoriesMap) {
+      categoriesMap[cat].push(item);
+    } else {
+      categoriesMap["정책·지원금"].push(item);
     }
+  }
+
+  // 각 카테고리 내에서는 keywordScore 및 최신 발행일 순으로 정렬
+  for (const cat of CORE_CATEGORIES) {
+    categoriesMap[cat].sort((a, b) => {
+      const scoreA = a.keywordScore || 0;
+      const scoreB = b.keywordScore || 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return (Date.parse(b.pubDate) || 0) - (Date.parse(a.pubDate) || 0);
+    });
+    console.log(`• [수집 풀] ${cat}: 유효 후보 ${categoriesMap[cat].length}건`);
+  }
+
+  // 3. 기사가 부족한 카테고리 우선 탐색 순서 결정
+  // 1순위: 당일 발행 건수 적은 카테고리, 2순위: 전체 누적 건수 적은 카테고리
+  const sortedCategories = [...CORE_CATEGORIES].sort((a, b) => {
+    const todayDiff = (todayCounts[a] || 0) - (todayCounts[b] || 0);
+    if (todayDiff !== 0) return todayDiff;
+    return (totalCounts[a] || 0) - (totalCounts[b] || 0);
+  });
+
+  console.log(
+    "🎯 [Quota 우선순위(기사 부족 카테고리 우선)]:",
+    sortedCategories
+      .map((c) => `${c}(오늘:${todayCounts[c] || 0}건 / 누적:${totalCounts[c] || 0}건)`)
+      .join(" -> ")
+  );
+
+  const result: T[] = [];
+  const selectedPerCategory: Record<string, number> = {
+    "정책·지원금": 0,
+    "금융·경제": 0,
+    "테크·IT": 0,
+    "사회·문화": 0,
+  };
+
+  // 1회 실행당 카테고리 최대 할당량: limit <= 4이면 카테고리당 1건, 초과 시 최대 2건
+  const maxPerCategoryPerRun = limit <= 4 ? 1 : 2;
+  const DAILY_QUOTA_PER_CAT = 2; // 일일 목표 균등 정원
+
+  // Round 1: 당일 정원 미달인 부족 카테고리 우선으로 각 1건씩 선별
+  for (const cat of sortedCategories) {
+    if (result.length >= limit) break;
+    const catItems = categoriesMap[cat];
+    const currentTodayCount = todayCounts[cat] || 0;
+
+    // 당일 정원(2건)을 이미 채웠고, 다른 미달 카테고리에 후보가 남아있다면 해당 카테고리는 스킵
+    const otherUnderrepresented = sortedCategories.some(
+      (other) =>
+        other !== cat &&
+        (todayCounts[other] || 0) < DAILY_QUOTA_PER_CAT &&
+        categoriesMap[other].length > selectedPerCategory[other]
+    );
+
+    if (currentTodayCount >= DAILY_QUOTA_PER_CAT && otherUnderrepresented) {
+      console.log(
+        `⏩ [Quota 건너뜀] '${cat}' 카테고리는 오늘 이미 ${currentTodayCount}건 발행되어 스킵 (부족 카테고리 우선)`
+      );
+      continue;
+    }
+
+    for (const item of catItems) {
+      if (selectedPerCategory[cat] >= maxPerCategoryPerRun) break;
+      if (!hasSimilarTitleInList(item, result)) {
+        result.push(item);
+        selectedPerCategory[cat] = (selectedPerCategory[cat] || 0) + 1;
+        console.log(
+          `🎯 [Quota 배정 1차] [${cat}] "${item.title.slice(0, 35)}..." (점수: ${item.keywordScore || 0})`
+        );
+        break;
+      }
+    }
+  }
+
+  // Round 2: 잔여 슬롯이 있다면, 부족 카테고리 순서대로 maxPerCategoryPerRun 범위 내에서 추가 선별
+  if (result.length < limit) {
+    for (const cat of sortedCategories) {
+      if (result.length >= limit) break;
+      const catItems = categoriesMap[cat];
+
+      for (const item of catItems) {
+        if (result.length >= limit) break;
+        if (selectedPerCategory[cat] >= maxPerCategoryPerRun) break;
+        if (!hasSimilarTitleInList(item, result) && !result.some((r) => r.link === item.link)) {
+          result.push(item);
+          selectedPerCategory[cat] = (selectedPerCategory[cat] || 0) + 1;
+          console.log(
+            `🎯 [Quota 보충 2차] [${cat}] "${item.title.slice(0, 35)}..." (점수: ${item.keywordScore || 0})`
+          );
+        }
+      }
+    }
+  }
+
+  // Round 3: 특정 카테고리 후보 부재로 여전히 limit 미달인 경우, 가용 풀 전체에서 중복 없이 보충
+  if (result.length < limit) {
+    for (const item of items) {
+      if (result.length >= limit) break;
+      if (!hasSimilarTitleInList(item, result) && !result.some((r) => r.link === item.link)) {
+        result.push(item);
+        const cat = item.category || "정책·지원금";
+        selectedPerCategory[cat] = (selectedPerCategory[cat] || 0) + 1;
+        console.log(`ℹ️ [Quota 풀백] [${cat}] "${item.title.slice(0, 35)}..."`);
+      }
+    }
+  }
+
+  console.log(`\n🎉 [Quota 선별 완료: 총 ${result.length}건 배정]`);
+  for (const cat of CORE_CATEGORIES) {
+    console.log(`   • ${cat}: ${selectedPerCategory[cat] || 0}건`);
   }
 
   return result;
