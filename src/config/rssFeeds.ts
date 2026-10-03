@@ -22,31 +22,31 @@ export interface RssFeedConfig {
 
 export const RSS_FEEDS: RssFeedConfig[] = [
   // ===========================================================================
-  // 1. 정책·지원금 (대한민국 정책브리핑, 중기부 기업마당, 소진공 공고)
+  // 1. 정책·지원금 (소상공인 정책자금, 신용취약차주 대환대출, 민생회복지원금, 청년·서민 복지)
   // ===========================================================================
   {
-    id: "policy-semas-announcement",
-    name: "소상공인시장진흥공단 정책자금 및 지원사업 공고",
+    id: "policy-semas-hot-fund",
+    name: "소상공인 정책자금·신용취약·대환대출 실시간 핫이슈",
     category: "정책·지원금",
-    url: `https://news.google.com/rss/search?q=${encodeURIComponent("site:semas.or.kr (정책자금 OR 경영자금 OR 소상공인 OR 대환대출 OR 지원사업 OR 공고)")}&hl=ko&gl=KR&ceid=KR:ko`,
+    url: `https://news.google.com/rss/search?q=${encodeURIComponent('("소상공인 정책자금" OR "신용취약소상공인" OR "소상공인 대환대출" OR "경영안정자금" OR "희망플러스" OR "버팀목") (중기부 OR 소진공 OR 소상공인시장진흥공단 OR 신청 OR 접수 OR 자격)')}&hl=ko&gl=KR&ceid=KR:ko`,
     enabled: true,
     officialDomain: "semas.or.kr",
-    description: "소상공인시장진흥공단(semas.or.kr) 정책자금, 경영안정자금 및 소상공인 지원사업 공식 공고",
+    description: "소상공인 정책자금, 신용취약 차주 직접대출, 저금리 대환대출 등 실시간 검색 핫이슈",
   },
   {
-    id: "policy-bizinfo-direct",
-    name: "중소벤처기업부 기업마당 지원사업 공고",
+    id: "policy-bizinfo-welfare",
+    name: "정부 민생회복·복지지원금·바우처 공고",
     category: "정책·지원금",
-    url: `https://news.google.com/rss/search?q=${encodeURIComponent("site:bizinfo.go.kr (소상공인 OR 지원사업 OR 정책자금 OR 보조금 OR 바우처)")}&hl=ko&gl=KR&ceid=KR:ko`,
+    url: `https://news.google.com/rss/search?q=${encodeURIComponent('("민생회복지원금" OR "근로장려금" OR "청년도약계좌" OR "청년월세" OR "에너지바우처" OR "소상공인 전기요금" OR "생계급여") (신청 OR 접수 OR 대상 OR 자격 OR 지급)')}&hl=ko&gl=KR&ceid=KR:ko`,
     enabled: true,
     officialDomain: "bizinfo.go.kr",
-    description: "중소벤처기업부 기업마당(bizinfo.go.kr) 정부 지원사업 및 보조금 공식 공고",
+    description: "정부 민생회복지원금, 근로장려금, 청년지원금, 에너지바우처 등 대국민 체감 혜택 핫이슈",
   },
   {
     id: "policy-korea-kr-briefing",
     name: "대한민국 정책브리핑 정책지원금·민생회복 공식 발표",
     category: "정책·지원금",
-    url: `https://news.google.com/rss/search?q=${encodeURIComponent("site:korea.kr (민생지원금 OR 정책지원금 OR 소상공인 OR 보조금 OR 정부지원금)")}&hl=ko&gl=KR&ceid=KR:ko`,
+    url: `https://news.google.com/rss/search?q=${encodeURIComponent("(민생지원금 OR 정책지원금 OR 소상공인지원 OR 보조금 OR 정부지원금) (기획재정부 OR 중소벤처기업부 OR 보건복지부 OR 행정안전부)")}&hl=ko&gl=KR&ceid=KR:ko`,
     enabled: true,
     officialDomain: "korea.kr",
     description: "대한민국 공식 정책브리핑(korea.kr) 범정부 정책지원금 및 민생회복 지원 프로젝트",
