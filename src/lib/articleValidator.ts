@@ -489,8 +489,8 @@ export function cleanseHeadline(title: string): string {
 /**
  * 카드뉴스 전용 헤드라인(card_title) 강력 정제기
  * - 괄호, 대괄호 및 내부 텍스트 완전 제거
- * - 불필요한 금액/접수 수식어((최대 OO만 원), [신청 안내], 2026년 공고 등) 원천 차단
- * - 특수문자 정리 및 12자~16자 내외의 정갈한 핵심 단문으로 제한
+ * - 불필요한 금액/접수 수식어 원천 차단
+ * - 단어(어절)를 임의로 쪼개지 않고 14~22자 내외의 자연스러운 핵심 단문으로 보존
  */
 export function cleanseCardTitle(rawTitle: string): string {
   if (!rawTitle) return "";
@@ -504,12 +504,36 @@ export function cleanseCardTitle(rawTitle: string): string {
     .replace(/\s+/g, " ")
     .trim();
 
-  // 4. 최대 16자 제한
-  if (clean.length > 16) {
-    clean = clean.slice(0, 16).trim();
+  // 18자 이하인 경우 이미 간결하고 완성된 단문이므로 그대로 보존
+  if (clean.length <= 18) {
+    return clean;
   }
 
-  return clean;
+  // 19자 이상인 경우 어절(단어) 단위로 안전하게 분리하여 단어 쪼개짐 방지
+  const words = clean.split(" ");
+  let result = "";
+  for (const word of words) {
+    if (!result) {
+      result = word;
+    } else if ((result + " " + word).length <= 22) {
+      result += " " + word;
+    } else {
+      break;
+    }
+  }
+
+  if (!result || result.length < 5) {
+    result = clean.slice(0, 22);
+    const lastSpace = result.lastIndexOf(" ");
+    if (lastSpace > 6) {
+      result = result.slice(0, lastSpace);
+    }
+  }
+
+  // 불완전한 말단 조사나 단어 파편('및', '의', '에', '가', '은', '는') 제거
+  result = result.replace(/\s+(?:및|의|에|가|은|는|과|와|등)$/, "").trim();
+
+  return result;
 }
 
 /**

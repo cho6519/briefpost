@@ -68,29 +68,53 @@ export async function GET(req: NextRequest) {
       title = "소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원)";
     }
 
-    // 2. 카드뉴스 전용 헤드라인(card_title) 안전장치(Sanitizer) 강제 적용
-    // 괄호, 대괄호 및 내부 텍스트 완전 제거, 특수문자 정리, 최대 16자 제한
+    // 2. 카드뉴스 전용 헤드라인(card_title) 안전장치 (단어 쪼개짐 원천 방지 및 어절 보존)
     const catchphraseData = generateCardCatchphrase(title, category);
     const queryCardTitle = searchParams.get("card_title") || searchParams.get("keyword");
-    const rawCardTitle = queryCardTitle || cardTitleFromDb || title;
+    const rawDbTitle = cardTitleFromDb ? cardTitleFromDb.trim() : "";
 
-    let cleanTitle = (rawCardTitle || "")
+    // 끝 글자가 1글자 불완전 파편(예: '가', '의', '를', '및')으로 잘린 문자열인지 판별
+    const isTruncatedFragment = (str: string) => {
+      if (!str) return true;
+      const s = str.trim();
+      if (s.length < 4) return true;
+      return /\s+[가-힣]{1}$/.test(s) || /(?:및|의|에|가|은|는|과|와|등)$/.test(s);
+    };
+
+    let baseCandidate = queryCardTitle || rawDbTitle;
+    if (!baseCandidate || isTruncatedFragment(baseCandidate)) {
+      // DB의 card_title이 불완전하게 잘려있으면 원본 title에서 완전한 어절로 재구성
+      baseCandidate = title;
+    }
+
+    // 괄호/특수문자 정제 (연도 보존)
+    let cleanTitle = (baseCandidate || "")
       .replace(/[\(\[\{【<].*?[\)\]\}】>]/g, "")
-      .replace(/\b202[0-9]년?\b/g, "")
       .replace(/[^\w\sㄱ-ㅎ가-힣]/g, " ")
       .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 16)
       .trim();
 
+    // 20자 초과 시 어절(단어) 단위로 안전하게 분리
+    if (cleanTitle.length > 20) {
+      const words = cleanTitle.split(" ");
+      let assembled = "";
+      for (const w of words) {
+        if (!assembled) {
+          assembled = w;
+        } else if ((assembled + " " + w).length <= 20) {
+          assembled += " " + w;
+        } else {
+          break;
+        }
+      }
+      cleanTitle = assembled || cleanTitle.slice(0, 18);
+    }
+
+    // 말단 불완전 1글자 조사/파편 제거
+    cleanTitle = cleanTitle.replace(/\s+[가-힣]{1}$/, "").trim();
+
     if (!cleanTitle || cleanTitle.length < 4) {
-      cleanTitle = (title || "")
-        .replace(/[\(\[\{【<].*?[\)\]\}】>]/g, "")
-        .replace(/[^\w\sㄱ-ㅎ가-힣]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 16)
-        .trim();
+      cleanTitle = title.slice(0, 18).trim();
     }
 
     const cardMainTitle = cleanTitle;
@@ -248,21 +272,23 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 5. 모바일 화면 최적화 타이포그래피 폰트 크기 대폭 상향 (이미지를 꽉 채우는 68px ~ 96px 초특대형 볼드)
+    // 5. 모바일 화면 최적화 타이포그래피 (글자 수에 따른 스마트 반응형 폰트 크기)
     const titleLength = cardMainTitle.length;
-    let titleFontSize = 96; // 15자 이하: 압도적인 96px
+    let titleFontSize = 84; // 13자 이하
     let titleLineHeight = 1.15;
 
-    if (titleLength > 32) {
-      titleFontSize = 68; // 33자 이상 긴 제목: 68px
+    if (titleLength > 24) {
+      titleFontSize = 64; // 25자 이상 긴 제목: 64px
       titleLineHeight = 1.18;
-    } else if (titleLength > 23) {
-      titleFontSize = 78; // 24~32자: 78px
+    } else if (titleLength > 18) {
+      titleFontSize = 72; // 19~24자: 72px
       titleLineHeight = 1.16;
-    } else if (titleLength > 15) {
-      titleFontSize = 86; // 16~23자: 86px
+    } else if (titleLength > 13) {
+      titleFontSize = 78; // 14~18자: 78px
       titleLineHeight = 1.15;
     }
+
+    const badgeFontSize = displayBadge.length > 28 ? "21px" : displayBadge.length > 20 ? "25px" : "29px";
 
     // 6. 폰트 로드
     const fontData = await getPretendardFont();
@@ -610,9 +636,10 @@ export async function GET(req: NextRequest) {
                   display: "flex",
                   alignItems: "center",
                   color: badgeInfo.isSubsidy ? "#34d399" : "#60a5fa",
-                  fontSize: "32px",
+                  fontSize: badgeFontSize,
                   fontWeight: 800,
                   letterSpacing: "-0.5px",
+                  lineHeight: 1.22,
                 }}
               >
                 {displayBadge}
