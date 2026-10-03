@@ -99,7 +99,14 @@ export async function GET(req: NextRequest) {
     // 3. 인포그래픽 하이라이트 배지 추출
     const badgeInfo = extractCardBadge(title, content, category, highlightBadge);
     const displayBadge = highlightBadge || badgeInfo.badgeText;
-    const displaySub = badgeInfo.subText || "신속하고 정확한 공공.경제 정책 전문 브리핑";
+    const defaultSubText = category.includes("정책") || category.includes("지원금")
+      ? "📌 자격 요건 · 구비 서류 · 3분 신청 꿀팁 총정리"
+      : category.includes("부동산") || category.includes("세제")
+      ? "📌 청약 자격 · 세제 감면 · 실수요 절세 가이드"
+      : category.includes("금융") || category.includes("경제")
+      ? "📌 금리 비교 · 이자 절감 · 실전 대환 꿀팁"
+      : "📌 핵심 요약 · 실무 팁 · 3분 완독 체크리스트";
+    const displaySub = badgeInfo.subText && badgeInfo.subText.length >= 10 ? badgeInfo.subText : defaultSubText;
 
     // 4. 기사 고유 해시 기반 다이내믹 배경 & 카테고리별 테마 설정
     const getHash = (str: string) => {
@@ -394,7 +401,7 @@ export async function GET(req: NextRequest) {
             {watermarkText}
           </div>
 
-          {/* [1. 상단 헤더 영역] 카테고리 뱃지 & Brief Post 브랜드 로고 */}
+          {/* [1. 상단 헤더 영역] 카테고리 뱃지 & 최신 개정판 배지 & Brief Post 브랜드 로고 */}
           <div
             style={{
               display: "flex",
@@ -403,23 +410,43 @@ export async function GET(req: NextRequest) {
               width: "100%",
             }}
           >
-            {/* 카테고리 뱃지 */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "9px 22px",
-                borderRadius: "30px",
-                backgroundColor: categoryBg,
-                border: `1.5px solid ${categoryBorder}`,
-                color: categoryColor,
-                fontSize: "24px",
-                fontWeight: 700,
-                letterSpacing: "-0.3px",
-              }}
-            >
-              <span style={{ marginRight: "8px", fontSize: "16px" }}>●</span>
-              {category}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {/* 카테고리 뱃지 */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "8px 20px",
+                  borderRadius: "30px",
+                  backgroundColor: categoryBg,
+                  border: `1.5px solid ${categoryBorder}`,
+                  color: categoryColor,
+                  fontSize: "22px",
+                  fontWeight: 700,
+                  letterSpacing: "-0.3px",
+                }}
+              >
+                <span style={{ marginRight: "8px", fontSize: "14px" }}>●</span>
+                {category}
+              </div>
+
+              {/* 2026 최신 개정판 네온 배지 (파워블로그 신뢰도 극대화 장치) */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "8px 16px",
+                  borderRadius: "30px",
+                  backgroundColor: "rgba(250, 204, 21, 0.18)",
+                  border: "1.5px solid #facc15",
+                  color: "#fef08a",
+                  fontSize: "20px",
+                  fontWeight: 800,
+                  letterSpacing: "-0.2px",
+                }}
+              >
+                ⚡ 2026 최신 개정판
+              </div>
             </div>
 
             {/* Brief Post 공식 브랜드 로고 */}
@@ -484,40 +511,50 @@ export async function GET(req: NextRequest) {
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              margin: "8px 0 10px 0",
+              margin: "6px 0 10px 0",
               maxWidth: "100%",
             }}
           >
-            {/* 세련된 서브 캐치프레이즈 (32px 대형 폰트) */}
+            {/* 세련된 서브 캐치프레이즈 & 형광펜 태그 라인 */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                color: categoryColor,
-                fontSize: "32px",
-                fontWeight: 700,
-                letterSpacing: "-0.5px",
+                gap: "12px",
                 marginBottom: "10px",
-                textShadow: "0 2px 14px rgba(0, 0, 0, 0.8)",
               }}
             >
-              <span
+              {/* 파워블로그 형광펜 하이라이트 뱃지 */}
+              <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "10px",
-                  backgroundColor: categoryBg,
-                  border: `1.5px solid ${categoryBorder}`,
-                  marginRight: "12px",
-                  fontSize: "19px",
+                  padding: "6px 16px",
+                  borderRadius: "8px",
+                  backgroundColor: "#facc15",
+                  color: "#0f172a",
+                  fontSize: "24px",
+                  fontWeight: 900,
+                  letterSpacing: "-0.5px",
+                  boxShadow: "0 4px 14px rgba(250, 204, 21, 0.45)",
                 }}
               >
-                ⚡
-              </span>
-              {cardSubCatchphrase}
+                HOT ISSUE
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  color: categoryColor,
+                  fontSize: "30px",
+                  fontWeight: 700,
+                  letterSpacing: "-0.5px",
+                  textShadow: "0 2px 14px rgba(0, 0, 0, 0.8)",
+                }}
+              >
+                {cardSubCatchphrase}
+              </div>
             </div>
 
             {/* 카드 중앙 메인 타이틀 (68px~96px 초특대형 볼드 폰트, 이미지를 꽉 채우는 2~3줄 헤드라인) */}

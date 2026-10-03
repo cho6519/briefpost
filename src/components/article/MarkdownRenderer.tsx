@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -7,6 +9,9 @@ interface MarkdownRendererProps {
   content: string;
   className?: string;
 }
+
+// ... helper functions 유지 ...
+
 
 /**
  * 긴 텍스트 덩어리(벽돌글)를 2~3문장 단위로 쪼개어 가독성과 호흡을 확보
@@ -231,10 +236,54 @@ export function preprocessMarkdown(raw: string): string {
 }
 
 /**
+ * 자가진단 인터랙티브 체크박스 아이템
+ */
+function InteractiveTaskItem({ children, defaultChecked }: { children: React.ReactNode; defaultChecked?: boolean }) {
+  const [isChecked, setIsChecked] = useState(defaultChecked ?? false);
+
+  return (
+    <li
+      onClick={() => setIsChecked(!isChecked)}
+      role="checkbox"
+      aria-checked={isChecked}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          setIsChecked(!isChecked);
+        }
+      }}
+      className={`flex items-center text-slate-800 font-medium text-[15px] sm:text-[15.5px] leading-relaxed gap-2 p-2.5 sm:p-3 rounded-xl border my-2 shadow-2xs transition-all cursor-pointer select-none ${
+        isChecked
+          ? "bg-emerald-50/80 border-emerald-300 text-emerald-950 font-semibold"
+          : "bg-gradient-to-r from-blue-50/70 to-indigo-50/40 border-blue-200/80 hover:bg-blue-50"
+      }`}
+    >
+      <span
+        className={`inline-flex items-center justify-center w-5 h-5 rounded-md border text-xs font-bold shrink-0 mr-1.5 transition-colors ${
+          isChecked
+            ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs scale-105"
+            : "bg-white border-zinc-300 text-transparent"
+        }`}
+      >
+        ✓
+      </span>
+      <div className="flex items-center gap-2 flex-1">{children}</div>
+      {isChecked && (
+        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full shrink-0">
+          확인 완료
+        </span>
+      )}
+    </li>
+  );
+}
+
+/**
  * 전문 미디어 표준 마크다운 렌더러 (react-markdown + remark-gfm + rehype-raw)
  */
 export default function MarkdownRenderer({ content, className = "" }: MarkdownRendererProps) {
   const cleanMarkdown = preprocessMarkdown(content);
+  let h2Count = 0;
 
   return (
     <div className={`article-markdown-body space-y-6 text-slate-800 font-normal leading-relaxed text-[16px] sm:text-[17px] break-keep ${className}`}>
@@ -245,9 +294,11 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           // 단일 H1 원칙: 본문 내부의 h1은 자동으로 h2 스타일로 렌더링 (빈 헤딩 방지)
           h1: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
+            h2Count++;
             return (
               <h2
-                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-bold text-slate-900 mt-10 mb-4 tracking-tight leading-snug"
+                id={`toc-heading-${h2Count}`}
+                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-bold text-slate-900 mt-10 mb-4 tracking-tight leading-snug scroll-mt-24"
                 {...props}
               >
                 {children}
@@ -257,18 +308,52 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           // H2: 소제목(h2) - text-slate-900 font-bold (완전한 짙은 검정색으로 파란 바 옆에 또렷하게 표시)
           h2: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
+            h2Count++;
             return (
               <h2
-                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-bold text-slate-900 mt-10 mb-4 tracking-tight leading-snug"
+                id={`toc-heading-${h2Count}`}
+                className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-bold text-slate-900 mt-10 mb-4 tracking-tight leading-snug scroll-mt-24"
                 {...props}
               >
                 {children}
               </h2>
             );
           },
-          // H3: 소제목(h3) - text-slate-900 font-bold
+          // H3: 소제목(h3) - 자가진단, 시뮬레이션, 체크리스트 등에 특화 하이라이트 부여
           h3: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
+            const textContent = String(children);
+            const isSimulation = textContent.includes("시뮬레이션") || textContent.includes("사례");
+            const isChecklist = textContent.includes("자가진단") || textContent.includes("체크리스트") || textContent.includes("주의사항");
+
+            if (isSimulation) {
+              return (
+                <div className="mt-8 mb-3 p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent border-l-4 border-amber-500">
+                  <h3
+                    className="flex items-center gap-2 text-[17.5px] sm:text-[19px] font-extrabold text-amber-950 m-0 tracking-tight leading-snug"
+                    {...props}
+                  >
+                    <span className="text-amber-600">💡</span>
+                    <span>{children}</span>
+                  </h3>
+                </div>
+              );
+            }
+
+            if (isChecklist) {
+              return (
+                <div className="mt-8 mb-3 p-3.5 rounded-xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent border-l-4 border-blue-600">
+                  <h3
+                    className="flex items-center gap-2 text-[17.5px] sm:text-[19px] font-extrabold text-slate-900 m-0 tracking-tight leading-snug"
+                    {...props}
+                  >
+                    <span className="text-blue-600">🔍</span>
+                    <span>{children}</span>
+                  </h3>
+                </div>
+              );
+            }
+
             return (
               <h3
                 className="block text-[17px] sm:text-[18.5px] font-bold text-slate-900 mt-7 mb-2.5 tracking-tight leading-snug"
@@ -306,8 +391,23 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           ol: ({ node, ...props }) => (
             <ol className="my-5 space-y-3 list-decimal pl-5 text-slate-800" {...props} />
           ),
-          // 불릿 리스트(li): 불릿 기호는 text-blue-600, 리스트 내부 글자는 text-slate-700 font-medium으로 또렷하게 설정
-          li: ({ node, children, ...props }) => {
+          // 체크박스(input type=checkbox) 커스텀 렌더링
+          input: ({ node, ...props }) => {
+            if (props.type === "checkbox") {
+              return null; // InteractiveTaskItem에서 자체 렌더링
+            }
+            return <input {...props} />;
+          },
+          // 불릿 리스트(li): 체크박스(task-list-item)인 경우 클릭 가능한 인터랙티브 카드로 렌더링
+          li: ({ node, children, className, ...props }) => {
+            const isTaskItem = className?.includes("task-list-item");
+            if (isTaskItem) {
+              return (
+                <InteractiveTaskItem defaultChecked={false}>
+                  {children}
+                </InteractiveTaskItem>
+              );
+            }
             return (
               <li
                 className="flex items-start text-slate-700 font-medium leading-relaxed gap-2"

@@ -27,13 +27,13 @@ export default function RelatedArticles({
       <div className="flex items-center justify-between mb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-blue-600 text-base">📌</span>
-            <h3 className="text-lg sm:text-xl font-bold text-zinc-950 tracking-tight">
-              관련 정책 및 맞춤 브리핑 3선
+            <span className="text-amber-500 text-base">🔥</span>
+            <h3 className="text-lg sm:text-xl font-extrabold text-zinc-950 tracking-tight">
+              함께 보면 돈이 되는 맞춤 추천 글
             </h3>
           </div>
-          <p className="text-xs text-zinc-500 mt-0.5">
-            ‘{currentCategory}’ 분야에서 함께 읽으면 좋은 최신 핵심 기사입니다.
+          <p className="text-xs text-zinc-500 mt-1">
+            ‘{currentCategory}’ 분야에서 놓치면 손해보는 실전 혜택 필독 가이드입니다.
           </p>
         </div>
 
