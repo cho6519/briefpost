@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { getAllArticleSlugs, getAllCategories } from "@/lib/articles";
+import { getAllArticleSlugs } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,6 @@ const siteUrl = getSiteUrl();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const articles = getAllArticleSlugs();
-  const categories = getAllCategories();
 
   const articleEntries: MetadataRoute.Sitemap = articles.map((article) => ({
     url: `${siteUrl}/news/${article.slug}`,
@@ -18,19 +17,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  const categoryEntries: MetadataRoute.Sitemap = categories.map((cat) => ({
-    url: `${siteUrl}/?category=${encodeURIComponent(cat)}`,
-    lastModified: new Date(),
-    changeFrequency: "daily",
-    priority: 0.7,
-  }));
-
   const legalPages: MetadataRoute.Sitemap = [
     {
       url: `${siteUrl}/about`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.6,
+      priority: 0.8,
     },
     {
       url: `${siteUrl}/privacy`,
@@ -48,7 +40,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${siteUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.6,
+      priority: 0.7,
     },
   ];
 
@@ -60,7 +52,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     ...legalPages,
-    ...categoryEntries,
     ...articleEntries,
   ];
 }

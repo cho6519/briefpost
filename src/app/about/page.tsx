@@ -79,16 +79,110 @@ export default function AboutPage() {
         </ul>
       </section>
 
-      {/* 3. 발행처 정보 및 연락처 */}
+      {/* 3. 편집국 전문 에디터 소개 (E-E-A-T 저자 전문성) */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-zinc-900 border-l-4 border-blue-600 pl-3">
+            3. 편집국 전문 에디터 및 팩트체크 팀
+          </h2>
+          <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+            EDITORIAL DESK
+          </span>
+        </div>
+        <p className="text-zinc-600 text-xs sm:text-sm leading-relaxed break-keep">
+          Brief Post의 모든 콘텐츠는 각 분야 전문 에디터의 1차 기획 및 공공기관 팩트 교차 검증을 거쳐 독자에게 투명하게 송출됩니다.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          {/* 에디터 1 */}
+          <div className="rounded-xl border border-zinc-200/90 bg-white p-4 sm:p-5 shadow-xs space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold text-sm shadow-xs">
+                김
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 text-sm sm:text-base">김민준 에디터</h3>
+                <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                  공공정책 & 복지제도 수석 분석관
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-zinc-600 leading-relaxed break-keep">
+              중앙부처 및 지자체 공공 복지제도, 청년·소상공인 지원 사업의 수혜 요건과 실전 신청 가이드를 심층 분석하여 전달합니다.
+            </p>
+            <p className="text-[11px] font-mono text-zinc-400">minjun.policy@briefpost.kr</p>
+          </div>
+
+          {/* 에디터 2 */}
+          <div className="rounded-xl border border-zinc-200/90 bg-white p-4 sm:p-5 shadow-xs space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white font-bold text-sm shadow-xs">
+                정
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 text-sm sm:text-base">정서연 에디터</h3>
+                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                  민생경제 & 금융정책 전문 에디터
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-zinc-600 leading-relaxed break-keep">
+              금리·세제 개편안과 서민금융 지원제도의 핵심 골자를 분석하여 시민의 실생활에 미치는 실질적 혜택과 위험요인을 진단합니다.
+            </p>
+            <p className="text-[11px] font-mono text-zinc-400">seoyeon.finance@briefpost.kr</p>
+          </div>
+
+          {/* 에디터 3 */}
+          <div className="rounded-xl border border-zinc-200/90 bg-white p-4 sm:p-5 shadow-xs space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold text-sm shadow-xs">
+                박
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 text-sm sm:text-base">박현우 에디터</h3>
+                <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
+                  산업기술 & 디지털정책 전문 에디터
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-zinc-600 leading-relaxed break-keep">
+              인공지능, 데이터 보안, 디지털 공공 인프라 변화가 산업 생태계와 개인에게 미치는 영향을 명료하게 짚어냅니다.
+            </p>
+            <p className="text-[11px] font-mono text-zinc-400">hyunwoo.tech@briefpost.kr</p>
+          </div>
+
+          {/* 에디터 4 */}
+          <div className="rounded-xl border border-zinc-200/90 bg-white p-4 sm:p-5 shadow-xs space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-zinc-800 flex items-center justify-center text-white font-bold text-sm shadow-xs">
+                이
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 text-sm sm:text-base">이지훈 팩트체커</h3>
+                <span className="text-[11px] font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md border border-zinc-200">
+                  시사·사회 정책 팩트체크 팀장
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-zinc-600 leading-relaxed break-keep">
+              사회적 주요 이슈와 정부 부처 공식 보도자료의 팩트를 다각도로 교차 검증하고 신속한 정정보도 시스템을 총괄합니다.
+            </p>
+            <p className="text-[11px] font-mono text-zinc-400">editorial@briefpost.kr</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. 발행처 정보 및 연락처 */}
       <section className="space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
         <h3 className="text-base font-bold text-zinc-900">
-          Brief Post 운영 안내
+          Brief Post 미디어 운영 안내
         </h3>
         <div className="space-y-1.5 text-xs sm:text-sm text-zinc-600 leading-relaxed">
           <p>• <strong>발행 매체명:</strong> Brief Post (브리프 포스트)</p>
-          <p>• <strong>발행·편집:</strong> Brief Post 편집국</p>
-          <p>• <strong>청소년보호책임자:</strong> 편집팀장</p>
-          <p>• <strong>제휴 및 독자 피드백:</strong> contact.briefpost@gmail.com</p>
+          <p>• <strong>발행·편집인:</strong> Brief Post 편집국 (공동대표)</p>
+          <p>• <strong>청소년보호책임자:</strong> 이지훈 편집팀장</p>
+          <p>• <strong>기사 정정 및 고충처리:</strong> contact.briefpost@gmail.com</p>
+          <p>• <strong>콘텐츠 이용 허락:</strong> 공공누리 제1유형 원칙 및 출처 명시 기반 자유 인용 허용</p>
         </div>
         <div className="pt-2">
           <Link
