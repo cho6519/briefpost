@@ -172,6 +172,10 @@ export function preprocessMarkdown(raw: string): string {
   if (!raw) return "";
   let text = raw;
 
+  // 0. 불필요한 기계적 접두사 ('체감형 혜택 시뮬레이션:') 완전 제거
+  text = text.replace(/###\s*체감형\s*혜택\s*시뮬레이션\s*:\s*/gi, "### ");
+  text = text.replace(/체감형\s*혜택\s*시뮬레이션\s*:\s*/gi, "");
+
   // 1. 단독 빈 헤딩 기호(#, ##, ### 등 단독 줄) 완전 제거
   text = text.replace(/^\s*#{1,6}\s*$/gm, "");
   text = text.replace(/\n##\s*\n+(?=##)/g, "\n\n");
@@ -322,9 +326,29 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           // H3: 소제목(h3) - 자가진단, 시뮬레이션, 체크리스트 등에 특화 하이라이트 부여
           h3: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
+
+            // '체감형 혜택 시뮬레이션:' 텍스트 잔여물 완벽 정제
+            const cleanChildNode = (child: React.ReactNode): React.ReactNode => {
+              if (typeof child === "string") {
+                return child.replace(/체감형\s*혜택\s*시뮬레이션\s*:\s*/gi, "").trim();
+              }
+              return child;
+            };
+
+            const processedChildren = Array.isArray(children)
+              ? children.map(cleanChildNode)
+              : cleanChildNode(children);
+
             const textContent = String(children);
-            const isSimulation = textContent.includes("시뮬레이션") || textContent.includes("사례");
-            const isChecklist = textContent.includes("자가진단") || textContent.includes("체크리스트") || textContent.includes("주의사항");
+            const isSimulation =
+              textContent.includes("시뮬레이션") ||
+              textContent.includes("적용 사례") ||
+              textContent.includes("지원 효과") ||
+              textContent.includes("사례");
+            const isChecklist =
+              textContent.includes("자가진단") ||
+              textContent.includes("체크리스트") ||
+              textContent.includes("주의사항");
 
             if (isSimulation) {
               return (
@@ -334,7 +358,7 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
                     {...props}
                   >
                     <span className="text-amber-600">💡</span>
-                    <span>{children}</span>
+                    <span>{processedChildren}</span>
                   </h3>
                 </div>
               );
