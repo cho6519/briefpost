@@ -387,6 +387,47 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
               </h3>
             );
           },
+          // 링크(a): 외부 공식 링크는 새 탭(target="_blank", rel="noopener noreferrer") 및 직관적인 블루 버튼/하이라이트 스타일
+          a: ({ node, href, children, ...props }) => {
+            if (!href) return <span>{children}</span>;
+            const isExternal = href.startsWith("http://") || href.startsWith("https://");
+            const childText = String(children);
+            const isActionLink =
+              childText.includes("바로가기") ||
+              childText.includes("수강") ||
+              childText.includes("신청") ||
+              childText.includes("조회") ||
+              childText.includes("누리집") ||
+              childText.includes("배움터");
+
+            if (isActionLink) {
+              return (
+                <a
+                  href={href}
+                  target={isExternal ? "_blank" : undefined}
+                  rel={isExternal ? "noopener noreferrer" : undefined}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 my-1 text-[13.5px] sm:text-[14.5px] font-bold text-blue-700 bg-blue-50/90 hover:bg-blue-100 hover:text-blue-900 border border-blue-200/90 rounded-lg shadow-2xs hover:shadow-xs transition-all no-underline cursor-pointer align-middle"
+                  {...props}
+                >
+                  <span>{children}</span>
+                  <span className="text-xs font-bold text-blue-600">↗</span>
+                </a>
+              );
+            }
+
+            return (
+              <a
+                href={href}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noopener noreferrer" : undefined}
+                className="font-semibold text-blue-600 hover:text-blue-800 underline underline-offset-4 decoration-blue-300 hover:decoration-blue-600 transition-colors inline-flex items-center gap-0.5"
+                {...props}
+              >
+                <span>{children}</span>
+                {isExternal && <span className="text-xs opacity-75">↗</span>}
+              </a>
+            );
+          },
           // 본문 일반 단락(<p>): text-slate-800 leading-relaxed font-normal (충분한 명도 대비 확보)
           p: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
