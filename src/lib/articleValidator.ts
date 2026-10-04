@@ -489,33 +489,36 @@ export function cleanseHeadline(title: string): string {
 /**
  * 카드뉴스 전용 헤드라인(card_title) 강력 정제기
  * - 괄호, 대괄호 및 내부 텍스트 완전 제거
- * - 불필요한 금액/접수 수식어 원천 차단
- * - 단어(어절)를 임의로 쪼개지 않고 14~22자 내외의 자연스러운 핵심 단문으로 보존
+ * - 어절(단어)을 임의로 자르지 않고 완성된 문장형 헤드라인으로 보존 (문장 절삭/파편화 방지)
  */
 export function cleanseCardTitle(rawTitle: string): string {
   if (!rawTitle) return "";
   let clean = rawTitle
     // 1. 괄호, 대괄호 및 내부 내용 완전 제거
     .replace(/[\(\[\{【<].*?[\)\]\}】>]/g, "")
-    // 2. 흔한 콜론 뒤 부연 설명 정리
-    .replace(/\s*:\s*.*$/, "")
-    // 3. 특수문자 제거 (한글, 영문, 숫자, 공백 보존 - 2026 등 연도 보존)
-    .replace(/[^\w\sㄱ-ㅎ가-힣]/g, " ")
+    // 2. 흔한 콜론 뒤 부연 설명 정리 (: 핵심 쟁점과 향후 전망 등)
+    .replace(/\s*:\s*(?:핵심\s*쟁점과\s*향후\s*전망|향후\s*전망과\s*핵심\s*쟁점|핵심\s*정리|총정리|종합\s*분석|심층\s*분석)\s*$/gi, "")
+    // 3. 고정 머리말 태그 제거
+    .replace(/^\[(?:심층\s*분석|긴급\s*점검|속보|단독|기획|종합|포토|단독보도|특징주|해설)\]\s*/i, "")
+    // 4. 언론사명 제거
+    .replace(/\s*-\s*(?:연합뉴스|뉴시스|머니투데이|한국경제|매일경제|조선일보|동아일보|중앙일보|YTN|전자신문|아시아경제|이데일리)\s*$/i, "")
+    // 5. 특수문자 정리 (한글, 영문, 숫자, 공백 및 핵심 부호 보존)
+    .replace(/[^\w\sㄱ-ㅎ가-힣·%]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
-  // 18자 이하인 경우 이미 간결하고 완성된 단문이므로 그대로 보존
-  if (clean.length <= 18) {
+  // 45자 이하인 경우 온전한 문장이므로 임의 절삭 없이 그대로 보존
+  if (clean.length <= 45) {
     return clean;
   }
 
-  // 19자 이상인 경우 어절(단어) 단위로 안전하게 분리하여 단어 쪼개짐 방지
+  // 45자 초과 시 어절(단어) 단위로 안전하게 분리
   const words = clean.split(" ");
   let result = "";
   for (const word of words) {
     if (!result) {
       result = word;
-    } else if ((result + " " + word).length <= 22) {
+    } else if ((result + " " + word).length <= 48) {
       result += " " + word;
     } else {
       break;
@@ -523,14 +526,14 @@ export function cleanseCardTitle(rawTitle: string): string {
   }
 
   if (!result || result.length < 5) {
-    result = clean.slice(0, 22);
+    result = clean.slice(0, 45);
     const lastSpace = result.lastIndexOf(" ");
-    if (lastSpace > 6) {
+    if (lastSpace > 10) {
       result = result.slice(0, lastSpace);
     }
   }
 
-  // 불완전한 말단 조사나 단어 파편('및', '의', '에', '가', '은', '는') 제거
+  // 불완전한 말단 조사나 단어 파편 제거
   result = result.replace(/\s+(?:및|의|에|가|은|는|과|와|등)$/, "").trim();
 
   return result;

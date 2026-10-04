@@ -24,11 +24,8 @@ function runMigration() {
   
   const updateMany = db.transaction((rows: ArticleRow[]) => {
     for (const article of rows) {
-      // 만약 원본 title에 2026이 있고 card_title에 2026이 없다면 title에서 재추출
-      let baseText = article.card_title || article.title;
-      if (article.title.includes('2026') && !baseText.includes('2026')) {
-        baseText = article.title;
-      }
+      // 항상 원본 title에서 완전한 어절과 내용을 기반으로 card_title 재생성
+      const baseText = article.title;
       const cleaned = cleanseCardTitle(baseText);
 
       if (article.card_title !== cleaned) {

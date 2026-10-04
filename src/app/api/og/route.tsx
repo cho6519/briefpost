@@ -68,53 +68,67 @@ export async function GET(req: NextRequest) {
       title = "소상공인시장진흥공단 2026 일반경영안정자금 접수 개시 (최대 7,000만 원)";
     }
 
-    // 2. 카드뉴스 전용 헤드라인(card_title) 안전장치 (단어 쪼개짐 원천 방지 및 어절 보존)
+    // 2. 카드뉴스 전용 헤드라인(card_title) 안전장치 (문장 중간 절삭 및 단어 쪼개짐 원천 방지)
     const catchphraseData = generateCardCatchphrase(title, category);
     const queryCardTitle = searchParams.get("card_title") || searchParams.get("keyword");
     const rawDbTitle = cardTitleFromDb ? cardTitleFromDb.trim() : "";
 
-    // 끝 글자가 1글자 불완전 파편(예: '가', '의', '를', '및')으로 잘린 문자열인지 판별
+    // 끝 글자가 불완전 파편(예: '가', '의', '를', '및', '되는', '등')으로 잘린 문자열인지 판별
     const isTruncatedFragment = (str: string) => {
       if (!str) return true;
       const s = str.trim();
-      if (s.length < 4) return true;
-      return /\s+[가-힣]{1}$/.test(s) || /(?:및|의|에|가|은|는|과|와|등)$/.test(s);
+      if (s.length < 8) return true;
+      return (
+        /\s+[가-힣]{1}$/.test(s) ||
+        /(?:및|의|에|가|은|는|과|와|등|로|으로|에서|하는|되는)$/.test(s)
+      );
     };
 
-    let baseCandidate = queryCardTitle || rawDbTitle;
-    if (!baseCandidate || isTruncatedFragment(baseCandidate)) {
-      // DB의 card_title이 불완전하게 잘려있으면 원본 title에서 완전한 어절로 재구성
+    // 우선순위:
+    // 1) 쿼리스트링에 명시된 card_title이 있고 온전하다면 사용
+    // 2) 원본 기사 title은 검증된 완전한 헤드라인이므로, DB의 card_title이 잘려있거나 불완전하면 무조건 title 채택
+    let baseCandidate = "";
+    if (queryCardTitle && !isTruncatedFragment(queryCardTitle)) {
+      baseCandidate = queryCardTitle;
+    } else if (rawDbTitle && !isTruncatedFragment(rawDbTitle) && rawDbTitle.length >= 22) {
+      baseCandidate = rawDbTitle;
+    } else {
       baseCandidate = title;
     }
 
-    // 괄호/특수문자 정제 (연도 보존)
-    let cleanTitle = (baseCandidate || "")
-      .replace(/[\(\[\{【<].*?[\)\]\}】>]/g, "")
-      .replace(/[^\w\sㄱ-ㅎ가-힣]/g, " ")
+    // 괄호 태그 및 불필요한 머리말/언론사 접미사 정제 (연도/숫자 보존)
+    let cleanTitle = (baseCandidate || title || "")
+      .replace(/^[“"']+|[”"']+$/g, "")
+      .replace(/^\[(?:심층\s*분석|긴급\s*점검|속보|단독|기획|종합|포토|단독보도|특징주|해설)\]\s*/i, "")
+      .replace(/^【(?:심층\s*분석|긴급\s*점검|속보|단독|기획|종합)】\s*/i, "")
+      .replace(/\s*-\s*(?:연합뉴스|뉴시스|머니투데이|한국경제|매일경제|조선일보|동아일보|중앙일보|YTN|전자신문|아시아경제|이데일리)\s*$/i, "")
+      .replace(/\.{2,}[^\n]*$/g, "")
+      .replace(/…\s*[0-9가-힣\s]{1,10}\.{2,}$/g, "")
+      .replace(/[^\w\sㄱ-ㅎ가-힣·%,~!?()]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
 
-    // 20자 초과 시 어절(단어) 단위로 안전하게 분리
-    if (cleanTitle.length > 20) {
+    // 48자 초과 시에만 어절(단어) 단위로 안전하게 분리 (2~3줄 래핑 한도 보존)
+    if (cleanTitle.length > 48) {
       const words = cleanTitle.split(" ");
       let assembled = "";
       for (const w of words) {
         if (!assembled) {
           assembled = w;
-        } else if ((assembled + " " + w).length <= 20) {
+        } else if ((assembled + " " + w).length <= 48) {
           assembled += " " + w;
         } else {
           break;
         }
       }
-      cleanTitle = assembled || cleanTitle.slice(0, 18);
+      cleanTitle = assembled || cleanTitle.slice(0, 48);
     }
 
     // 말단 불완전 1글자 조사/파편 제거
     cleanTitle = cleanTitle.replace(/\s+[가-힣]{1}$/, "").trim();
 
     if (!cleanTitle || cleanTitle.length < 4) {
-      cleanTitle = title.slice(0, 18).trim();
+      cleanTitle = title.trim();
     }
 
     const cardMainTitle = cleanTitle;
@@ -274,18 +288,21 @@ export async function GET(req: NextRequest) {
 
     // 5. 모바일 화면 최적화 타이포그래피 (글자 수에 따른 스마트 반응형 폰트 크기)
     const titleLength = cardMainTitle.length;
-    let titleFontSize = 84; // 13자 이하
-    let titleLineHeight = 1.15;
+    let titleFontSize = 74; // 15자 이하 단문: 74px
+    let titleLineHeight = 1.18;
 
-    if (titleLength > 24) {
-      titleFontSize = 64; // 25자 이상 긴 제목: 64px
-      titleLineHeight = 1.18;
-    } else if (titleLength > 18) {
-      titleFontSize = 72; // 19~24자: 72px
-      titleLineHeight = 1.16;
-    } else if (titleLength > 13) {
-      titleFontSize = 78; // 14~18자: 78px
-      titleLineHeight = 1.15;
+    if (titleLength > 44) {
+      titleFontSize = 46; // 45자 이상 초장문: 46px (3줄 안정적 래핑)
+      titleLineHeight = 1.25;
+    } else if (titleLength > 34) {
+      titleFontSize = 52; // 35~44자 장문: 52px (2~3줄 래핑)
+      titleLineHeight = 1.24;
+    } else if (titleLength > 24) {
+      titleFontSize = 60; // 25~34자 중문: 60px (2줄 래핑)
+      titleLineHeight = 1.22;
+    } else if (titleLength > 15) {
+      titleFontSize = 68; // 16~24자: 68px (1~2줄 래핑)
+      titleLineHeight = 1.20;
     }
 
     const badgeFontSize = displayBadge.length > 28 ? "21px" : displayBadge.length > 20 ? "25px" : "29px";
