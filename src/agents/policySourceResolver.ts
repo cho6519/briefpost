@@ -58,8 +58,112 @@ interface OfficialPolicyMaster {
 
 const OFFICIAL_POLICY_MASTERS: OfficialPolicyMaster[] = [
   {
+    policyKey: "소상공인전기요금특별지원",
+    matchPatterns: ["전기요금", "전기세", "소상공인 전기요금", "전기요금 특별지원", "전기요금지원"],
+    policyName: "2026 소상공인 전기요금 특별지원 사업",
+    policyYear: "2026",
+    officialPolicyName: "중소벤처기업부 2026년도 소상공인 전기요금 특별지원 사업 시행계획 공고",
+    currentStatus: "CURRENT",
+    effectiveDate: {
+      value: "2026년도 연중 수시 접수",
+      source: "중소벤처기업부 공식 공고",
+      sourceUrl: "https://www.mss.go.kr",
+      sourceDate: "2026-01-05",
+      notes: "예산 소진 시 조기 마감"
+    },
+    applicationPeriod: {
+      value: "2026년 1월부터 예산 소진 시까지 온라인 접수",
+      source: "소상공인시장진흥공단 공고",
+      sourceUrl: "https://소상공인전기요금특별지원.kr",
+      sourceDate: "2026-01-05"
+    },
+    eligibility: {
+      value: "개업일이 공고일 이전이며, 공고일 기준 활동 중이고 연 매출 1억 400만 원 이하인 개인·법인 소상공인 (국세 완납)",
+      source: "소상공인전기요금특별지원 사업 지침",
+      sourceUrl: "https://소상공인전기요금특별지원.kr",
+      sourceDate: "2026-01-05"
+    },
+    supportAmount: {
+      value: "사업자당 최대 20만 원 (한국전력 요금 직접 차감 또는 계좌 환급)",
+      source: "중소벤처기업부 보도자료",
+      sourceUrl: "https://www.mss.go.kr",
+      sourceDate: "2026-01-05"
+    },
+    supportPeriod: {
+      value: "사업 기간 내 1회 지원 (최대 20만 원 한도 차감/환급 완료 시 종료)",
+      source: "사업 시행 매뉴얼",
+      sourceUrl: "https://소상공인전기요금특별지원.kr",
+      sourceDate: "2026-01-05"
+    },
+    paymentSchedule: {
+      value: "신청 접수 후 검증을 거쳐 한전 계약자는 익월 고지서 차감, 비계약사용자는 계좌 입금",
+      source: "소진공 사업 매뉴얼",
+      sourceUrl: "https://소상공인전기요금특별지원.kr",
+      sourceDate: "2026-01-05"
+    },
+    applicationMethod: {
+      value: "온라인 전용: '소상공인전기요금특별지원.kr' (포털 검색 가능)",
+      source: "공식 전용 누리집",
+      sourceUrl: "https://소상공인전기요금특별지원.kr",
+      sourceDate: "2026-01-05"
+    },
+    applicationDocuments: {
+      value: "직접계약자(신청서만 작성, 행정망 연계 자동검증), 비계약사용자(고지서 사본, 관리비 내역서 등 추가 제출)",
+      source: "제출서류 안내",
+      sourceUrl: "https://소상공인전기요금특별지원.kr",
+      sourceDate: "2026-01-05"
+    },
+    exceptions: [],
+    exclusionCriteria: [
+      {
+        value: "휴·폐업 소상공인, 유흥·도박 등 정책자금 융자제외 업종, 연 매출 1억 400만 원 초과 사업자",
+        source: "지원제외 기준",
+        sourceUrl: "https://소상공인전기요금특별지원.kr",
+        sourceDate: "2026-01-05"
+      }
+    ],
+    duplicateSupportRules: [
+      {
+        value: "기존 1차·2차 전기요금 수혜자 중 지원 한도(20만 원) 기수급자는 중복 지원 불가",
+        source: "중복지원 방지 규정",
+        sourceUrl: "https://소상공인전기요금특별지원.kr",
+        sourceDate: "2026-01-05"
+      }
+    ],
+    comparisonWithOldPolicy: [
+      {
+        fieldName: "연매출 기준",
+        oldPolicyValue: "과거 연 매출 6,000만 원 이하",
+        currentPolicyValue: "2026 현재 연 매출 1억 400만 원 이하로 대폭 확대",
+        changeDescription: "취약 소상공인 지원 대상을 일반 소상공인 대다수로 수혜 범위 대폭 확대"
+      }
+    ],
+    importantChanges: [
+      "매출 요건이 기존 6,000만 원에서 1억 400만 원 이하로 대폭 완화되어 더 많은 영세 소상공인이 수혜 가능합니다.",
+      "소상공인전기요금특별지원.kr에서 간편 본인인증으로 접수 가능합니다."
+    ],
+    officialSources: [
+      {
+        name: "중소벤처기업부",
+        url: "https://www.mss.go.kr",
+        priority: 1,
+        isPrimaryGov: true
+      },
+      {
+        name: "소상공인전기요금특별지원 공식 누리집",
+        url: "https://소상공인전기요금특별지원.kr",
+        priority: 2,
+        isPrimaryGov: true
+      }
+    ],
+    confidence: "HIGH",
+    warnings: [
+      "OFFICIAL_SOURCE_NOTE: 대출/융자가 아닌 '전기요금 특별지원(최대 20만 원 환급)' 현금성/차감성 보조금 사업임"
+    ]
+  },
+  {
     policyKey: "소상공인경영안정자금",
-    matchPatterns: ["소상공인", "경영안정자금", "정책자금 직접대출", "대환대출", "소진공", "자영업자 대출", "정책자금"],
+    matchPatterns: ["경영안정자금", "소상공인 정책자금", "정책자금 직접대출", "대환대출", "소진공 직접대출", "자영업자 대출", "소상공인 대출", "정책자금"],
     policyName: "2026 소상공인 경영안정자금 및 정책자금",
     policyYear: "2026",
     officialPolicyName: "중소벤처기업부 및 소상공인시장진흥공단 2026년도 소상공인 정책자금 운용계획",

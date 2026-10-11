@@ -312,7 +312,8 @@ export function normalizeArticleContent(raw: string): string {
   text = text.replace(/^[^\n]*?(?:관련\s+최신\s+주요\s+발표와\s+시장\s+동향이|이번\s+사안과\s+관련한\s+핵심\s+쟁점과)[^\n]*\n+/g, "");
   text = text.replace(/^[^\n]*:\s*핵심\s*쟁점과\s*향후\s*전망[^\n]*\n+/g, "");
 
-  // 6. 인라인 불릿 및 숫자 리스트 앞에 줄바꿈: ' - **', ' * ', ' - ', ' 1. '
+  // 6. 인라인 불릿 및 숫자 리스트 앞에 줄바꿈: ' - [ ]', ' - **', ' * ', ' - ', ' 1. '
+  text = text.replace(/([^\n])\s+-\s+\[\s*\]/g, "$1\n\n- [ ]");
   text = text.replace(/([^\n])\s+-\s+\*\*/g, "$1\n\n- **");
   text = text.replace(/([^\n])\s+[-*•]\s+/g, "$1\n\n- ");
   text = text.replace(/([^\n])\s+([0-9]+\.\s+\*\*)/g, "$1\n\n$2");
@@ -437,6 +438,11 @@ export function normalizeArticleContent(raw: string): string {
   // 12. 연속 빈 줄 정리 (최대 2줄)
   text = text.replace(/[^\S\r\n]+/g, " ");
   text = text.replace(/\n{3,}/g, "\n\n").trim();
+
+  // 13. YMYL 기준일자 및 법적 면책 조항 자동 보장
+  if (!text.includes("YMYL") && !text.includes("면책 고지") && !text.includes("법적 책임")) {
+    text += "\n\n> **[⚠️ YMYL 안내 및 법적 면책 고지]**\n> 본 글은 중소벤처기업부 및 소상공인시장진흥공단의 2026년도 최신 공식 공고를 바탕으로 정보 제공 목적으로 작성된 경영 참고 자료입니다. 정책자금의 최종 승인 여부, 세부 금리 및 지원 한도는 접수 시점의 예산 소진 상황 및 보증재단·금융기관의 개별 심사 결과에 따라 달라질 수 있으며, 본 사이트는 개별 대출 승인 및 금융 계약 결과에 대해 법적 책임을 지지 않습니다.";
+  }
 
   return text;
 }

@@ -240,7 +240,23 @@ export function preprocessMarkdown(raw: string): string {
 }
 
 /**
- * 자가진단 인터랙티브 체크박스 아이템
+ * ReactNode로부터 순수 텍스트를 안전하게 추출하는 헬퍼 함수
+ */
+function extractNodeText(node: React.ReactNode): string {
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (!node) return "";
+  if (Array.isArray(node)) {
+    return node.map(extractNodeText).join("");
+  }
+  if (React.isValidElement(node) && node.props && (node.props as { children?: React.ReactNode }).children) {
+    return extractNodeText((node.props as { children?: React.ReactNode }).children);
+  }
+  return "";
+}
+
+/**
+ * 자가진단 인터랙티브 체크박스 아이템 (체류 시간 극대화 인터랙션)
  */
 function InteractiveTaskItem({ children, defaultChecked }: { children: React.ReactNode; defaultChecked?: boolean }) {
   const [isChecked, setIsChecked] = useState(defaultChecked ?? false);
@@ -257,25 +273,25 @@ function InteractiveTaskItem({ children, defaultChecked }: { children: React.Rea
           setIsChecked(!isChecked);
         }
       }}
-      className={`flex items-center text-slate-800 font-medium text-[15px] sm:text-[15.5px] leading-relaxed gap-2 p-2.5 sm:p-3 rounded-xl border my-2 shadow-2xs transition-all cursor-pointer select-none ${
+      className={`group flex items-start text-slate-800 font-medium text-[15px] sm:text-[15.5px] leading-relaxed gap-3 p-3 sm:p-3.5 rounded-xl border my-2.5 shadow-2xs transition-all duration-200 cursor-pointer select-none ${
         isChecked
-          ? "bg-emerald-50/80 border-emerald-300 text-emerald-950 font-semibold"
-          : "bg-gradient-to-r from-blue-50/70 to-indigo-50/40 border-blue-200/80 hover:bg-blue-50"
+          ? "bg-emerald-50/90 border-emerald-300 text-emerald-950 shadow-xs"
+          : "bg-white hover:bg-slate-50/90 border-slate-200/90 hover:border-blue-300"
       }`}
     >
       <span
-        className={`inline-flex items-center justify-center w-5 h-5 rounded-md border text-xs font-bold shrink-0 mr-1.5 transition-colors ${
+        className={`inline-flex items-center justify-center w-5 h-5 rounded-md border text-xs font-bold shrink-0 mt-0.5 transition-all duration-200 ${
           isChecked
             ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs scale-105"
-            : "bg-white border-zinc-300 text-transparent"
+            : "bg-white border-slate-300 text-transparent group-hover:border-blue-400"
         }`}
       >
         ✓
       </span>
-      <div className="flex items-center gap-2 flex-1">{children}</div>
+      <div className="flex-1 min-w-0 flex flex-col gap-1">{children}</div>
       {isChecked && (
-        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full shrink-0">
-          확인 완료
+        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0 self-start mt-0.5 animate-in fade-in">
+          적합 확인
         </span>
       )}
     </li>
@@ -471,7 +487,7 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
             }
             return <input {...props} />;
           },
-          // 불릿 리스트(li): 체크박스(task-list-item)인 경우 클릭 가능한 인터랙티브 카드로 렌더링
+          // 불릿 리스트(li): 체크박스(task-list-item) 및 핵심 실무 서식(3줄 포맷, 3단 구조, 시뮬레이션 속성) 자동 스타일링
           li: ({ node, children, className, ...props }) => {
             const isTaskItem = className?.includes("task-list-item");
             if (isTaskItem) {
@@ -481,9 +497,101 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
                 </InteractiveTaskItem>
               );
             }
+
+            const text = extractNodeText(children).trim();
+
+            // 1. 단계별 신청 절차 3줄 포맷
+            if (text.startsWith("소요 기간:") || text.includes("소요 기간:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-indigo-50/50 border border-indigo-100/90 my-1.5 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-indigo-600 text-white text-xs font-bold shrink-0 mt-0.5">⏱️</span>
+                  <div className="flex-1 font-medium">{children}</div>
+                </li>
+              );
+            }
+            if (text.startsWith("준비물 및 서류:") || text.includes("준비물 및 서류:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-blue-50/50 border border-blue-100/90 my-1.5 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-blue-600 text-white text-xs font-bold shrink-0 mt-0.5">📑</span>
+                  <div className="flex-1 font-medium">{children}</div>
+                </li>
+              );
+            }
+            if (text.startsWith("자주 하는 실수:") || text.includes("자주 하는 실수:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-rose-50/70 border border-rose-200/80 my-1.5 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-rose-600 text-white text-xs font-bold shrink-0 mt-0.5">⚠️</span>
+                  <div className="flex-1 font-medium text-rose-950">{children}</div>
+                </li>
+              );
+            }
+
+            // 2. 탈락·부결 방지 3단 구조
+            if (text.startsWith("왜 문제가 되는가:") || text.includes("왜 문제가 되는가:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 my-1.5 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-amber-600 text-white text-xs font-bold shrink-0 mt-0.5">🚨</span>
+                  <div className="flex-1 font-medium text-amber-950">{children}</div>
+                </li>
+              );
+            }
+            if (text.startsWith("신청 전 확인법:") || text.includes("신청 전 확인법:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200/80 my-1.5 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-sky-600 text-white text-xs font-bold shrink-0 mt-0.5">🔍</span>
+                  <div className="flex-1 font-medium text-sky-950">{children}</div>
+                </li>
+              );
+            }
+            if (text.startsWith("이미 걸렸다면 대응책:") || text.includes("이미 걸렸다면 대응책:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 my-1.5 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-600 text-white text-xs font-bold shrink-0 mt-0.5">🛡️</span>
+                  <div className="flex-1 font-medium text-emerald-950">{children}</div>
+                </li>
+              );
+            }
+
+            // 3. 자가진단 결격 시 대처법 (💡 대처법:)
+            if (text.startsWith("대처법:") || text.includes("대처법:") || text.includes("💡 대처법")) {
+              return (
+                <li className="flex items-start text-amber-950 text-[14px] sm:text-[14.5px] leading-relaxed gap-2 p-2 rounded-lg bg-amber-50/90 border border-amber-200/70 my-1 shadow-2xs" {...props}>
+                  <span className="text-amber-600 text-sm font-bold shrink-0">💡</span>
+                  <div className="flex-1 font-normal">{children}</div>
+                </li>
+              );
+            }
+
+            // 4. 가상 시뮬레이션 카드 속성 (신청 가능성, 추천 자금, 주의사항)
+            if (text.startsWith("신청 가능성:") || text.includes("신청 가능성:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 my-1 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-xs font-bold shrink-0 mt-0.5">평가</span>
+                  <div className="flex-1 font-medium">{children}</div>
+                </li>
+              );
+            }
+            if (text.startsWith("추천 자금:") || text.includes("추천 자금:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 my-1 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-bold shrink-0 mt-0.5">추천</span>
+                  <div className="flex-1 font-medium">{children}</div>
+                </li>
+              );
+            }
+            if (text.startsWith("주의사항:") || text.startsWith("핵심 주의사항:") || text.includes("주의사항:")) {
+              return (
+                <li className="flex items-start text-slate-800 text-[15px] sm:text-[15.5px] leading-relaxed gap-2.5 p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 my-1 shadow-2xs" {...props}>
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-xs font-bold shrink-0 mt-0.5">주의</span>
+                  <div className="flex-1 font-medium">{children}</div>
+                </li>
+              );
+            }
+
+            // 일반 불릿
             return (
               <li
-                className="flex items-start text-slate-700 font-medium leading-relaxed gap-2"
+                className="flex items-start text-slate-700 font-medium leading-relaxed gap-2 my-1"
                 {...props}
               >
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-600 text-blue-600 mt-2.5 shrink-0 mr-1" />
@@ -529,13 +637,55 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           tr: ({ node, ...props }) => (
             <tr className="transition-colors hover:bg-slate-50/80 even:bg-slate-50/50" {...props} />
           ),
-          // 인용구(blockquote): 주의사항 콜아웃 스타일
-          blockquote: ({ node, ...props }) => (
-            <aside
-              className="w-full bg-amber-50/90 border-l-4 border-amber-400 p-4 rounded-r-lg my-4 text-amber-950 text-sm shadow-2xs leading-relaxed"
-              {...props}
-            />
-          ),
+          // 인용구(blockquote): 문맥에 맞는 콜아웃 박스 (YMYL 면책고지, 핵심 요약, 브로커 경고 등)
+          blockquote: ({ node, children, ...props }) => {
+            const text = extractNodeText(children);
+            const isYmyl = text.includes("YMYL") || text.includes("면책 고지") || text.includes("법적 책임");
+            const isSummary = text.includes("핵심 지원 요약") || text.includes("핵심 요약") || text.includes("지원 요약");
+            const isWarning = text.includes("브로커") || text.includes("사기") || text.includes("주의");
+
+            if (isYmyl) {
+              return (
+                <aside
+                  className="w-full bg-slate-50/95 border-l-4 border-slate-400 p-4 sm:p-4.5 rounded-r-xl my-6 text-slate-700 text-[13.5px] sm:text-[14px] shadow-2xs leading-relaxed"
+                  {...props}
+                >
+                  {children}
+                </aside>
+              );
+            }
+
+            if (isSummary) {
+              return (
+                <aside
+                  className="w-full bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-transparent border-l-4 border-blue-600 p-4 sm:p-5 rounded-r-xl my-6 text-slate-800 text-sm sm:text-[15px] shadow-2xs leading-relaxed"
+                  {...props}
+                >
+                  {children}
+                </aside>
+              );
+            }
+
+            if (isWarning) {
+              return (
+                <aside
+                  className="w-full bg-amber-50/90 border-l-4 border-amber-500 p-4 sm:p-4.5 rounded-r-xl my-6 text-amber-950 text-sm shadow-2xs leading-relaxed"
+                  {...props}
+                >
+                  {children}
+                </aside>
+              );
+            }
+
+            return (
+              <aside
+                className="w-full bg-slate-50/80 border-l-4 border-blue-500 p-4 rounded-r-xl my-5 text-slate-800 text-sm shadow-2xs leading-relaxed"
+                {...props}
+              >
+                {children}
+              </aside>
+            );
+          },
         }}
       >
         {cleanMarkdown}
