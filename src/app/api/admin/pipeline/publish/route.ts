@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = pipelineStore.publishQueueItem(queueId);
+    const result = await pipelineStore.publishQueueItem(queueId);
 
     if (!result.success) {
       return NextResponse.json(

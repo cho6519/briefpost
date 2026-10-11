@@ -10,7 +10,7 @@ import MarkdownRenderer from "@/components/article/MarkdownRenderer";
 import AuthorBioCard from "@/components/article/AuthorBioCard";
 import ReadingProgressBar from "@/components/article/ReadingProgressBar";
 import TableOfContents from "@/components/article/TableOfContents";
-import { getArticleBySlug, getAllArticleSlugs, getRelatedArticles } from "@/lib/articles";
+import { getArticleBySlug, getArticleBySlugAsync, getAllArticleSlugs, getAllArticleSlugsAsync, getRelatedArticles, getRelatedArticlesAsync } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
 import { normalizeArticleContent } from "@/lib/articleValidator";
@@ -32,7 +32,7 @@ const siteUrl = getSiteUrl();
  * 사전 렌더링용 Static Params 생성
  */
 export async function generateStaticParams() {
-  const articles = getAllArticleSlugs();
+  const articles = await getAllArticleSlugsAsync();
   return articles.map((article) => ({
     slug: article.slug,
   }));
@@ -99,8 +99,8 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     notFound();
   }
 
-  // 디코딩된 슬러그 우선 조회 후 원본 슬러그 조회
-  const article = getArticleBySlug(decodedSlug) || getArticleBySlug(rawSlug);
+  // 디코딩된 슬러그 우선 조회 후 원본 슬러그 조회 (Neon / SQLite 듀얼 호환)
+  const article = (await getArticleBySlugAsync(decodedSlug)) || (await getArticleBySlugAsync(rawSlug));
 
   if (!article) {
     return {
@@ -187,8 +187,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  // 디코딩된 슬러그 우선 조회 후 원본 슬러그 조회
-  const article = getArticleBySlug(decodedSlug) || getArticleBySlug(rawSlug);
+  // 디코딩된 슬러그 우선 조회 후 원본 슬러그 조회 (Neon / SQLite 듀얼 호환)
+  const article = (await getArticleBySlugAsync(decodedSlug)) || (await getArticleBySlugAsync(rawSlug));
 
   if (!article) {
     notFound();
@@ -216,8 +216,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     }
   }
 
-  // 관련 기사 3선 조회
-  const relatedArticles = getRelatedArticles(article.slug, article.category, 3);
+  // 관련 기사 3선 조회 (Neon / SQLite 듀얼 호환)
+  const relatedArticles = await getRelatedArticlesAsync(article.slug, article.category, 3);
 
   const formattedDate = new Date(article.createdAt).toLocaleDateString("ko-KR", {
     year: "numeric",

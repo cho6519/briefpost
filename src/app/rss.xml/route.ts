@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getArticles } from "@/lib/articles";
+import { getArticlesAsync } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 export async function GET() {
   const siteUrl = getSiteUrl();
-  const { articles } = getArticles({ limit: 50 });
+  const { articles } = await getArticlesAsync({ limit: 50 });
 
   const items = articles
     .map((article) => {

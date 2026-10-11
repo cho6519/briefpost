@@ -1,4 +1,5 @@
 import db from "./db";
+import { isNeonConfigured, getNeonSql } from "./neonDb";
 
 export interface Article {
   id: number;
@@ -686,4 +687,284 @@ export function seedArticlesIfNeeded(): void {
   for (const article of sampleArticles) {
     createArticle(article);
   }
+}
+
+/**
+ * Neon PostgreSQL 및 SQLite 듀얼 호환 비동기 상세 조회
+ */
+export async function getArticleBySlugAsync(slug: string): Promise<Article | null> {
+  if (isNeonConfigured()) {
+    const sql = getNeonSql();
+    if (sql) {
+      try {
+        const rawSlug = slug.trim();
+        let decodedSlug = rawSlug;
+        try {
+          decodedSlug = decodeURIComponent(rawSlug);
+        } catch {}
+
+        const rows = await sql`
+          SELECT 
+            id, title, slug, content, summary, category,
+            meta_title as "metaTitle", meta_description as "metaDescription",
+            thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
+            cta_type as "ctaType", image_theme as "imageTheme",
+            highlight_badge as "highlightBadge", card_title,
+            created_at as "createdAt", updated_at as "updatedAt"
+          FROM articles 
+          WHERE slug = ${decodedSlug} OR slug = ${rawSlug}
+          LIMIT 1
+        `;
+        if (rows && rows.length > 0) {
+          return rows[0] as unknown as Article;
+        }
+      } catch (err) {
+        console.warn("[Neon DB] getArticleBySlugAsync 실패, SQLite 폴백:", err);
+      }
+    }
+  }
+  return getArticleBySlug(slug);
+}
+
+/**
+ * Neon PostgreSQL 및 SQLite 듀얼 호환 비동기 목록 조회
+ */
+export async function getArticlesAsync(options: GetArticlesOptions = {}): Promise<PaginatedArticles> {
+  if (isNeonConfigured()) {
+    const sql = getNeonSql();
+    if (sql) {
+      try {
+        const page = Math.max(1, options.page || 1);
+        const limit = Math.max(1, options.limit || 10);
+        const offset = (page - 1) * limit;
+        const category = options.category;
+
+        let total = 0;
+        let rows: unknown[] = [];
+
+        if (category && category !== "all") {
+          const countRes = await sql`SELECT COUNT(*)::int as count FROM articles WHERE category = ${category}`;
+          total = countRes[0]?.count || 0;
+          rows = await sql`
+            SELECT 
+              id, title, slug, content, summary, category,
+              meta_title as "metaTitle", meta_description as "metaDescription",
+              thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
+              cta_type as "ctaType", image_theme as "imageTheme",
+              highlight_badge as "highlightBadge", card_title,
+              created_at as "createdAt", updated_at as "updatedAt"
+            FROM articles 
+            WHERE category = ${category}
+            ORDER BY id DESC 
+            LIMIT ${limit} OFFSET ${offset}
+          `;
+        } else {
+          const countRes = await sql`SELECT COUNT(*)::int as count FROM articles`;
+          total = countRes[0]?.count || 0;
+          rows = await sql`
+            SELECT 
+              id, title, slug, content, summary, category,
+              meta_title as "metaTitle", meta_description as "metaDescription",
+              thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
+              cta_type as "ctaType", image_theme as "imageTheme",
+              highlight_badge as "highlightBadge", card_title,
+              created_at as "createdAt", updated_at as "updatedAt"
+            FROM articles 
+            ORDER BY id DESC 
+            LIMIT ${limit} OFFSET ${offset}
+          `;
+        }
+
+        return {
+          articles: rows as Article[],
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit) || 1,
+        };
+      } catch (err) {
+        console.warn("[Neon DB] getArticlesAsync 실패, SQLite 폴백:", err);
+      }
+    }
+  }
+  return getArticles(options);
+}
+
+/**
+ * Neon PostgreSQL 및 SQLite 듀얼 호환 비동기 신규 기사 저장
+ */
+export async function createArticleAsync(input: CreateArticleInput): Promise<Article> {
+  const localArticle = createArticle(input);
+
+  if (isNeonConfigured()) {
+    const sql = getNeonSql();
+    if (sql) {
+      try {
+        const rows = await sql`
+          INSERT INTO articles (
+            title, slug, content, summary, category,
+            meta_title, meta_description, thumbnail_url, source_url,
+            cta_type, image_theme, highlight_badge, card_title, created_at
+          ) VALUES (
+            ${input.title},
+            ${input.slug},
+            ${input.content},
+            ${input.summary || null},
+            ${input.category},
+            ${input.metaTitle || input.title},
+            ${input.metaDescription || input.summary || null},
+            ${input.thumbnailUrl || null},
+            ${input.sourceUrl || null},
+            ${input.ctaType || "general"},
+            ${input.imageTheme || null},
+            ${input.highlightBadge || null},
+            ${input.card_title || null},
+            ${input.createdAt || new Date().toISOString()}
+          )
+          ON CONFLICT (slug) DO UPDATE SET
+            title = EXCLUDED.title,
+            content = EXCLUDED.content,
+            updated_at = CURRENT_TIMESTAMP
+          RETURNING 
+            id, title, slug, content, summary, category,
+            meta_title as "metaTitle", meta_description as "metaDescription",
+            thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
+            cta_type as "ctaType", image_theme as "imageTheme",
+            highlight_badge as "highlightBadge", card_title,
+            created_at as "createdAt", updated_at as "updatedAt"
+        `;
+        if (rows && rows.length > 0) {
+          return rows[0] as unknown as Article;
+        }
+      } catch (err) {
+        console.warn("[Neon DB] createArticleAsync Neon 동기화 경고:", err);
+      }
+    }
+  }
+
+  return localArticle;
+}
+
+/**
+ * Neon PostgreSQL 및 SQLite 듀얼 호환 비동기 연관 기사 조회
+ */
+export async function getRelatedArticlesAsync(
+  currentSlug: string,
+  category: string,
+  limit: number = 3
+): Promise<Article[]> {
+  if (isNeonConfigured()) {
+    const sql = getNeonSql();
+    if (sql) {
+      try {
+        let related = (await sql`
+          SELECT 
+            id, title, slug, content, summary, category,
+            meta_title as "metaTitle", meta_description as "metaDescription",
+            thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
+            cta_type as "ctaType", image_theme as "imageTheme",
+            highlight_badge as "highlightBadge", card_title,
+            created_at as "createdAt", updated_at as "updatedAt"
+          FROM articles 
+          WHERE category = ${category} AND slug != ${currentSlug}
+          ORDER BY id DESC 
+          LIMIT ${limit}
+        `) as unknown as Article[];
+
+        if (related.length < limit) {
+          const needed = limit - related.length;
+          const excludedSlugs = [currentSlug, ...related.map((a) => a.slug)];
+          const fallbacks = (await sql`
+            SELECT 
+              id, title, slug, content, summary, category,
+              meta_title as "metaTitle", meta_description as "metaDescription",
+              thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
+              cta_type as "ctaType", image_theme as "imageTheme",
+              highlight_badge as "highlightBadge", card_title,
+              created_at as "createdAt", updated_at as "updatedAt"
+            FROM articles 
+            WHERE NOT (slug = ANY(${excludedSlugs}))
+            ORDER BY id DESC 
+            LIMIT ${needed}
+          `) as unknown as Article[];
+          related = [...related, ...fallbacks];
+        }
+
+        if (related.length > 0) {
+          return related;
+        }
+      } catch (err) {
+        console.warn("[Neon DB] getRelatedArticlesAsync 실패, SQLite 폴백:", err);
+      }
+    }
+  }
+  return getRelatedArticles(currentSlug, category, limit);
+}
+
+/**
+ * Neon PostgreSQL 및 SQLite 듀얼 호환 비동기 ID 기반 단일 기사 조회
+ */
+export async function getArticleByIdAsync(id: number | string): Promise<Article | null> {
+  const numId = Number(id);
+  if (isNaN(numId)) return null;
+
+  if (isNeonConfigured()) {
+    const sql = getNeonSql();
+    if (sql) {
+      try {
+        const rows = await sql`
+          SELECT 
+            id, title, slug, content, summary, category,
+            meta_title as "metaTitle", meta_description as "metaDescription",
+            thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
+            cta_type as "ctaType", image_theme as "imageTheme",
+            highlight_badge as "highlightBadge", card_title,
+            created_at as "createdAt", updated_at as "updatedAt"
+          FROM articles 
+          WHERE id = ${numId}
+          LIMIT 1
+        `;
+        if (rows && rows.length > 0) {
+          return rows[0] as unknown as Article;
+        }
+      } catch (err) {
+        console.warn("[Neon DB] getArticleByIdAsync 실패, SQLite 폴백:", err);
+      }
+    }
+  }
+  return getArticleById(id);
+}
+
+/**
+ * Neon PostgreSQL 및 SQLite 듀얼 호환 비동기 전체 기사 슬러그 목록 조회
+ */
+export async function getAllArticleSlugsAsync(): Promise<{ slug: string; updatedAt: string }[]> {
+  if (isNeonConfigured()) {
+    const sql = getNeonSql();
+    if (sql) {
+      try {
+        const rows = await sql`
+          SELECT slug, updated_at as "updatedAt" 
+          FROM articles 
+          WHERE slug != 'subsidy-welfare' 
+            AND slug NOT LIKE '%opinion%' 
+            AND slug NOT LIKE '%column%'
+            AND title NOT LIKE '%[칼럼]%'
+            AND title NOT LIKE '%[사설]%'
+            AND title NOT LIKE '%[오피니언]%'
+            AND title NOT LIKE '%칼럼%'
+          ORDER BY created_at DESC
+        `;
+        if (rows && rows.length > 0) {
+          return rows.map((r: Record<string, unknown>) => ({
+            slug: String(r.slug),
+            updatedAt: String(r.updatedAt || new Date().toISOString()),
+          }));
+        }
+      } catch (err) {
+        console.warn("[Neon DB] getAllArticleSlugsAsync 실패, SQLite 폴백:", err);
+      }
+    }
+  }
+  return getAllArticleSlugs();
 }

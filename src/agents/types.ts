@@ -219,6 +219,7 @@ export interface PolicyComparisonItem {
 
 export interface PolicySourcePack {
   keyword: string;
+  policyKey?: string;
   policyName: string;
   policyYear: string;
   officialPolicyName: string;

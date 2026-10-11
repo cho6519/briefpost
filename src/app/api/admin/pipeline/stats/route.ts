@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     }
 
     const stats = pipelineStore.getDashboardStats();
-    const queueItems = pipelineStore.getQueueItems();
+    const queueItems = await pipelineStore.getQueueItemsAsync();
     const keywords = pipelineStore.getAllKeywords(100);
     const rejectedList = pipelineStore.getRejectedList(50);
     const apiErrors = pipelineStore.getApiErrors(50);

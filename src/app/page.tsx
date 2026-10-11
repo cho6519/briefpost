@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import AdSlot from "@/components/ads/AdSlot";
-import { getArticles, seedArticlesIfNeeded } from "@/lib/articles";
+import { getArticles, getArticlesAsync, seedArticlesIfNeeded } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getSourceDisplayName } from "@/lib/sourceHelper";
 
@@ -50,7 +50,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   const page = typeof resolvedParams.page === "string" ? parseInt(resolvedParams.page, 10) : 1;
   const category = typeof resolvedParams.category === "string" ? resolvedParams.category : undefined;
 
-  const { articles, total, totalPages } = getArticles({
+  const { articles, total, totalPages } = await getArticlesAsync({
     page,
     limit: 6,
     category,

@@ -11,9 +11,10 @@ import {
   ContentTaskStatus,
   PipelineRunStatus,
 } from "./types";
-import { createArticle } from "../lib/articles";
+import { createArticle, createArticleAsync } from "../lib/articles";
 import { isPublishingPaused } from "../lib/emergencyStop";
 import { getStockImage } from "../utils/imageMapper";
+import { isNeonConfigured, getNeonSql } from "../lib/neonDb";
 
 export class PipelineStore {
   private static instance: PipelineStore;
@@ -355,12 +356,78 @@ export class PipelineStore {
     }
   }
 
+  /**
+   * Neon PostgreSQL 및 JSON 파일 듀얼 호환 비동기 큐 목록 조회
+   */
+  public async getQueueItemsAsync(): Promise<PublishQueueItem[]> {
+    if (isNeonConfigured()) {
+      const sql = getNeonSql();
+      if (sql) {
+        try {
+          const rows = await sql`
+            SELECT 
+              id, status, payload, search_intent as "searchIntent",
+              attempts, last_error as "error",
+              processing_started_at as "processingStartedAt",
+              queued_at as "queuedAt",
+              published_at as "publishedAt",
+              rejected_at as "rejectedAt",
+              rejection_reason as "rejectionReason"
+            FROM publish_queue
+            ORDER BY queued_at DESC
+          `;
+          if (rows && rows.length > 0) {
+            return rows.map((r: Record<string, unknown>) => ({
+              id: String(r.id),
+              status: r.status as PublishQueueItem["status"],
+              payload: (typeof r.payload === "string" ? JSON.parse(r.payload) : r.payload) as PublishQueueItem["payload"],
+              searchIntent: r.searchIntent as PublishQueueItem["searchIntent"],
+              attempts: Number(r.attempts) || 0,
+              error: r.error ? String(r.error) : undefined,
+              processingStartedAt: r.processingStartedAt ? String(r.processingStartedAt) : undefined,
+              queuedAt: r.queuedAt ? String(r.queuedAt) : new Date().toISOString(),
+              publishedAt: r.publishedAt ? String(r.publishedAt) : undefined,
+              rejectedAt: r.rejectedAt ? String(r.rejectedAt) : undefined,
+              rejectionReason: r.rejectionReason ? String(r.rejectionReason) : undefined,
+            }));
+          }
+        } catch (err) {
+          console.warn("[Neon DB] getQueueItemsAsync 실패, JSON 폴백:", err);
+        }
+      }
+    }
+    return this.getQueueItems();
+  }
+
   public enqueueArticle(item: PublishQueueItem): void {
     const items = this.getQueueItems();
     // 중복 제거 후 추가
     const filtered = items.filter((i) => i.id !== item.id);
     filtered.unshift(item);
     fs.writeFileSync(this.queueFilePath, JSON.stringify(filtered, null, 2), "utf-8");
+
+    // Neon PostgreSQL 영속 저장 (서버리스 휘발 방지)
+    if (isNeonConfigured()) {
+      const sql = getNeonSql();
+      if (sql) {
+        sql`
+          INSERT INTO publish_queue (
+            id, status, payload, search_intent, attempts, queued_at
+          ) VALUES (
+            ${item.id},
+            ${item.status},
+            ${JSON.stringify(item.payload)},
+            ${item.searchIntent || null},
+            ${item.attempts || 0},
+            ${item.queuedAt || new Date().toISOString()}
+          )
+          ON CONFLICT (id) DO UPDATE SET
+            status = EXCLUDED.status,
+            payload = EXCLUDED.payload,
+            search_intent = EXCLUDED.search_intent
+        `.catch((err) => console.warn("[Neon DB] enqueueArticle 동기화 경고:", err));
+      }
+    }
   }
 
   /**
@@ -373,7 +440,7 @@ export class PipelineStore {
    * 4. 실패 상태 전이 및 재시도: 영구 오류 즉시 FAILED, 일시 오류 3회 도달 시 FAILED 전이
    * 5. REJECTED / FAILED 항목 자동 발행 불가
    */
-  public publishQueueItem(queueId: string): { success: boolean; articleId?: number; error?: string; recovered?: boolean } {
+  public async publishQueueItem(queueId: string): Promise<{ success: boolean; articleId?: number; error?: string; recovered?: boolean }> {
     // 1. 전역 긴급 중지 검사 (Fail-Safe)
     if (isPublishingPaused()) {
       return {
@@ -465,7 +532,7 @@ export class PipelineStore {
         };
       }
 
-      // 7. 정식 기사 생성 (고화질 실사 스톡 이미지 배정)
+      // 7. 정식 기사 생성 (고화질 실사 스톡 이미지 배정, SQLite & Neon 듀얼 저장)
       const stock = getStockImage(
         undefined,
         article.headline,
@@ -475,7 +542,7 @@ export class PipelineStore {
         article.slug
       );
 
-      const created = createArticle({
+      const created = await createArticleAsync({
         title: article.headline,
         slug: article.slug,
         content: article.finalMarkdownContent,
@@ -497,6 +564,24 @@ export class PipelineStore {
       delete item.error;
       items[targetIdx] = item;
       fs.writeFileSync(this.queueFilePath, JSON.stringify(items, null, 2), "utf-8");
+
+      // Neon PostgreSQL 대기열 상태 영속 갱신
+      if (isNeonConfigured()) {
+        const sql = getNeonSql();
+        if (sql) {
+          try {
+            await sql`
+              UPDATE publish_queue SET
+                status = 'PUBLISHED',
+                published_at = ${item.publishedAt},
+                last_error = NULL
+              WHERE id = ${queueId}
+            `;
+          } catch (e) {
+            console.warn("[Neon DB] 큐 PUBLISHED 상태 동기화 경고:", e);
+          }
+        }
+      }
 
       // 파이프라인 로그 및 작업 상태 갱신
       this.addLog({
@@ -558,6 +643,20 @@ export class PipelineStore {
     item.rejectionReason = rejectionReason;
     items[targetIdx] = item;
     fs.writeFileSync(this.queueFilePath, JSON.stringify(items, null, 2), "utf-8");
+
+    // Neon PostgreSQL 영속 갱신
+    if (isNeonConfigured()) {
+      const sql = getNeonSql();
+      if (sql) {
+        sql`
+          UPDATE publish_queue SET
+            status = 'REJECTED',
+            rejected_at = CURRENT_TIMESTAMP,
+            rejection_reason = ${rejectionReason}
+          WHERE id = ${queueId}
+        `.catch((e) => console.warn("[Neon DB] 큐 REJECTED 상태 동기화 경고:", e));
+      }
+    }
 
     // 거절 아카이브에도 영구 기록
     this.saveRejectedArticle(

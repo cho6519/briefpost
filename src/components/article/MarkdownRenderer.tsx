@@ -313,9 +313,17 @@ export default function MarkdownRenderer({ content, className = "" }: MarkdownRe
           h2: ({ node, children, ...props }) => {
             if (!children || (typeof children === "string" && !children.trim())) return null;
             h2Count++;
+            const textContent = React.Children.toArray(children)
+              .map((c) => (typeof c === "string" ? c : ""))
+              .join("")
+              .replace(/^[0-9]+[.)]\s*/, "")
+              .trim();
+            const slugId = "heading-" + textContent.toLowerCase().replace(/[^\w\uAC00-\uD7A3]+/g, "-").replace(/^-+|-+$/g, "");
+            const finalId = slugId !== "heading-" ? slugId : `toc-heading-${h2Count}`;
             return (
               <h2
-                id={`toc-heading-${h2Count}`}
+                id={finalId}
+                data-toc-id={`toc-heading-${h2Count}`}
                 className="block border-l-[4px] border-blue-600 pl-3.5 py-0.5 text-[21px] sm:text-[23px] font-bold text-slate-900 mt-10 mb-4 tracking-tight leading-snug scroll-mt-24"
                 {...props}
               >

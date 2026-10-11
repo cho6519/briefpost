@@ -262,7 +262,7 @@ export default function AdminDashboardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          domain: "AI 테크놀로지 및 디지털 정책 비즈니스",
+          domain: "자영업자·소상공인 실전 정책자금 및 세무/지원금 가이드",
           hunterCount: 6,
         }),
       });

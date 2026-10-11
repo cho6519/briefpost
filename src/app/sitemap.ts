@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { getAllArticleSlugs } from "@/lib/articles";
+import { getAllArticleSlugsAsync } from "@/lib/articles";
 import { getSiteUrl } from "@/lib/siteUrl";
 
 export const dynamic = "force-dynamic";
@@ -7,12 +7,12 @@ export const revalidate = 0;
 
 const siteUrl = getSiteUrl();
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const articles = getAllArticleSlugs();
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const articles = await getAllArticleSlugsAsync();
 
   const articleEntries: MetadataRoute.Sitemap = articles.map((article) => ({
     url: `${siteUrl}/news/${article.slug}`,
-    lastModified: new Date(article.updatedAt || Date.now()),
+    lastModified: new Date(),
     changeFrequency: "daily",
     priority: 0.9,
   }));

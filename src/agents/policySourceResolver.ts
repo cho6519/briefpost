@@ -58,6 +58,104 @@ interface OfficialPolicyMaster {
 
 const OFFICIAL_POLICY_MASTERS: OfficialPolicyMaster[] = [
   {
+    policyKey: "소상공인경영안정자금",
+    matchPatterns: ["소상공인", "경영안정자금", "정책자금 직접대출", "대환대출", "소진공", "자영업자 대출", "정책자금"],
+    policyName: "2026 소상공인 경영안정자금 및 정책자금",
+    policyYear: "2026",
+    officialPolicyName: "중소벤처기업부 및 소상공인시장진흥공단 2026년도 소상공인 정책자금 운용계획",
+    currentStatus: "CURRENT",
+    effectiveDate: {
+      value: "2026년도 연중 수시 (분기별 회차 배정)",
+      source: "중소벤처기업부 공식 공고",
+      sourceUrl: "https://www.mss.go.kr",
+      sourceDate: "2026-01-02",
+      notes: "예산 소진 시 조기 마감"
+    },
+    applicationPeriod: {
+      value: "2026년 1월부터 예산 소진 시까지 상시 접수",
+      source: "소상공인시장진흥공단 공고",
+      sourceUrl: "https://ols.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    eligibility: {
+      value: "소상공인기본법상 소상공인 (상시 근로자 5인 미만, 제조업·건설업·운수업 10인 미만, 국세 완납)",
+      source: "소상공인시장진흥공단 지침",
+      sourceUrl: "https://ols.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    supportAmount: {
+      value: "일반 경영안정 최대 7,000만 원, 특별 경영안정 최대 1억 원, 대환대출 최대 5,000만 원",
+      source: "소상공인시장진흥공단 사업계획",
+      sourceUrl: "https://ols.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    supportPeriod: {
+      value: "최대 5년 (거치기간 2년 포함) 또는 대환 10년 분할상환",
+      source: "중소벤처기업부 지침",
+      sourceUrl: "https://www.mss.go.kr",
+      sourceDate: "2026-01-02"
+    },
+    paymentSchedule: {
+      value: "전자약정 체결 후 7~14영업일 이내 계좌 입금",
+      source: "소진공 매뉴얼",
+      sourceUrl: "https://ols.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    applicationMethod: {
+      value: "온라인: 소상공인정책자금 누리집(ols.semas.or.kr) 비대면 원스톱 접수",
+      source: "소상공인정책자금 공식 누리집",
+      sourceUrl: "https://ols.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    applicationDocuments: {
+      value: "사업자등록증명원, 부가가치세 과세표준증명, 국세·지방세 납세증명서, 4대보험 가입자명부",
+      source: "소진공 제출서류 가이드",
+      sourceUrl: "https://ols.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    exceptions: [],
+    exclusionCriteria: [
+      {
+        value: "세금 체납자, 유흥·향락·도박 사행성 업종, 신용도 판단정보 등록자",
+        source: "소진공 지원제외 기준",
+        sourceUrl: "https://ols.semas.or.kr",
+        sourceDate: "2026-01-05"
+      }
+    ],
+    duplicateSupportRules: [
+      {
+        value: "기존 정책자금 잔액 한도 범위 내 추가 대출 가능 (한도 초과 시 대환 등 활용)",
+        source: "소진공 한도 관리 지침",
+        sourceUrl: "https://ols.semas.or.kr",
+        sourceDate: "2026-01-05"
+      }
+    ],
+    comparisonWithOldPolicy: [],
+    importantChanges: [
+      "2026년 소상공인 경영안정자금은 선착순으로 예산이 조기 소진될 수 있으므로 사전 서류 준비가 필수적입니다.",
+      "소상공인정책자금 누리집(ols.semas.or.kr)에서 100% 비대면 온라인으로 접수됩니다.",
+      "불법 브로커의 수수료 요구 행위는 사기이므로 절대 응하지 마십시오."
+    ],
+    officialSources: [
+      {
+        name: "중소벤처기업부",
+        url: "https://www.mss.go.kr",
+        priority: 1,
+        isPrimaryGov: true
+      },
+      {
+        name: "소상공인시장진흥공단 소상공인정책자금 누리집",
+        url: "https://ols.semas.or.kr",
+        priority: 2,
+        isPrimaryGov: true
+      }
+    ],
+    confidence: "HIGH",
+    warnings: [
+      "OFFICIAL_SOURCE_NOTE: 복지로가 아닌 소상공인정책자금 누리집(ols.semas.or.kr)이 공식 접수처임"
+    ]
+  },
+  {
     policyKey: "청년월세특별지원",
     matchPatterns: ["청년 월세", "청년월세", "월세 특별지원", "월세지원"],
     policyName: "청년 월세 특별지원 (2차·계속사업)",

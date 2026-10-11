@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getArticles, createArticle, CreateArticleInput } from "@/lib/articles";
+import { getArticlesAsync, createArticleAsync, CreateArticleInput } from "@/lib/articles";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const category = searchParams.get("category") || undefined;
 
-    const data = getArticles({ page, limit, category });
+    const data = await getArticlesAsync({ page, limit, category });
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("GET /api/articles error:", error);
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newArticle = createArticle(body);
+    const newArticle = await createArticleAsync(body);
     return NextResponse.json({ success: true, article: newArticle }, { status: 201 });
   } catch (error: unknown) {
     console.error("POST /api/articles error:", error);

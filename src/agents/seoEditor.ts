@@ -334,19 +334,34 @@ ${JSON.stringify(existingArticles.slice(0, 8), null, 2)}
       "",
       `> 카테고리: **${category}** | 핵심 토픽: **${primaryKeyword}**`,
       "",
-      "## 📌 3줄 핵심 요약",
+      "## 📌 핵심 요약",
       ...(draft.keyTakeaways || []).map((t) => `- ${t}`),
       "",
-      "## 1. 개요 및 배경",
+      "## 개요 및 배경",
       draft.introduction || "",
       "",
-      ...(draft.sections || []).map((s, idx) => `## ${idx + 2}. ${s.subheading}\n\n${s.content}\n`),
-      "## 💡 결론 및 실무 시사점",
+      ...(draft.sections || []).map((s) => `## ${s.subheading}\n\n${s.content}\n`),
+    ];
+
+    if (draft.faq && draft.faq.length > 0) {
+      lines.push("## 자주 묻는 질문 (FAQ)");
+      lines.push("");
+      for (const item of draft.faq) {
+        lines.push(`### Q. ${item.question}`);
+        lines.push(`${item.answer}`);
+        lines.push("");
+      }
+    }
+
+    lines.push(
+      "## 결론 및 실무 시사점",
       draft.conclusion || "",
       "",
-      "## 🏛️ 인용 및 검증 공식 출처",
-      ...(draft.officialSources || ["공식 산업 표준 규격", "정부 공공 통계"]).map((s) => `- ${s}`),
-    ];
+      "## 공식 출처 및 기준일자",
+      "- **기준일자**: 2026년 최신 고시 및 공고 기준",
+      ...(draft.officialSources || ["소상공인시장진흥공단 소상공인정책자금 누리집", "중소벤처기업부 공식 보도자료"]).map((s) => `- ${s}`)
+    );
+
     return lines.join("\n");
   }
 

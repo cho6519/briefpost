@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 interface TocItem {
   id: string;
+  slugId: string;
   title: string;
   level: number;
 }
@@ -35,8 +36,10 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
         // 헤딩 텍스트 정제
         const cleanTitle = rawTitle.replace(/^[0-9]+[.)]\s*/, "").trim();
         if (cleanTitle && cleanTitle.length >= 2 && !cleanTitle.includes("<") && !cleanTitle.includes("http")) {
+          const slugId = "heading-" + cleanTitle.toLowerCase().replace(/[^\w\uAC00-\uD7A3]+/g, "-").replace(/^-+|-+$/g, "");
           items.push({
             id: `toc-heading-${sectionIdx}`,
+            slugId,
             title: cleanTitle,
             level: 2,
           });
@@ -50,8 +53,8 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
 
   if (tocItems.length < 2) return null;
 
-  const scrollToHeading = (id: string) => {
-    const el = document.getElementById(id);
+  const scrollToHeading = (slugId: string, id: string) => {
+    const el = document.getElementById(slugId) || document.getElementById(id);
     if (el) {
       const yOffset = -80; // 헤더 높이 여백 고려
       const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
@@ -100,7 +103,7 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
               </span>
               <button
                 type="button"
-                onClick={() => scrollToHeading(item.id)}
+                onClick={() => scrollToHeading(item.slugId, item.id)}
                 className="text-left text-slate-700 font-medium hover:text-blue-700 hover:underline underline-offset-4 transition-colors leading-snug cursor-pointer"
               >
                 {item.title}
