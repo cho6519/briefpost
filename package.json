@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:cron": "node scripts/trigger-cron.mjs",
-    "publish:cron": "tsx scripts/publish-runner.ts"
+    "publish:cron": "tsx scripts/publish-runner.ts",
+    "test:agents": "tsx scripts/test-agents.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

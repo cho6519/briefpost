@@ -1,0 +1,288 @@
+{
+  "runId": "test_neg_1791670165020_audit",
+  "test1ReviseForced": {
+    "passed": true,
+    "extractedClaimCount": 12,
+    "unverifiableOrReviseCount": 0,
+    "rejectCount": 12,
+    "factStatus": "REJECT",
+    "seoEditorBlocked": true,
+    "claims": [
+      {
+        "claim": "2026 미래청년 디딤돌 바우처 지원사업 신설",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "대한민국 정부 공식 기관에서 발표된 바 없는 가상의 지원사업입니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "주관 기관: 국가청년지원관리청",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "대한민국 정부 조직도에 존재하지 않는 가상의 기관입니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "접수 기간: 2026년 11월 31일부터 12월 45일까지 특별 접수",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "11월 31일과 12월 45일은 달력상 존재하지 않는 날짜이며, 공식 접수 일정 또한 존재하지 않습니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "지원 금액: 1인당 연간 최대 4,500만 원의 비과세 현금 지급",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "공식적으로 확인되지 않은 허위 지원 금액입니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "지급 방식: 매월 균등 입금, 별도의 사용처 제한 없음",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "사실근거가 없는 허위 지급 방식 및 사용 조건입니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "소득 요건: 연소득 3억 원 이하",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "공식 정책 기준이 아닌 임의로 작성된 허위 소득 기준입니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "거주 및 대상 요건: 모든 대한민국 거주 청년",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "실제 정부 지원사업 기준과 무관한 허위 대상자 요건입니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "연령 요건: 만 15세~49세",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "청년기본법 및 정부 청년 지원사업의 일반적 연령 기준과 일치하지 않는 허위 기준입니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "자산 요건: 자산 규모와 무관하게 100% 무조건 지급",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "정부 지원사업 중 자산과 무관하게 무조건 지급되는 제도는 존재하지 않습니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "공식 포털 URL: https://www.future-youth-fake-gov.kr",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "URL 도메인에 'fake'가 포함되어 있으며 실제 정부 공식 도메인(go.kr)이 아닙니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "신청 방법: 주민등록등본 없이 성명만 입력하면 즉시 접수 완료",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "정부 지원금 신청 시 본인 확인 및 증빙 서류 제출 절차가 생략되는 경우는 존재하지 않습니다.",
+        "status": "REJECT",
+        "confidence": 100
+      },
+      {
+        "claim": "인용 출처: 국가청년지원관리청 특별 보도자료",
+        "sourceTitle": "출처 미확인",
+        "sourceOrganization": "정보 없음",
+        "checkedAt": "2026-10-10T22:09:25.029Z",
+        "evidence": "존재하지 않는 기관의 가상 보도자료입니다.",
+        "status": "REJECT",
+        "confidence": 100
+      }
+    ]
+  },
+  "test2ReviseLoop": {
+    "passed": true,
+    "factLoopCount": 2,
+    "revisionReason": [
+      "섹션 1의 단독 가구 연간 총소득 기준이 '대략 2,000만 원 수준'으로 모호하게 작성되어 있습니다. 2026년 기준 단독가구 총소득기준은 2,200만 원 미만이므로 정확한 수치로 수정해 주세요.",
+      "홑벌이 가구(3,200만 원)와 맞벌이 가구(3,800만 원)의 구체적인 소득 상한액 수치를 본문에 명시하면 정보의 정확성과 신뢰도가 높아집니다.",
+      "수정 필요(2건) 또는 미확인 주장(0건)이 있어 Content Writer의 사실 보정이 필요합니다.",
+      "섹션 3의 재산 감액 기준에서 '1억 7천만 원 이상인 경우'는 오기입니다. 현행 규정상 재산 합계액이 1억 원 이상 2억 4천만 원 미만인 경우 50%가 감액되므로 정확한 금액(1억 원 이상)으로 수정해야 합니다.",
+      "맞벌이 가구 소득기준(3,800만 원 미만)에 대해 최근 세법 개정에 따른 최신 금액(예: 4,400만 원 미만 등)으로 변경되었는지 최종 확인 후 반영하십시오.",
+      "수정 필요(2건) 또는 미확인 주장(0건)이 있어 Content Writer의 사실 보정이 필요합니다."
+    ],
+    "initialFactStatus": "REVISE_REQUIRED",
+    "finalFactStatus": "VERIFIED",
+    "seoEditorPassed": true
+  },
+  "test3MaxLoopExceeded": {
+    "passed": true,
+    "maxCyclesEnforced": true,
+    "actualCyclesExecuted": 2,
+    "seoEditorBlocked": true,
+    "publishQueueBlocked": true,
+    "archivedInDb": true
+  },
+  "test4RejectTest": {
+    "passed": true,
+    "factStatus": "REJECT",
+    "rejectCount": 15,
+    "seoEditorBlocked": true,
+    "publishQueueBlocked": true,
+    "rejectionReasonRecorded": true,
+    "pipelineLogsRecorded": true
+  },
+  "test5ClaimExtractionAccuracy": {
+    "passed": true,
+    "actualClaimCount": 15,
+    "requiredMinimum": 10,
+    "categoriesDetected": [
+      "날짜/기간",
+      "지원금액",
+      "연령조건",
+      "소득조건",
+      "가구자격",
+      "신청방법",
+      "기관명",
+      "제도명",
+      "법령근거",
+      "통계수치",
+      "소급적용",
+      "예외조건",
+      "신청지역",
+      "공식누리집",
+      "만기구조"
+    ],
+    "hasTenCapLimit": false
+  },
+  "test6NumberDateDetection": {
+    "passed": true,
+    "patterns": {
+      "2026년": {
+        "presentInText": true,
+        "capturedInClaim": true
+      },
+      "10월 15일": {
+        "presentInText": true,
+        "capturedInClaim": true
+      },
+      "월 70만원": {
+        "presentInText": true,
+        "capturedInClaim": true
+      },
+      "60개월": {
+        "presentInText": true,
+        "capturedInClaim": true
+      },
+      "250%": {
+        "presentInText": true,
+        "capturedInClaim": true
+      },
+      "5년": {
+        "presentInText": true,
+        "capturedInClaim": true
+      },
+      "30%": {
+        "presentInText": true,
+        "capturedInClaim": true
+      },
+      "1,000만원": {
+        "presentInText": true,
+        "capturedInClaim": true
+      }
+    },
+    "allDetected": true,
+    "missingCount": 0
+  },
+  "test7OfficialSourceVerification": {
+    "passed": true,
+    "officialHierarchyApplied": true,
+    "hallucinatedUrlDetected": false,
+    "sourcesEvaluated": [
+      {
+        "source": "https://www.fsc.go.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.law.go.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.fsc.go.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      },
+      {
+        "source": "https://www.kinfa.or.kr",
+        "isOfficialGov": true
+      }
+    ]
+  },
+  "test8SeoEditorBlocking": {
+    "passed": true,
+    "caseA_Verified_Allowed": true,
+    "caseB_Revise_Blocked": true,
+    "caseC_Unverifiable_Blocked": true,
+    "caseD_Reject_Blocked": true
+  },
+  "test9DataProtection": {
+    "passed": true,
+    "articlesBefore": 104,
+    "articlesAfter": 104,
+    "queueBefore": 4,
+    "queueAfter": 4,
+    "draftsBefore": 3,
+    "draftsAfter": 3,
+    "isCompletelyUntouched": true
+  },
+  "overallVerdict": "NEGATIVE TEST PASS"
+}

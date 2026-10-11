@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchRssFeeds, ParsedRssItem, selectCandidatesWithQuota } from "@/lib/rss";
 import { rewriteArticleWithAI } from "@/lib/ai";
 import {
-  createArticle,
   ensureUniqueSlug,
   articleExistsBySourceUrl,
   getRecentThumbnailUrls,
@@ -12,6 +11,7 @@ import {
 import { verifyCronAuth } from "@/lib/cronAuth";
 import { verifyAndSanitizeArticle } from "@/lib/articleValidator";
 import { getStockImage } from "@/utils/imageMapper";
+import { isPublishingPaused } from "@/lib/emergencyStop";
 
 export const dynamic = "force-dynamic";
 
@@ -62,9 +62,47 @@ async function handlePublishArticles(request: NextRequest) {
     }
     console.log(`[PUBLISH CRON] [1/5] 인증 통과 완료`);
 
-    // 1. 설정 및 API 키 확인
+    // 0.5. 전역 긴급 중지 여부 검증 (Fail-Safe)
+    if (isPublishingPaused()) {
+      console.warn(`[PUBLISH CRON] 전역 긴급 중지(PUBLISHING_PAUSED) 상태이므로 기사 수집 및 발행을 전면 차단합니다.`);
+      return NextResponse.json(
+        {
+          success: false,
+          stage: "AUTH",
+          stageDescription: "전역 긴급 중지 상태(PUBLISHING_PAUSED)로 실행 차단됨",
+          error: "Publishing is globally paused by administrator emergency stop.",
+          timestamp: new Date().toISOString(),
+          durationMs: Date.now() - startTime,
+        },
+        { status: 503 }
+      );
+    }
+
+    // 0.6. [STEP 4.3 Safe-Guard] RSS 직접 무검증 공개 발행 경로 전면 차단
+    // 공식 출처 대조 및 개별 주장 팩트 검증(Claim-Level Fact Checking)이 구현되어 활성화될 때까지
+    // 실제 운영 요청(기본 크론 호출)의 공개 DB 직접 INSERT를 명시적으로 차단합니다.
+    const { searchParams } = new URL(request.url);
+    const isDryRun = searchParams.get("dryRun") === "true" || searchParams.get("mode") === "diagnostic";
+
+    if (!isDryRun) {
+      console.warn(`[PUBLISH CRON SAFEGUARD] 미검증 RSS 기사의 직접 공개 발행 경로가 안전 차단되었습니다.`);
+      return NextResponse.json(
+        {
+          success: false,
+          stage: "AUTH",
+          stageDescription: "RSS 직접 공개 발행 임시 안전 차단 (STEP 4.3 Safe-Guard)",
+          error: "UNVERIFIED_RSS_PUBLISH_BLOCKED: RSS 크론을 통한 직접 공개 발행은 공식 출처 대조 및 개별 사실 주장 검증(Claim-Level Fact Checking) 부재로 인해 안전 차단되었습니다. 비공개 진단 모드(?dryRun=true 또는 ?mode=diagnostic)로만 실행이 허용됩니다.",
+          code: "CLAIM_FACT_CHECK_REQUIRED",
+          timestamp: new Date().toISOString(),
+          durationMs: Date.now() - startTime,
+        },
+        { status: 403 }
+      );
+    }
+
+    // 1. 설정 및 API 키 확인 (격리 진단 모드)
     currentStage = "CONFIG_CHECK";
-    console.log(`[PUBLISH CRON] [2/5] 환경변수 및 키 검증 단계...`);
+    console.log(`[PUBLISH CRON] [2/5] [진단 모드] 환경변수 및 키 검증 단계...`);
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const aiModel = process.env.AI_MODEL || process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
@@ -76,7 +114,6 @@ async function handlePublishArticles(request: NextRequest) {
       console.log(`[PUBLISH CRON] Gemini API Key 확인 완료 (모델: ${aiModel})`);
     }
 
-    const { searchParams } = new URL(request.url);
     // 한 번의 실행에서 처리할 최대 기사 수 (기본값: 4개 - 4대 카테고리 1:1:1:1 균등 배정)
     const limit = Math.min(10, Math.max(1, parseInt(searchParams.get("limit") || "4", 10)));
     const customFeedUrl = searchParams.get("url") || undefined;
@@ -219,41 +256,39 @@ async function handlePublishArticles(request: NextRequest) {
         );
         const finalThumbnail = (isUnsplash && rawItem.thumbnailUrl) ? rawItem.thumbnailUrl : assignedStock.url;
         const finalTheme = rewritten.imageTheme || assignedStock.theme;
-        if (finalThumbnail) {
-          recentThumbnails.add(finalThumbnail);
+        // DB 등록 직전 전역 긴급 중지 2차 검증 (Fail-Safe)
+        if (isPublishingPaused()) {
+          console.warn(`[PUBLISH CRON] 기사 저장 직전 전역 긴급 중지가 감지되어 인서트를 중단합니다: "${validArticle.title}"`);
+          failedItems.push({
+            title: rawItem.title,
+            link: rawItem.link,
+            stage: currentStage,
+            error: "EMERGENCY_STOP: 기사 등록 직전 전역 긴급 중지 활성화됨",
+          });
+          break; // 즉시 이후 기사 등록 중단
         }
 
-        // SQLite DB에 최종 기사 자동 Insert (우리 사이트 송출 시점 기준 최신화)
-        const savedArticle = createArticle({
+        // [STEP 4.3 Safe-Guard] 비공개 진단/격리 모드에서는 공개 DB INSERT를 원천 차단
+        // (운영 DB 오염 방지 및 시뮬레이션 진단 결과만 안전 반환)
+        const simulatedArticle = {
+          id: `diagnostic-simulated-${Date.now()}-${i}`,
           title: validArticle.title,
           slug: uniqueSlug,
-          content: validArticle.content,
-          summary: validArticle.summary,
           category: validArticle.category,
-          metaTitle: validArticle.metaTitle ?? null,
-          metaDescription: validArticle.metaDescription ?? null,
-          thumbnailUrl: finalThumbnail,
+          url: `/news/${uniqueSlug}`,
           sourceUrl: rawItem.link,
-          faq: rewritten.faq ? JSON.stringify(rewritten.faq) : null,
-          ctaType: rewritten.ctaType || "general",
-          imageTheme: finalTheme,
-          highlightBadge: rewritten.highlightBadge || null,
-          card_title: rewritten.card_title || null,
-          createdAt: new Date().toISOString(),
-        });
+          thumbnailUrl: finalThumbnail,
+          publishedAt: new Date().toISOString(),
+          isDryRun: true,
+          savedToDb: false,
+          factChecked: false,
+          note: "진단 모드 시뮬레이션 (공개 DB 미등록)",
+        };
 
-        publishedArticles.push({
-          id: savedArticle.id,
-          title: savedArticle.title,
-          slug: savedArticle.slug,
-          category: savedArticle.category,
-          url: `/news/${savedArticle.slug}`,
-          sourceUrl: savedArticle.sourceUrl,
-          publishedAt: savedArticle.createdAt,
-        });
+        publishedArticles.push(simulatedArticle);
 
         console.log(
-          `[PUBLISH CRON SUCCESS] ${itemIndexStr} 기사 발행 완료: /news/${savedArticle.slug} (DB ID: ${savedArticle.id})`
+          `[PUBLISH CRON DIAGNOSTIC] ${itemIndexStr} 기사 진단 시뮬레이션 완료 (DB 미저장): /news/${uniqueSlug}`
         );
       } catch (itemError: unknown) {
         // 개별 기사 실패 시 전체 프로세스가 죽지 않고 다음 기사로 안전하게 넘어감

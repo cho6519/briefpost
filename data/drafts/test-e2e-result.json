@@ -1,0 +1,292 @@
+{
+  "testRunId": "test_e2e_1791099134320_gov_policy",
+  "selectedKeyword": "청년도약계좌 기여금 상향",
+  "hunterResults": {
+    "candidatesCount": 6,
+    "candidates": [
+      {
+        "keyword": "청년도약계좌 기여금 상향",
+        "discoveryPath": "정책 브리핑 및 청년 커뮤니티 검색 쿼리 급상승",
+        "searchIntent": "INFORMATIONAL",
+        "freshness": "2026 하반기 최신 공고 기준",
+        "officialSourceExists": true,
+        "officialSourceExample": "서민금융진흥원(kinfa.or.kr)"
+      },
+      {
+        "keyword": "근로장려금 반기신청 자격조회",
+        "discoveryPath": "국세청 홈택스 시즌별 트래픽 및 실시간 검색어 분석",
+        "searchIntent": "TRANSACTIONAL",
+        "freshness": "2026 하반기 최신 공고 기준",
+        "officialSourceExists": true,
+        "officialSourceExample": "국세청 홈택스(hometax.go.kr)"
+      },
+      {
+        "keyword": "청년월세 특별지원 연장",
+        "discoveryPath": "지자체 복지 공고 및 주거 관련 커뮤니티 언급량 증가",
+        "searchIntent": "INFORMATIONAL",
+        "freshness": "2026 하반기 최신 공고 기준",
+        "officialSourceExists": true,
+        "officialSourceExample": "마이홈(myhome.go.kr) / 복지로(bokjiro.go.kr)"
+      },
+      {
+        "keyword": "국민취업지원제도 일경험 프로그램",
+        "discoveryPath": "고용노동부 청년 정책 업데이트 및 구직 플랫폼 트렌드",
+        "searchIntent": "COMMERCIAL",
+        "freshness": "2026 하반기 최신 공고 기준",
+        "officialSourceExists": true,
+        "officialSourceExample": "고용24(work24.go.kr)"
+      },
+      {
+        "keyword": "청년내일저축계좌 유지조건",
+        "discoveryPath": "복지로(bokjiro) 포털 검색 유입 패턴 분석",
+        "searchIntent": "INFORMATIONAL",
+        "freshness": "2026 하반기 최신 공고 기준",
+        "officialSourceExists": true,
+        "officialSourceExample": "서민금융진흥원(kinfa.or.kr)"
+      },
+      {
+        "keyword": "K-디지털 트레이닝 지원금",
+        "discoveryPath": "IT 직무 교육 시장 및 내일배움카드 연계 검색량 분석",
+        "searchIntent": "COMMERCIAL",
+        "freshness": "2026 하반기 최신 공고 기준",
+        "officialSourceExists": true,
+        "officialSourceExample": "서민금융진흥원(kinfa.or.kr)"
+      }
+    ]
+  },
+  "deduplicationResults": {
+    "passedCount": 6,
+    "removedCount": 0,
+    "removedDetails": []
+  },
+  "evaluatorResults": {
+    "evaluatedCount": 6,
+    "evaluatedItems": [
+      {
+        "keyword": "청년도약계좌 기여금 상향",
+        "grade": "S",
+        "score": 91,
+        "searchIntent": "INFORMATIONAL",
+        "criteria": {}
+      },
+      {
+        "keyword": "근로장려금 반기신청 자격조회",
+        "grade": "TREND",
+        "score": 89,
+        "searchIntent": "TRANSACTIONAL",
+        "criteria": {}
+      },
+      {
+        "keyword": "청년월세 특별지원 연장",
+        "grade": "A",
+        "score": 86,
+        "searchIntent": "INFORMATIONAL",
+        "criteria": {}
+      },
+      {
+        "keyword": "국민취업지원제도 일경험 프로그램",
+        "grade": "A",
+        "score": 83,
+        "searchIntent": "COMMERCIAL",
+        "criteria": {}
+      },
+      {
+        "keyword": "청년내일저축계좌 유지조건",
+        "grade": "A",
+        "score": 82,
+        "searchIntent": "INFORMATIONAL",
+        "criteria": {}
+      },
+      {
+        "keyword": "K-디지털 트레이닝 지원금",
+        "grade": "A",
+        "score": 87,
+        "searchIntent": "COMMERCIAL",
+        "criteria": {}
+      }
+    ]
+  },
+  "prioritySelectionResults": {
+    "keyword": "청년도약계좌 기여금 상향",
+    "grade": "S",
+    "score": 91,
+    "selectionReason": "자산 형성에 관심이 극대화된 2030 청년층을 타깃으로 매칭 기여금 확대라는 강력한 혜택 변경 이슈가 결합되어 검색 수요와 지속성이 매우 높음.",
+    "recommendedAngle": "변경된 기여금 상향 구조를 알기 쉽게 수치로 비교하고, 월 납입액별 최종 수령액 시뮬레이션을 제공하여 실질적인 자산 관리 가이드로 차별화"
+  },
+  "contentWriterResults": {
+    "seoTitle": "청년도약계좌 기여금 상향 혜택, 월 납입액별 최종 수령액 시뮬레이션",
+    "metaDescription": "청년도약계좌 기여금 상향 제도의 핵심 내용과 매칭 지원금 변화, 월 납입액별 최종 수령액을 비교하여 실질적인 청년 자산 형성 전략을 제시합니다.",
+    "slug": "youth-jump-up-account-subsidy-increase",
+    "primaryKeyword": "청년도약계좌 기여금 상향",
+    "secondaryKeywords": [
+      "청년도약계좌 매칭기여금",
+      "청년도약계좌 최종수령액",
+      "정부지원금 2030"
+    ],
+    "relatedKeywords": [
+      "청년희망적금",
+      "청년도약계좌 신청자격",
+      "서민금융진흥원"
+    ],
+    "h1": "청년도약계좌 기여금 상향으로 극대화되는 2030 자산 형성 전략",
+    "sectionsCount": 3,
+    "sections": [
+      {
+        "subheading": "청년도약계좌 기여금 상향의 핵심 구조와 배경",
+        "contentSnippet": "청년도약계좌는 만 19세 이상 34세 이하의 청년(병역복무 기간 반영 최대 만 40세)을 대상으로 하는 5년 만기 적금 상품이다. 개인소득 요건..."
+      },
+      {
+        "subheading": "월 납입액별 최종 수령액 시뮬레이션 및 비교",
+        "contentSnippet": "청년도약계좌의 혜택을 온전히 누리기 위해서는 월 납입액 설정이 중요하다. 최대 납입 한도인 월 70만 원을 기준으로 할 때, 기여금 상향 혜택을..."
+      },
+      {
+        "subheading": "신청 방법 및 필수 준수 사항",
+        "contentSnippet": "청년도약계좌 가입을 희망하는 청년은 매월 서민금융진흥원이 공고하는 기간에 맞춰 취급 은행(11개 시중은행) 앱을 통해 비대면으로 신청할 수 있다..."
+      }
+    ],
+    "faq": [
+      {
+        "question": "청년도약계좌 기여금 상향 혜택은 기존 가입자에게도 소급 적용되나요?",
+        "answer": "정부 정책 및 서민금융진흥원의 공식 지침에 따라 제도 개선 사항의 적용 범위가 결정됩니다. 대다수의 기여금 구조 개편은 형평성과 예산 계획을 고려하여 발표 시점 이후의 가입자뿐만 아니라 기존 가입자 중 요건을 충족하는 대상에게도 단계적으로 반영되는 경우가 많으므로, 취급 은행이나 서민금융진흥원 콜센터를 통해 개별 확인이 필요합니다."
+      },
+      {
+        "question": "소득이 변동되면 기여금 지급 금액도 달라지나요?",
+        "answer": "청년도약계좌는 가입 후 매년 소득 재심사를 거치게 됩니다. 직전 과세기간의 소득을 기준으로 기여금 지급 여부와 금액이 조정될 수 있으며, 소득이 일정 기준을 초과하는 경우 해당 기간에는 정부 기여금 지급이 중단될 수 있습니다."
+      }
+    ],
+    "officialSources": [
+      "서민금융진흥원 공식 누리집",
+      "금융위원회 보도자료"
+    ],
+    "internalLinkCandidates": [
+      "청년희망적금 만기 후 청년도약계좌 연계 방법",
+      "2030 청년층을 위한 정부 지원금 총정리"
+    ],
+    "wordCount": 1139
+  },
+  "factCheckerResults": {
+    "totalClaims": 3,
+    "verified": 3,
+    "revise": 0,
+    "reject": 0,
+    "unverifiable": 0,
+    "claims": [
+      {
+        "claim": "청년도약계좌는 5년(60개월) 만기 구조로 운영된다.",
+        "sourceUrl": "https://www.kinfa.or.kr",
+        "sourceTitle": "청년도약계좌 상품 안내",
+        "sourceOrganization": "서민금융진흥원",
+        "sourceDate": "2026-01-01",
+        "checkedAt": "2026-10-04T07:32:56.451Z",
+        "evidence": "청년도약계좌는 가입일로부터 5년(60개월) 만기로 운영됨이 공식 확인됨.",
+        "status": "VERIFIED",
+        "confidence": 100
+      },
+      {
+        "claim": "청년도약계좌의 납입 한도는 월 최대 70만 원까지 설정되어 있다.",
+        "sourceUrl": "https://www.fsc.go.kr",
+        "sourceTitle": "청년도약계좌 운영 방안",
+        "sourceOrganization": "금융위원회",
+        "sourceDate": "2026-01-01",
+        "checkedAt": "2026-10-04T07:32:56.451Z",
+        "evidence": "개인 납입 한도는 월 최대 70만 원으로 공식 지정되어 있음.",
+        "status": "VERIFIED",
+        "confidence": 100
+      },
+      {
+        "claim": "청년도약계좌 가입을 위해 개인소득 및 가구소득 기준(기준 중위소득 250% 이하 등)을 충족해야 한다.",
+        "sourceUrl": "https://www.kinfa.or.kr",
+        "sourceTitle": "청년도약계좌 가입요건 안내",
+        "sourceOrganization": "서민금융진흥원",
+        "sourceDate": "2026-01-01",
+        "checkedAt": "2026-10-04T07:32:56.451Z",
+        "evidence": "개인소득 요건 및 가구소득 중위소득 250% 이하 요건이 공식 적용됨.",
+        "status": "VERIFIED",
+        "confidence": 100
+      }
+    ],
+    "status": "VERIFIED"
+  },
+  "seoEditorResults": {
+    "status": "PUBLISH",
+    "reviewScore": 92,
+    "reviewFeedback": [
+      "메인 타깃 키워드인 '청년도약계좌 기여금 상향'이 제목과 본문에 적절히 녹아들어 SEO 최적화 요건을 충족함",
+      "INFORMATIONAL 검색의도에 맞춘 명확한 구조와 공식 출처 인용으로 신뢰도를 확보함"
+    ],
+    "article": {
+      "headline": "청년도약계좌 기여금 상향 및 지원 구조, 2030 자산 형성 시뮬레이션 완벽 가이드",
+      "subHeadline": "소득 구간별 매칭 비율부터 최종 수령액 계산까지, 5년 만기 자산 관리를 위한 필수 정책 가이드",
+      "metaDescription": "청년도약계좌 기여금 상향 및 매칭 지원 구조를 완벽 분석합니다. 소득 구간별 지원 한도와 월 납입액별 최종 수령액 시뮬레이션을 확인하여 5년 만기 자산 형성을 준비하세요.",
+      "slug": "youth-top-account-contribution-increase-guide",
+      "seoScore": 94,
+      "internalLinksCount": 1
+    }
+  },
+  "virtualPublishQueueResult": {
+    "keyword": "청년도약계좌 기여금 상향",
+    "factCheckStatus": "VERIFIED",
+    "seoStatus": "PUBLISH",
+    "finalStatus": "PUBLISH",
+    "reason": "공식 출처 팩트 전수 통과(100%) 및 SEO 종합 검수 85점 이상 충족 (가상 시뮬레이션 전용, 실제 큐 적재 없음)"
+  },
+  "stepDataFlowVerification": {
+    "step1To2": true,
+    "step2To3": true,
+    "step3To4": true,
+    "step4To5": true,
+    "step5To6": true,
+    "step6To7": true,
+    "step7To8": true,
+    "allPassed": true
+  },
+  "reviseLoopVerification": {
+    "loopEnforced": true,
+    "maxCyclesEnforced": true,
+    "actualCyclesExecuted": 2,
+    "passed": true
+  },
+  "rejectionArchiveVerification": {
+    "rejectionHandled": true,
+    "archivedInDb": true,
+    "passed": true
+  },
+  "pipelineLogsVerification": {
+    "recordedInDb": true,
+    "totalLogsForRun": 16,
+    "stepsRecorded": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  },
+  "adminStatsVerification": {
+    "todayDiscoveredKeywords": 49,
+    "evaluatedKeywordsCount": 23,
+    "gradeSCount": 7,
+    "gradeACount": 14,
+    "trendKeywordsCount": 1,
+    "pendingWritingCount": 3,
+    "reviewedCount": 1,
+    "reviseCount": 0,
+    "publishQueuePendingCount": 2,
+    "publishedCount": 104,
+    "failedTasksCount": 0,
+    "apiErrorsCount": 2,
+    "lastUpdated": "2026-10-04T07:33:03.740Z"
+  },
+  "dataIntegrityVerification": {
+    "articlesBefore": 104,
+    "articlesAfter": 104,
+    "articlesMutated": false,
+    "queueBefore": 2,
+    "queueAfter": 2,
+    "queueMutated": false,
+    "livePublished": false
+  }
+}
