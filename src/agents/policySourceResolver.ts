@@ -260,6 +260,278 @@ const OFFICIAL_POLICY_MASTERS: OfficialPolicyMaster[] = [
     ]
   },
   {
+    policyKey: "소상공인노란우산공제",
+    matchPatterns: ["노란우산공제", "소득공제", "자영업자 절세", "노란우산", "사업자 소득공제", "세금 절세"],
+    policyName: "2026 소상공인 노란우산공제 소득공제 및 절세 혜택",
+    policyYear: "2026",
+    officialPolicyName: "중소벤처기업부 및 중소기업중앙회 2026년도 소기업·소상공인 공제(노란우산) 운용계획",
+    currentStatus: "CURRENT",
+    effectiveDate: {
+      value: "2026년도 연중 상시 운용",
+      source: "중소기업중앙회 공식 공고",
+      sourceUrl: "https://www.8899.or.kr",
+      sourceDate: "2026-01-02",
+      notes: "과세표준 구간별 최대 500만 원 소득공제 혜택"
+    },
+    applicationPeriod: {
+      value: "2026년 연중 상시 가입 접수",
+      source: "노란우산 누리집",
+      sourceUrl: "https://www.8899.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    eligibility: {
+      value: "소기업·소상공인 대표자 (사업자등록증 보유 개인사업자 및 법인대표자)",
+      source: "중소기업협동조합법 제115조",
+      sourceUrl: "https://www.8899.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    supportAmount: {
+      value: "사업소득 금액에 따라 연 최대 500만 원 소득공제 및 연복리 이자 지급, 수급권 법적 보호(압류·양도·담보 금지)",
+      source: "중소벤처기업부 세제지원 안내",
+      sourceUrl: "https://www.8899.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    supportPeriod: {
+      value: "가입 유지 기간 동안 매년 소득공제 적용, 폐업·사망·노령 시 공제금 지급",
+      source: "노란우산 정관",
+      sourceUrl: "https://www.8899.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    paymentSchedule: {
+      value: "공제 사유 발생 시 청구 즉시 일시금 또는 분할 지급",
+      source: "중소기업중앙회",
+      sourceUrl: "https://www.8899.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    applicationMethod: {
+      value: "온라인: 노란우산 공식 누리집(8899.or.kr) 또는 시중 주요 은행(국민, 신한, 우리, 하나, 기업 등) 모바일 뱅킹",
+      source: "노란우산 공식 가입 안내",
+      sourceUrl: "https://www.8899.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    applicationDocuments: {
+      value: "사업자등록증명원, 부가가치세 과세표준증명원(또는 표준재무제표증명), 대표자 신분증",
+      source: "가입 구비서류 목록",
+      sourceUrl: "https://www.8899.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    exceptions: [],
+    exclusionCriteria: [
+      {
+        value: "유흥주점업, 도박 및 사행성 업종, 사업자등록이 말소된 폐업자",
+        source: "공제 가입 제한 규정",
+        sourceUrl: "https://www.8899.or.kr",
+        sourceDate: "2026-01-02"
+      }
+    ],
+    duplicateSupportRules: [],
+    comparisonWithOldPolicy: [],
+    importantChanges: [
+      "2026년 세법 개정안 연계로 영세 자영업자의 소득공제 실효 혜택이 강화되었습니다.",
+      "복리이자 적용 및 압류방지 통장 개설 지원으로 폐업 시 사업주의 안전망 역할을 수행합니다."
+    ],
+    officialSources: [
+      {
+        name: "중소기업중앙회 노란우산 누리집",
+        url: "https://www.8899.or.kr",
+        priority: 1,
+        isPrimaryGov: true
+      },
+      {
+        name: "국세청 홈택스",
+        url: "https://www.hometax.go.kr",
+        priority: 2,
+        isPrimaryGov: true
+      }
+    ],
+    confidence: "HIGH",
+    warnings: []
+  },
+  {
+    policyKey: "두루누리사회보험료지원",
+    matchPatterns: ["두루누리", "4대보험 지원", "사회보험료 지원", "일자리안정자금", "인건비 지원", "고용보험 환급"],
+    policyName: "2026 두루누리 사회보험료(고용·국민연금) 80% 지원 사업",
+    policyYear: "2026",
+    officialPolicyName: "고용노동부 및 근로복지공단 2026년도 두루누리 사회보험료 지원사업 공고",
+    currentStatus: "CURRENT",
+    effectiveDate: {
+      value: "2026년도 연중 상시 지원",
+      source: "근로복지공단 공식 공고",
+      sourceUrl: "https://www.comwel.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    applicationPeriod: {
+      value: "2026년 매월 수시 접수 (보험료 법정 납부기한 내)",
+      source: "4대사회보험 정보연계센터",
+      sourceUrl: "https://www.4insure.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    eligibility: {
+      value: "근로자 수 10인 미만 소규모 사업장의 월평균 보수 270만 원 미만 신규가입 근로자 및 사업주",
+      source: "고용노동부 지원 요건 고시",
+      sourceUrl: "https://www.moel.go.kr",
+      sourceDate: "2026-01-02"
+    },
+    supportAmount: {
+      value: "신규가입 근로자 및 사업주가 부담하는 고용보험 및 국민연금 보험료의 80% 지원",
+      source: "근로복지공단 사업 안내",
+      sourceUrl: "https://www.comwel.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    supportPeriod: {
+      value: "신규가입 근로자 1인당 최대 36개월까지 지원",
+      source: "사회보험료 지원 규정",
+      sourceUrl: "https://www.comwel.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    paymentSchedule: {
+      value: "매월 완납된 보험료를 익월 보험료에서 80% 자동 차감 지원",
+      source: "국민건강보험공단 징수 매뉴얼",
+      sourceUrl: "https://www.nhis.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    applicationMethod: {
+      value: "온라인: 4대사회보험 정보연계센터(4insure.or.kr) 또는 근로복지공단 고용·산재보험 토탈서비스",
+      source: "공식 온라인 접수처",
+      sourceUrl: "https://www.4insure.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    applicationDocuments: {
+      value: "4대보험 피보험자격 취득신고서, 보험료 지원신청서",
+      source: "신청서식 가이드",
+      sourceUrl: "https://www.4insure.or.kr",
+      sourceDate: "2026-01-02"
+    },
+    exceptions: [],
+    exclusionCriteria: [
+      {
+        value: "전년도 재산세 과세표준 6억 원 이상자 또는 전년도 종합소득 4,300만 원 이상자 제외",
+        source: "고액자산가 배제 기준",
+        sourceUrl: "https://www.moel.go.kr",
+        sourceDate: "2026-01-02"
+      }
+    ],
+    duplicateSupportRules: [],
+    comparisonWithOldPolicy: [],
+    importantChanges: [
+      "월평균 보수 기준이 2026년 기준 270만 원 미만으로 적용됩니다.",
+      "보험료를 법정 기한 내 완납해야 해당 월 지원금이 정상 차감됩니다."
+    ],
+    officialSources: [
+      {
+        name: "근로복지공단",
+        url: "https://www.comwel.or.kr",
+        priority: 1,
+        isPrimaryGov: true
+      },
+      {
+        name: "4대사회보험 정보연계센터",
+        url: "https://www.4insure.or.kr",
+        priority: 2,
+        isPrimaryGov: true
+      }
+    ],
+    confidence: "HIGH",
+    warnings: []
+  },
+  {
+    policyKey: "희망리턴패키지원스톱재기지원",
+    matchPatterns: ["희망리턴패키지", "점포철거비", "철거비 지원", "폐업 지원", "재기지원", "브릿지보증", "전직장려수당"],
+    policyName: "2026 희망리턴패키지 소상공인 원스톱 폐업 및 재기지원 사업",
+    policyYear: "2026",
+    officialPolicyName: "중소벤처기업부 및 소상공인시장진흥공단 2026년도 희망리턴패키지 지원사업 시행계획",
+    currentStatus: "CURRENT",
+    effectiveDate: {
+      value: "2026년도 연중 수시 접수",
+      source: "소상공인시장진흥공단 공식 공고",
+      sourceUrl: "https://hope.semas.or.kr",
+      sourceDate: "2026-01-05",
+      notes: "예산 소진 시 조기 마감"
+    },
+    applicationPeriod: {
+      value: "2026년 1월부터 예산 소진 시까지 상시 접수",
+      source: "희망리턴패키지 누리집",
+      sourceUrl: "https://hope.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    eligibility: {
+      value: "폐업 예정이거나 기폐업한 소상공인 중 사업 운영 기간이 60일 이상인 자 (임대차 계약 사업장)",
+      source: "희망리턴패키지 사업 지침",
+      sourceUrl: "https://hope.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    supportAmount: {
+      value: "점포 철거 및 원상복구 비용 평당 13만 원 (최대 250만 원 한도, 부가세 제외) 및 재취업 전직장려수당 최대 100만 원",
+      source: "소진공 사업계획",
+      sourceUrl: "https://hope.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    supportPeriod: {
+      value: "신청 접수 후 현장 실사 및 철거 완료 검증 시까지 (통상 2~4주 소요)",
+      source: "업무 매뉴얼",
+      sourceUrl: "https://hope.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    paymentSchedule: {
+      value: "철거 완료 서류 검증 및 현장 정산 확인 후 신청인 계좌로 실비 입금",
+      source: "소진공 지급 기준",
+      sourceUrl: "https://hope.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    applicationMethod: {
+      value: "온라인: 희망리턴패키지 누리집(hope.semas.or.kr) 100% 비대면 원스톱 신청",
+      source: "공식 접수처",
+      sourceUrl: "https://hope.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    applicationDocuments: {
+      value: "임대차계약서, 사업자등록증명(또는 폐업사실증명), 건축물대장, 철거 전·후 사진, 공사 견적서 및 전자세금계산서",
+      source: "제출서류 체크리스트",
+      sourceUrl: "https://hope.semas.or.kr",
+      sourceDate: "2026-01-05"
+    },
+    exceptions: [],
+    exclusionCriteria: [
+      {
+        value: "자가 소유 건물 사업장, 이미 철거가 완료된 후 사후 신청자(사전 신청 필수), 융자제외 업종",
+        source: "지원 제외 요건",
+        sourceUrl: "https://hope.semas.or.kr",
+        sourceDate: "2026-01-05"
+      }
+    ],
+    duplicateSupportRules: [
+      {
+        value: "동일 사업장 및 동일인 기준 철거비 지원은 1회로 한정",
+        source: "중복 수급 제한 규정",
+        sourceUrl: "https://hope.semas.or.kr",
+        sourceDate: "2026-01-05"
+      }
+    ],
+    comparisonWithOldPolicy: [],
+    importantChanges: [
+      "반드시 점포 철거 '전'에 사전 신청해야 지원받을 수 있으며, 사후 신청은 지원 불가합니다.",
+      "원스톱 폐업 지원으로 세무·법률 자문 컨설팅도 무료 제공됩니다."
+    ],
+    officialSources: [
+      {
+        name: "소상공인시장진흥공단 희망리턴패키지",
+        url: "https://hope.semas.or.kr",
+        priority: 1,
+        isPrimaryGov: true
+      },
+      {
+        name: "중소벤처기업부",
+        url: "https://www.mss.go.kr",
+        priority: 2,
+        isPrimaryGov: true
+      }
+    ],
+    confidence: "HIGH",
+    warnings: [
+      "OFFICIAL_SOURCE_NOTE: 반드시 철거 공사 착공 전에 사전 신청해야 인정됨"
+    ]
+  },
+  {
     policyKey: "청년월세특별지원",
     matchPatterns: ["청년 월세", "청년월세", "월세 특별지원", "월세지원"],
     policyName: "청년 월세 특별지원 (2차·계속사업)",

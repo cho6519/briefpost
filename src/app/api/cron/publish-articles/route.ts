@@ -1,370 +1,314 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchRssFeeds, ParsedRssItem, selectCandidatesWithQuota } from "@/lib/rss";
-import { rewriteArticleWithAI } from "@/lib/ai";
-import {
-  ensureUniqueSlug,
-  articleExistsBySourceUrl,
-  getRecentThumbnailUrls,
-  isDuplicateArticleContent,
-  isDuplicateArticleTitle,
-} from "@/lib/articles";
+import { AgentPipeline } from "@/agents/pipeline";
+import { pipelineStore } from "@/agents/pipelineStore";
 import { verifyCronAuth } from "@/lib/cronAuth";
-import { verifyAndSanitizeArticle } from "@/lib/articleValidator";
-import { getStockImage } from "@/utils/imageMapper";
 import { isPublishingPaused } from "@/lib/emergencyStop";
+import { isNeonConfigured, getNeonSql } from "@/lib/neonDb";
+import getDatabase from "@/lib/db";
 
 export const dynamic = "force-dynamic";
-
-type CronStage =
-  | "AUTH"
-  | "CONFIG_CHECK"
-  | "RSS_FETCH"
-  | "AI_PROCESSING"
-  | "QUALITY_VALIDATION"
-  | "DB_SAVE"
-  | "COMPLETED";
+export const maxDuration = 60; // Vercel 서버리스 함수 최대 실행 시간 허용
 
 /**
- * RSS 수집 + AI 패러프레이징 + 품질 검증 + DB 자동 퍼블리싱 공통 핸들러
+ * 5대 핵심 카테고리 쿼터제 정의
  */
-async function handlePublishArticles(request: NextRequest) {
-  const startTime = Date.now();
-  let currentStage: CronStage = "AUTH";
+export interface CategoryQuotaSpec {
+  id: string;
+  name: string;
+  aliases: string[];
+  seedKeywords: string[];
+  targetAudience: string;
+}
 
-  const stageDescriptions: Record<CronStage, string> = {
-    AUTH: "인증 토큰(CRON_SECRET) 검증",
-    CONFIG_CHECK: "환경변수 및 Gemini API 설정 확인",
-    RSS_FETCH: "공공 및 언론사 RSS 피드 원문 수집 및 중복 체크",
-    AI_PROCESSING: "Google Gemini AI 본문 재가공 및 요약·SEO 생성",
-    QUALITY_VALIDATION: "3줄 요약 태그 제거 및 제목-내용 일치성 무결성 검증",
-    DB_SAVE: "SQLite 데이터베이스 영구 저장 및 슬러그 검증",
-    COMPLETED: "전체 기사 자동 발행 파이프라인 완료",
+export const QUOTA_CATEGORIES: CategoryQuotaSpec[] = [
+  {
+    id: "loan",
+    name: "정책자금/대출",
+    aliases: ["정책자금", "대출", "정책·지원금", "금융", "소상공인대출"],
+    seedKeywords: [
+      "2026 소상공인 정책자금 직접대출 신청 자격",
+      "2026 소상공인 저금리 대환대출 조건 및 한도",
+      "2026 소상공인 일반경영안정자금 신청 방법",
+    ],
+    targetAudience: "긴급 유동성 자금 및 저금리 대환이 필요한 소상공인 대표님",
+  },
+  {
+    id: "subsidy",
+    name: "지원금/바우처",
+    aliases: ["지원금", "바우처", "보조금", "전기요금"],
+    seedKeywords: [
+      "2026 소상공인 전기요금 특별지원 신청 방법 및 환급",
+      "2026 소상공인 스마트상점 기술보급 바우처 지원",
+      "2026 영세 소상공인 난방비 및 에너지바우처 신청",
+    ],
+    targetAudience: "고정비 감면 및 공공 보조금 수혜를 원하는 영세 자영업자",
+  },
+  {
+    id: "tax",
+    name: "세금/절세",
+    aliases: ["세금", "절세", "노란우산", "부가세", "종합소득세"],
+    seedKeywords: [
+      "2026 소상공인 노란우산공제 소득공제 한도 및 복리이자",
+      "2026 자영업자 부가가치세 매입세액공제 절세 전략",
+      "2026 개인사업자 종합소득세 필요경비 인정 항목 총정리",
+    ],
+    targetAudience: "합법적 절세와 사업소득 공제를 극대화하려는 개인·법인 사업주",
+  },
+  {
+    id: "labor",
+    name: "인건비/4대보험",
+    aliases: ["인건비", "4대보험", "두루누리", "고용보험", "일자리"],
+    seedKeywords: [
+      "2026 두루누리 사회보험료 80% 지원 신청 자격 및 방법",
+      "2026 1인 자영업자 고용보험 및 산재보험료 환급 지원",
+      "2026 청년일자리도약장려금 소상공인 채용 인건비 지원",
+    ],
+    targetAudience: "직원 채용 부담과 4대보험료 경감을 원하는 고용 사업주 및 1인 자영업자",
+  },
+  {
+    id: "restart",
+    name: "폐업/재기지원",
+    aliases: ["폐업", "재기지원", "희망리턴패키지", "점포철거비", "철거비"],
+    seedKeywords: [
+      "2026 희망리턴패키지 점포철거비 평당 지원금 신청 방법",
+      "2026 폐업 소상공인 브릿지보증 및 채무조정 재기지원",
+      "2026 소상공인 전업 재취업 전직장려수당 신청 가이드",
+    ],
+    targetAudience: "한계 사업장 폐업 원상복구 및 안전한 재기를 준비하는 소상공인",
+  },
+];
+
+/**
+ * DB 및 대기열의 카테고리별 현황을 집계하여 가장 적게 발행된 카테고리를 우선 선정 (Balanced Quota)
+ */
+async function selectQuotaCategory(requestedCategoryId?: string | null): Promise<{
+  selected: CategoryQuotaSpec;
+  counts: Record<string, number>;
+  reason: string;
+}> {
+  // 1. 요청 파라미터로 특정 카테고리가 강제 지정된 경우
+  if (requestedCategoryId) {
+    const matched = QUOTA_CATEGORIES.find(
+      (c) =>
+        c.id === requestedCategoryId.toLowerCase() ||
+        c.name === requestedCategoryId ||
+        c.aliases.some((a) => requestedCategoryId.includes(a))
+    );
+    if (matched) {
+      return {
+        selected: matched,
+        counts: {},
+        reason: `사용자 지정 카테고리 강제 실행: '${matched.name}'`,
+      };
+    }
+  }
+
+  // 2. Neon DB 및 SQLite에서 최근 발행 기사들의 카테고리 분포 집계
+  const counts: Record<string, number> = {
+    loan: 0,
+    subsidy: 0,
+    tax: 0,
+    labor: 0,
+    restart: 0,
   };
 
-  let rssResult: Awaited<ReturnType<typeof fetchRssFeeds>> | null = null;
-  let candidates: ParsedRssItem[] = [];
-  const publishedArticles = [];
-  const failedItems = [];
+  try {
+    if (isNeonConfigured()) {
+      const sql = getNeonSql();
+      if (sql) {
+        const rows = await sql`
+          SELECT category, title FROM articles ORDER BY id DESC LIMIT 50
+        `;
+        for (const row of rows) {
+          const cat = String(row.category || "");
+          const title = String(row.title || "");
+          classifyItem(cat, title, counts);
+        }
+      }
+    } else {
+      const db = getDatabase;
+      const rows = db.prepare("SELECT category, title FROM articles ORDER BY id DESC LIMIT 50").all() as Array<{
+        category: string;
+        title: string;
+      }>;
+      for (const row of rows) {
+        classifyItem(row.category, row.title, counts);
+      }
+    }
+  } catch (e) {
+    console.warn("[Quota Selector] 카테고리 집계 조회 중 경고, 기본 분배 적용:", e);
+  }
 
-  console.log(`\n======================================================`);
-  console.log(`[PUBLISH CRON] 기사 수집 및 AI 자동 발행 파이프라인 개시`);
-  console.log(`- 시작 일시: ${new Date().toISOString()}`);
-  console.log(`======================================================`);
+  // 3. 대기열(PublishQueue)에 대기 중인 항목들도 카운트에 반영
+  try {
+    const queueItems = pipelineStore.getQueueItems();
+    for (const item of queueItems) {
+      if (item.status === "PENDING" || item.status === "PROCESSING") {
+        classifyItem(item.payload.category, item.payload.headline, counts);
+      }
+    }
+  } catch {
+    // 무시
+  }
+
+  // 4. 가장 발행 건수가 적은 카테고리를 1순위로 선정 (동률 시 랜덤 순환)
+  let minCount = Infinity;
+  let candidates: CategoryQuotaSpec[] = [];
+
+  for (const cat of QUOTA_CATEGORIES) {
+    const count = counts[cat.id] || 0;
+    if (count < minCount) {
+      minCount = count;
+      candidates = [cat];
+    } else if (count === minCount) {
+      candidates.push(cat);
+    }
+  }
+
+  const selected = candidates[Math.floor(Math.random() * candidates.length)] || QUOTA_CATEGORIES[0];
+
+  return {
+    selected,
+    counts,
+    reason: `5대 카테고리 쿼터제 균등 배정: '${selected.name}' (현재 누적 ${minCount}건으로 최소 배정군)`,
+  };
+}
+
+/**
+ * 텍스트 기반 카테고리 분류 헬퍼
+ */
+function classifyItem(category: string, title: string, counts: Record<string, number>): void {
+  const combined = `${category} ${title}`.toLowerCase();
+  if (combined.includes("대출") || combined.includes("경영안정") || combined.includes("정책자금")) {
+    counts.loan = (counts.loan || 0) + 1;
+  } else if (combined.includes("전기요금") || combined.includes("바우처") || combined.includes("지원금") || combined.includes("보조금")) {
+    counts.subsidy = (counts.subsidy || 0) + 1;
+  } else if (combined.includes("노란우산") || combined.includes("세금") || combined.includes("절세") || combined.includes("소득공제")) {
+    counts.tax = (counts.tax || 0) + 1;
+  } else if (combined.includes("두루누리") || combined.includes("4대보험") || combined.includes("인건비") || combined.includes("고용보험")) {
+    counts.labor = (counts.labor || 0) + 1;
+  } else if (combined.includes("희망리턴") || combined.includes("철거비") || combined.includes("폐업") || combined.includes("재기")) {
+    counts.restart = (counts.restart || 0) + 1;
+  } else {
+    counts.loan = (counts.loan || 0) + 1;
+  }
+}
+
+/**
+ * Vercel Cron 엔드포인트 핸들러
+ */
+async function handlePublishCron(request: NextRequest) {
+  const startTime = Date.now();
+
+  console.log("\n========================================================");
+  console.log("⏰ [VERCEL CRON] 5대 카테고리 균등 쿼터제 파이프라인 트리거");
+  console.log(`- 실행 일시: ${new Date().toISOString()}`);
+  console.log("========================================================");
 
   try {
-    // 0. Vercel Cron 및 외부 무단 호출 방지 인증 검증
-    currentStage = "AUTH";
-    console.log(`[PUBLISH CRON] [1/5] 인증 검증 단계 (${stageDescriptions[currentStage]})...`);
+    // 1. Vercel Cron 인증 토큰 검증
     const auth = verifyCronAuth(request);
     if (!auth.authorized) {
-      console.warn(`[PUBLISH CRON] 인증 실패 - 요청 거부`);
+      console.warn("[VERCEL CRON] 인증 실패 - 요청 거부");
       return auth.response!;
     }
-    console.log(`[PUBLISH CRON] [1/5] 인증 통과 완료`);
 
-    // 0.5. 전역 긴급 중지 여부 검증 (Fail-Safe)
+    // 2. 전역 긴급 중지 검사
     if (isPublishingPaused()) {
-      console.warn(`[PUBLISH CRON] 전역 긴급 중지(PUBLISHING_PAUSED) 상태이므로 기사 수집 및 발행을 전면 차단합니다.`);
+      console.warn("[VERCEL CRON] 전역 긴급 중지 상태로 실행 중단");
       return NextResponse.json(
         {
           success: false,
-          stage: "AUTH",
-          stageDescription: "전역 긴급 중지 상태(PUBLISHING_PAUSED)로 실행 차단됨",
-          error: "Publishing is globally paused by administrator emergency stop.",
-          timestamp: new Date().toISOString(),
-          durationMs: Date.now() - startTime,
+          error: "전역 긴급 중지 상태(PUBLISHING_PAUSED)로 인해 파이프라인 가동이 차단되었습니다.",
         },
         { status: 503 }
       );
     }
 
-    // 0.6. [STEP 4.3 Safe-Guard] RSS 직접 무검증 공개 발행 경로 전면 차단
-    // 공식 출처 대조 및 개별 주장 팩트 검증(Claim-Level Fact Checking)이 구현되어 활성화될 때까지
-    // 실제 운영 요청(기본 크론 호출)의 공개 DB 직접 INSERT를 명시적으로 차단합니다.
     const { searchParams } = new URL(request.url);
-    const isDryRun = searchParams.get("dryRun") === "true" || searchParams.get("mode") === "diagnostic";
+    const requestedCategory = searchParams.get("category");
+    // autoPublish: 쿼리 파라미터가 없으면 기본 true (검증 통과본 즉시 발행), 'false' 명시 시 대기열만 적재
+    const autoPublish = searchParams.get("autoPublish") !== "false";
 
-    if (!isDryRun) {
-      console.warn(`[PUBLISH CRON SAFEGUARD] 미검증 RSS 기사의 직접 공개 발행 경로가 안전 차단되었습니다.`);
-      return NextResponse.json(
-        {
-          success: false,
-          stage: "AUTH",
-          stageDescription: "RSS 직접 공개 발행 임시 안전 차단 (STEP 4.3 Safe-Guard)",
-          error: "UNVERIFIED_RSS_PUBLISH_BLOCKED: RSS 크론을 통한 직접 공개 발행은 공식 출처 대조 및 개별 사실 주장 검증(Claim-Level Fact Checking) 부재로 인해 안전 차단되었습니다. 비공개 진단 모드(?dryRun=true 또는 ?mode=diagnostic)로만 실행이 허용됩니다.",
-          code: "CLAIM_FACT_CHECK_REQUIRED",
-          timestamp: new Date().toISOString(),
-          durationMs: Date.now() - startTime,
-        },
-        { status: 403 }
-      );
-    }
+    // 3. 5대 카테고리 균등 쿼터제 엔진 구동 -> 1순위 카테고리 자동 선정
+    const quotaResult = await selectQuotaCategory(requestedCategory);
+    const target = quotaResult.selected;
 
-    // 1. 설정 및 API 키 확인 (격리 진단 모드)
-    currentStage = "CONFIG_CHECK";
-    console.log(`[PUBLISH CRON] [2/5] [진단 모드] 환경변수 및 키 검증 단계...`);
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    const aiModel = process.env.AI_MODEL || process.env.GEMINI_MODEL || "gemini-3.8-flash";
+    // 카테고리별 시드 키워드 중 1개 선택
+    const seedKeyword = target.seedKeywords[Math.floor(Math.random() * target.seedKeywords.length)];
 
-    if (!geminiKey) {
-      console.warn(
-        `[PUBLISH CRON Warning] GEMINI_API_KEY가 미설정 상태입니다. (로컬 폴백 에디터가 적용됩니다)`
-      );
-    } else {
-      console.log(`[PUBLISH CRON] Gemini API Key 확인 완료 (모델: ${aiModel})`);
-    }
+    console.log(`[QUOTA SELECTION] ${quotaResult.reason}`);
+    console.log(`- 선정 카테고리: [${target.name}]`);
+    console.log(`- 시드 키워드: "${seedKeyword}"`);
 
-    // 한 번의 실행에서 처리할 최대 기사 수 (기본값: 4개 - 4대 카테고리 1:1:1:1 균등 배정)
-    const limit = Math.min(10, Math.max(1, parseInt(searchParams.get("limit") || "4", 10)));
-    const customFeedUrl = searchParams.get("url") || undefined;
-    const customCategory = searchParams.get("category") || undefined;
+    // 4. 9단계 무결성 에이전트 파이프라인 가동
+    const pipeline = new AgentPipeline();
+    const pipelineResult = await pipeline.run({
+      domain: target.name,
+      seedKeywords: [seedKeyword],
+      hunterCount: 2,
+      targetAudience: target.targetAudience,
+    });
 
-    // 2. RSS 피드에서 최신 기사 수집 (피드별 상태 추적 및 중복 필터링)
-    currentStage = "RSS_FETCH";
-    console.log(`[PUBLISH CRON] [3/5] RSS 피드 원문 수집 단계 시작 (limit: ${limit})...`);
-    rssResult = await fetchRssFeeds(
-      customFeedUrl ? [{ url: customFeedUrl, category: customCategory }] : undefined
-    );
-
-    candidates = selectCandidatesWithQuota(rssResult.items, limit);
-    console.log(
-      `[PUBLISH CRON] [3/5] RSS 수집 결과: 원문 ${rssResult.totalFetched}건 중 신규 ${rssResult.newItemsCount}건 확보 (상위 ${candidates.length}건 AI 재가공 대상 선정)`
-    );
-
-    if (candidates.length === 0) {
-      console.log(`[PUBLISH CRON] 새로 발행할 신규 기사 후보가 없어 작업을 종료합니다.`);
-      const durationMs = Date.now() - startTime;
+    if (!pipelineResult.success || !pipelineResult.step7QueueItem) {
+      console.warn("[VERCEL CRON] 파이프라인 검증 반려 또는 팩트체크 미달:", pipelineResult.step9Rejected);
       return NextResponse.json({
-        success: true,
-        stage: "COMPLETED",
-        stageDescription: "신규 수집 대상 없음 (모두 중복이거나 피드 없음)",
-        timestamp: new Date().toISOString(),
-        durationMs,
-        summary: {
-          totalRssRawFetched: rssResult.totalFetched,
-          totalNewCandidates: rssResult.newItemsCount,
-          duplicateSkippedCount: rssResult.skippedCount,
-          processedLimit: limit,
-          publishedCount: 0,
-          failedCount: 0,
-        },
-        feedStatuses: rssResult.feedStatuses,
-        publishedArticles: [],
+        success: false,
+        category: target.name,
+        seedKeyword,
+        rejection: pipelineResult.step9Rejected,
+        durationMs: Date.now() - startTime,
+        message: "팩트체크 또는 SEO 검수 미달로 대기열 적재 제외됨 (품질 안전장치 정상 작동)",
       });
     }
 
-    // 3. 수집된 후보 기사를 AI로 100% 재작성 및 DB 저장
-    console.log(`[PUBLISH CRON] [4/5] AI 재가공 및 DB 저장 루프 시작 (총 ${candidates.length}건)`);
+    const queueItem = pipelineResult.step7QueueItem;
+    console.log(`✅ [대기열 적재 성공] Queue ID: ${queueItem.id}`);
+    console.log(`- 기사 제목: "${queueItem.payload.headline}"`);
+    console.log(`- 슬러그: /news/${queueItem.payload.slug}`);
 
-    const recentThumbnails = getRecentThumbnailUrls(60);
-
-    for (let i = 0; i < candidates.length; i++) {
-      const rawItem = candidates[i];
-      const itemIndexStr = `[${i + 1}/${candidates.length}]`;
-
-      try {
-        // 이중 안전장치: 혹시라도 이미 등록된 sourceUrl이면 건너뜀
-        if (articleExistsBySourceUrl(rawItem.link)) {
-          console.log(
-            `[PUBLISH CRON] ${itemIndexStr} 이미 DB에 존재하는 URL이므로 스킵: ${rawItem.link}`
-          );
-          continue;
-        }
-
-        currentStage = "AI_PROCESSING";
-        console.log(
-          `[PUBLISH CRON] ${itemIndexStr} AI 패러프레이징 시작: "${rawItem.title.slice(0, 40)}..."`
-        );
-
-        // AI 패러프레이징 호출 (100% 문장 재구성 및 팩트 보존)
-        const rewritten = await rewriteArticleWithAI({
-          title: rawItem.title,
-          content: rawItem.content || rawItem.contentSnippet,
-          category: rawItem.category,
-          link: rawItem.link,
-        });
-
-        currentStage = "QUALITY_VALIDATION";
-        console.log(`[PUBLISH CRON] ${itemIndexStr} 기사 품질 및 제목-내용 일치성 무결성 검증 수행...`);
-
-        // 3줄 요약 태그 제거 및 제목-내용 일치성 검증 게이트 통과
-        const validation = verifyAndSanitizeArticle({
-          title: rewritten.title,
-          slug: rewritten.slug,
-          summary: rewritten.summary,
-          content: rewritten.content,
-          category: rewritten.category || rawItem.category,
-          metaTitle: rewritten.metaTitle,
-          metaDescription: rewritten.metaDescription,
-          thumbnailUrl: rawItem.thumbnailUrl,
-          sourceUrl: rawItem.link,
-        });
-
-        if (!validation.isValid) {
-          throw new Error(`기사 품질 기준 미달로 발행 거절: ${validation.rejectionReason}`);
-        }
-
-        if (validation.repairedIssues.length > 0) {
-          console.log(
-            `[PUBLISH CRON REPAIRED] ${itemIndexStr} 무결성 자동 보정 적용: ${validation.repairedIssues.join(" | ")}`
-          );
-        }
-
-        const validArticle = validation.sanitized;
-
-        // 본문 중복 및 동일 주제 중복 발행 원천 차단 게이트
-        if (isDuplicateArticleContent(validArticle.content)) {
-          console.warn(
-            `[PUBLISH CRON REJECT] ${itemIndexStr} 동일/유사 본문이 이미 DB에 존재하여 발행 제외: "${validArticle.title}"`
-          );
-          failedItems.push({
-            title: rawItem.title,
-            link: rawItem.link,
-            stage: currentStage,
-            error: "DUPLICATE_CONTENT: 동일하거나 매우 유사한 본문이 이미 존재함",
-          });
-          continue;
-        }
-
-        if (isDuplicateArticleTitle(validArticle.title, validArticle.category)) {
-          console.warn(
-            `[PUBLISH CRON REJECT] ${itemIndexStr} 동일 카테고리에 매우 유사한 주제가 최근 발행되어 중복 제외: "${validArticle.title}"`
-          );
-          failedItems.push({
-            title: rawItem.title,
-            link: rawItem.link,
-            stage: currentStage,
-            error: "DUPLICATE_TOPIC: 최근 동일 카테고리에 유사한 주제가 이미 발행됨",
-          });
-          continue;
-        }
-
-        currentStage = "DB_SAVE";
-        // 고유 슬러그 검증 및 중복 방지 타임스탬프 처리
-        const uniqueSlug = ensureUniqueSlug(validArticle.slug);
-
-        // 실사 고화질 스톡 이미지 1:1 고유 배정 (최근 60개 기사와 중복 원천 차단)
-        const isUnsplash = rawItem.thumbnailUrl && rawItem.thumbnailUrl.includes("unsplash.com");
-        const assignedStock = getStockImage(
-          rewritten.imageTheme,
-          validArticle.title,
-          validArticle.category,
-          validArticle.content,
-          undefined,
-          uniqueSlug,
-          recentThumbnails
-        );
-        const finalThumbnail = (isUnsplash && rawItem.thumbnailUrl) ? rawItem.thumbnailUrl : assignedStock.url;
-        const finalTheme = rewritten.imageTheme || assignedStock.theme;
-        // DB 등록 직전 전역 긴급 중지 2차 검증 (Fail-Safe)
-        if (isPublishingPaused()) {
-          console.warn(`[PUBLISH CRON] 기사 저장 직전 전역 긴급 중지가 감지되어 인서트를 중단합니다: "${validArticle.title}"`);
-          failedItems.push({
-            title: rawItem.title,
-            link: rawItem.link,
-            stage: currentStage,
-            error: "EMERGENCY_STOP: 기사 등록 직전 전역 긴급 중지 활성화됨",
-          });
-          break; // 즉시 이후 기사 등록 중단
-        }
-
-        // [STEP 4.3 Safe-Guard] 비공개 진단/격리 모드에서는 공개 DB INSERT를 원천 차단
-        // (운영 DB 오염 방지 및 시뮬레이션 진단 결과만 안전 반환)
-        const simulatedArticle = {
-          id: `diagnostic-simulated-${Date.now()}-${i}`,
-          title: validArticle.title,
-          slug: uniqueSlug,
-          category: validArticle.category,
-          url: `/news/${uniqueSlug}`,
-          sourceUrl: rawItem.link,
-          thumbnailUrl: finalThumbnail,
-          publishedAt: new Date().toISOString(),
-          isDryRun: true,
-          savedToDb: false,
-          factChecked: false,
-          note: "진단 모드 시뮬레이션 (공개 DB 미등록)",
-        };
-
-        publishedArticles.push(simulatedArticle);
-
-        console.log(
-          `[PUBLISH CRON DIAGNOSTIC] ${itemIndexStr} 기사 진단 시뮬레이션 완료 (DB 미저장): /news/${uniqueSlug}`
-        );
-      } catch (itemError: unknown) {
-        // 개별 기사 실패 시 전체 프로세스가 죽지 않고 다음 기사로 안전하게 넘어감
-        const itemErrMsg = itemError instanceof Error ? itemError.message : String(itemError);
-        console.error(
-          `[PUBLISH CRON ERROR] ${itemIndexStr} 개별 기사 가공/저장 실패 ("${rawItem.title}"):`,
-          itemErrMsg
-        );
-        failedItems.push({
-          title: rawItem.title,
-          link: rawItem.link,
-          stage: currentStage,
-          error: itemErrMsg || "Unknown processing error",
-        });
+    // 5. 옵션에 따른 정식 기사 발행 처리
+    let publishedArticleId: number | undefined;
+    if (autoPublish) {
+      console.log(`▶ [자동 승인 발행] 대기열 ID ${queueItem.id} 즉시 발행 진행...`);
+      const pubResult = await pipelineStore.publishQueueItem(queueItem.id);
+      if (pubResult.success) {
+        publishedArticleId = pubResult.articleId;
+        console.log(`🎉 [정식 발행 완료] Article ID: ${publishedArticleId}`);
+      } else {
+        console.warn(`⚠️ [발행 지연] 대기열 상태 유지: ${pubResult.error}`);
       }
     }
 
-    currentStage = "COMPLETED";
     const durationMs = Date.now() - startTime;
-    console.log(`\n======================================================`);
-    console.log(
-      `[PUBLISH CRON COMPLETE] 전체 완료: 성공 ${publishedArticles.length}건, 실패 ${failedItems.length}건, 소요시간 ${durationMs}ms`
-    );
-    console.log(`======================================================\n`);
-
     return NextResponse.json({
       success: true,
-      stage: currentStage,
-      stageDescription: stageDescriptions[currentStage],
-      timestamp: new Date().toISOString(),
-      durationMs,
-      summary: {
-        totalRssRawFetched: rssResult.totalFetched,
-        totalNewCandidates: rssResult.newItemsCount,
-        duplicateSkippedCount: rssResult.skippedCount,
-        expiredCount: rssResult.expiredCount ?? 0,
-        noticeSkippedCount: rssResult.noticeSkippedCount ?? 0,
-        noKeywordSkippedCount: rssResult.noKeywordSkippedCount ?? 0,
-        processedLimit: limit,
-        publishedCount: publishedArticles.length,
-        failedCount: failedItems.length,
+      category: target.name,
+      seedKeyword,
+      quotaDistribution: quotaResult.counts,
+      queueItem: {
+        id: queueItem.id,
+        headline: queueItem.payload.headline,
+        slug: queueItem.payload.slug,
+        status: publishedArticleId ? "PUBLISHED" : "PENDING",
       },
-      feedStatuses: rssResult.feedStatuses,
-      publishedArticles,
-      failedItems: failedItems.length > 0 ? failedItems : undefined,
+      articleId: publishedArticleId,
+      url: `/news/${queueItem.payload.slug}`,
+      durationMs,
+      timestamp: new Date().toISOString(),
+      message: publishedArticleId
+        ? "5대 카테고리 균등 쿼터제 파이프라인 가동 및 정식 발행이 완벽히 완료되었습니다."
+        : "5대 카테고리 균등 쿼터제 파이프라인 가동 및 발행 대기열 적재가 완료되었습니다.",
     });
-  } catch (globalError: unknown) {
-    const durationMs = Date.now() - startTime;
-    console.error(`[PUBLISH CRON FATAL ERROR] [단계: ${currentStage}] 치명적 오류 발생:`, globalError);
-    const globalErrMsg =
-      globalError instanceof Error ? globalError.message : "Fatal error during article publishing";
-
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("[VERCEL CRON FATAL ERROR]:", error);
     return NextResponse.json(
       {
         success: false,
-        stage: currentStage,
-        stageDescription: stageDescriptions[currentStage] || "알 수 없는 단계",
-        error: globalErrMsg,
+        error: errorMsg,
+        durationMs: Date.now() - startTime,
         timestamp: new Date().toISOString(),
-        durationMs,
-        diagnostics: {
-          hasGeminiKey: !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
-          aiModel: process.env.AI_MODEL || process.env.GEMINI_MODEL || "gemini-3.8-flash",
-          rssSummary: rssResult
-            ? {
-                totalRawFetched: rssResult.totalFetched,
-                totalNewCandidates: rssResult.newItemsCount,
-                duplicateSkippedCount: rssResult.skippedCount,
-              }
-            : null,
-          feedStatuses: rssResult?.feedStatuses || [],
-          candidatesCount: candidates ? candidates.length : 0,
-          publishedCount: publishedArticles.length,
-          failedCount: failedItems.length,
-          failedItems,
-        },
       },
       { status: 500 }
     );
@@ -372,9 +316,9 @@ async function handlePublishArticles(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  return handlePublishArticles(request);
+  return handlePublishCron(request);
 }
 
 export async function POST(request: NextRequest) {
-  return handlePublishArticles(request);
+  return handlePublishCron(request);
 }
