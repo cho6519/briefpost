@@ -2,7 +2,7 @@ import { agentPipeline } from "../src/agents/pipeline";
 
 async function main() {
   console.log("=== [소상공인 9단계 실전 롱폼 파이프라인 가동] ===");
-  const targetSeed = "2026 소상공인 경영안정자금 신청 자격 및 온라인 접수 방법";
+  const targetSeed = "2026 소상공인 저금리 대환대출 자격 조건 및 온라인 신청 가이드";
 
   const result = await agentPipeline.run({
     domain: "자영업자·소상공인 실전 정책자금 및 세무/지원금 가이드",

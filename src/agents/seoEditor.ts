@@ -184,6 +184,16 @@ ${JSON.stringify(existingArticles.slice(0, 8), null, 2)}
         finalMarkdown += linksMarkdown;
       }
 
+      // YMYL 기준일자 표기 및 법적 면책 고지 안전장치 자동 삽입
+      if (!finalMarkdown.includes("YMYL") && !finalMarkdown.includes("면책 고지") && !finalMarkdown.includes("법적 책임")) {
+        const disclaimerMarkdown = [
+          "",
+          "> **[⚠️ YMYL 안내 및 법적 면책 고지]**",
+          `> 본 가이드는 중소벤처기업부 및 소상공인시장진흥공단의 2026년도 최신 공식 공고를 바탕으로 정보 제공 목적으로 작성되었습니다. 정책자금의 최종 승인 여부, 세부 금리 및 지원 한도는 접수 시점의 예산 소진 상황 및 보증재단·금융기관의 개별 신용도 심사 결과에 따라 달라질 수 있으며, 본 사이트는 개별 대출 승인 및 금융 계약 결과에 대해 법적 책임을 지지 않습니다.`,
+        ].join("\n");
+        finalMarkdown += disclaimerMarkdown;
+      }
+
       const checklist: SeoChecklist = {
         keywordInTitle: (rawArticle?.headline || draft.draftTitle).includes(primaryKeyword),
         keywordInFirst100Words: finalMarkdown.slice(0, 300).includes(primaryKeyword),
@@ -359,7 +369,10 @@ ${JSON.stringify(existingArticles.slice(0, 8), null, 2)}
       "",
       "## 공식 출처 및 기준일자",
       "- **기준일자**: 2026년 최신 고시 및 공고 기준",
-      ...(draft.officialSources || ["소상공인시장진흥공단 소상공인정책자금 누리집", "중소벤처기업부 공식 보도자료"]).map((s) => `- ${s}`)
+      ...(draft.officialSources || ["소상공인시장진흥공단 소상공인정책자금 누리집", "중소벤처기업부 공식 보도자료"]).map((s) => `- ${s}`),
+      "",
+      "> **[⚠️ YMYL 안내 및 법적 면책 고지]**",
+      "> 본 가이드는 중소벤처기업부 및 소상공인시장진흥공단의 2026년도 최신 공식 공고를 바탕으로 정보 제공 목적으로 작성되었습니다. 정책자금의 최종 승인 여부, 세부 금리 및 지원 한도는 접수 시점의 예산 소진 상황 및 보증재단·금융기관의 개별 신용도 심사 결과에 따라 달라질 수 있으며, 본 사이트는 개별 대출 승인 및 금융 계약 결과에 대해 법적 책임을 지지 않습니다."
     );
 
     return lines.join("\n");
