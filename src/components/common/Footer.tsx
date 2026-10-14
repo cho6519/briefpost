@@ -16,7 +16,7 @@ export default function Footer() {
                 Brief Post
               </span>
               <p className="text-[11px] text-zinc-500">
-                핵심 뉴스를 신속·정확하게 전달하는 정책·경제 전문 브리핑 미디어
+                소상공인을 위한 정책자금·지원금·세무·노무 실전 가이드 전문 미디어
               </p>
             </div>
           </div>
@@ -55,7 +55,7 @@ export default function Footer() {
             </p>
           </div>
           <p className="text-[10.5px] text-zinc-400 leading-relaxed break-keep">
-            발행·편집: Brief Post 편집팀 | 청소년보호책임자: 편집팀장 | 본 사이트는 공공 포털 및 신뢰도 높은 공개 뉴스를 기반으로 전문적인 편집 및 심층 분석을 거쳐 독자에게 유용한 정보를 신속하게 전달하는 독립 공공.경제 정책 전문 브리핑 미디어입니다.
+            발행·편집: Brief Post 편집팀 | 청소년보호책임자: 편집팀장 | 본 사이트는 소상공인 정책자금, 정부지원금, 세무·절세, 인건비·4대보험, 폐업·재기지원 등 소상공인 생태계에 직결된 핵심 공공 정책과 실전 가이드를 신속·정확하게 전달하는 독립 소상공인 정책 전문 브리핑 미디어입니다.
           </p>
         </div>
       </div>

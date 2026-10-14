@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS articles (
   image_theme TEXT,
   highlight_badge TEXT,
   card_title TEXT,
+  status TEXT DEFAULT 'PUBLISHED',
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS articles (
 CREATE INDEX IF NOT EXISTS idx_articles_slug ON articles(slug);
 CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category);
 CREATE INDEX IF NOT EXISTS idx_articles_created_at ON articles(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(status);
 
 CREATE TABLE IF NOT EXISTS publish_queue (
   id TEXT PRIMARY KEY,

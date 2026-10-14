@@ -107,6 +107,11 @@ function initSchema(db: Database.Database) {
     if (!hasCardTitle) {
       db.exec("ALTER TABLE articles ADD COLUMN card_title TEXT");
     }
+    const hasStatus = tableInfo.some((col) => col.name === "status");
+    if (!hasStatus) {
+      db.exec("ALTER TABLE articles ADD COLUMN status TEXT DEFAULT 'PUBLISHED'");
+      db.exec("CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(status)");
+    }
 
     // 중복 복제 기사(ID 36, 85, 86, 90, 109) 및 칼럼/사설/오피니언 기사 영구 삭제 강제
     db.exec(`

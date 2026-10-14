@@ -25,7 +25,10 @@ function CategoryNavList({ categories }: CategoryNavProps) {
         전체
       </Link>
       {categories.map((category) => {
-        const isActive = currentCategory === category;
+        const isActive =
+          currentCategory === category ||
+          (Boolean(currentCategory) &&
+            currentCategory?.replace(/[·\/]/g, "") === category.replace(/[·\/]/g, ""));
         return (
           <Link
             key={category}

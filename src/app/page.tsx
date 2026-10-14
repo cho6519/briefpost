@@ -63,7 +63,7 @@ export default async function HomePage({ searchParams }: PageProps) {
     "@type": "WebSite",
     name: "Brief Post",
     url: siteUrl,
-    description: "정책, 경제, 테크 핵심 뉴스를 빠르게 전달하는 공공.경제 정책 전문 브리핑",
+    description: "소상공인 정책자금, 정부지원금, 세무·절세, 인건비·4대보험, 폐업·재기지원 실전 가이드 전문 브리핑",
     publisher: {
       "@type": "Organization",
       name: "Brief Post",

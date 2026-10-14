@@ -24,7 +24,7 @@ export default function Header() {
                 </span>
               </div>
               <span className="text-[10.5px] text-zinc-500 font-medium tracking-normal">
-                공공·경제 정책 전문 브리핑
+                소상공인 정책·지원금 실전 브리핑
               </span>
             </div>
           </Link>

@@ -17,6 +17,7 @@ export interface Article {
   imageTheme?: "housing" | "finance" | "youth" | "policy" | string | null;
   highlightBadge?: string | null;
   card_title?: string | null;
+  status?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,7 +41,54 @@ export interface PaginatedArticles {
 }
 
 /**
- * 기사 목록 페이지네이션 및 카테고리 필터링 조회
+ * 5대 핵심 소상공인 전문 카테고리
+ */
+export const PRIMARY_CATEGORIES = [
+  "정책자금",
+  "지원금/바우처",
+  "세금/절세",
+  "인건비/4대보험",
+  "폐업/재기지원",
+] as const;
+
+/**
+ * GNB 탭 클릭 및 URL 쿼리 파라미터 호환용 스마트 카테고리 매칭
+ */
+export function getCategoryAliases(category: string): string[] {
+  const norm = category.trim().replace(/\s+/g, "");
+  if (norm.includes("정책자금") || norm === "정책·지원금") {
+    return [
+      "정책자금",
+      "소상공인 정책자금",
+      "소상공인 정책자금·직접/대리 대출",
+      "정책자금/대출",
+      "정책자금·대출",
+      "정책·지원금",
+    ];
+  }
+  if (norm.includes("지원금") || norm.includes("바우처")) {
+    return [
+      "지원금/바우처",
+      "지원금·바우처",
+      "정부 지원금·바우처",
+      "정부지원금·바우처",
+      "지원금",
+    ];
+  }
+  if (norm.includes("세금") || norm.includes("절세")) {
+    return ["세금/절세", "세금·절세", "세무·절세"];
+  }
+  if (norm.includes("인건비") || norm.includes("4대보험") || norm.includes("보험료")) {
+    return ["인건비/4대보험", "인건비·4대보험", "고용·인건비"];
+  }
+  if (norm.includes("폐업") || norm.includes("재기")) {
+    return ["폐업/재기지원", "폐업·재기지원", "재기지원", "폐업지원"];
+  }
+  return [category];
+}
+
+/**
+ * 기사 목록 페이지네이션 및 카테고리 필터링 조회 (Thin Content 및 DRAFT 완전 차단)
  */
 export function getArticles(options: GetArticlesOptions = {}): PaginatedArticles {
   const page = Math.max(1, options.page || 1);
@@ -51,25 +99,32 @@ export function getArticles(options: GetArticlesOptions = {}): PaginatedArticles
   let total = 0;
   let articles: Article[] = [];
 
+  const baseFilter = "(status IS NULL OR status != 'DRAFT') AND LENGTH(content) >= 1500";
+
   if (category && category !== "all") {
-    const countStmt = db.prepare("SELECT COUNT(*) as count FROM articles WHERE category = ?");
-    const countResult = countStmt.get(category) as { count: number };
+    const aliases = getCategoryAliases(category);
+    const placeholders = aliases.map(() => "?").join(",");
+    const countStmt = db.prepare(
+      `SELECT COUNT(*) as count FROM articles WHERE (${baseFilter}) AND category IN (${placeholders})`
+    );
+    const countResult = countStmt.get(...aliases) as { count: number };
     total = countResult.count;
 
     const selectStmt = db.prepare(`
       SELECT * FROM articles 
-      WHERE category = ? 
+      WHERE (${baseFilter}) AND category IN (${placeholders})
       ORDER BY id DESC 
       LIMIT ? OFFSET ?
     `);
-    articles = selectStmt.all(category, limit, offset) as Article[];
+    articles = selectStmt.all(...aliases, limit, offset) as Article[];
   } else {
-    const countStmt = db.prepare("SELECT COUNT(*) as count FROM articles");
+    const countStmt = db.prepare(`SELECT COUNT(*) as count FROM articles WHERE ${baseFilter}`);
     const countResult = countStmt.get() as { count: number };
     total = countResult.count;
 
     const selectStmt = db.prepare(`
       SELECT * FROM articles 
+      WHERE ${baseFilter}
       ORDER BY id DESC 
       LIMIT ? OFFSET ?
     `);
@@ -357,36 +412,10 @@ export function getCategoryTotalCounts(): Record<string, number> {
 }
 
 /**
- * 등록된 카테고리 목록 조회 (4대 핵심 카테고리 고정 노출 보장)
+ * 등록된 카테고리 목록 조회 (5대 핵심 카테고리 고정 노출 보장)
  */
-export function getAllCategories(minCount: number = 3): string[] {
-  const stmt = db.prepare(`
-    SELECT category, COUNT(*) as cnt 
-    FROM articles 
-    GROUP BY category 
-    HAVING COUNT(*) >= ? 
-    ORDER BY cnt DESC, category ASC
-  `);
-  const rows = stmt.all(minCount) as { category: string; cnt: number }[];
-
-  // 4대 핵심 카테고리 고정 우선순위 순서대로 정렬
-  const priorityOrder = ["정책·지원금", "금융·경제", "테크·IT", "사회·문화"];
-  const validCategories = new Set(rows.map((r) => r.category));
-
-  // 4대 핵심 카테고리는 기사가 1건 이상 존재하면 무조건 상단에 고르게 노출
-  const ordered: string[] = [];
-  for (const cat of priorityOrder) {
-    ordered.push(cat);
-  }
-
-  // 그 외 3건 이상 등록된 카테고리(예: 부동산·세제 등)가 있다면 뒤에 추가
-  for (const cat of validCategories) {
-    if (!ordered.includes(cat)) {
-      ordered.push(cat);
-    }
-  }
-
-  return ordered;
+export function getAllCategories(): string[] {
+  return [...PRIMARY_CATEGORIES];
 }
 
 /**
@@ -554,7 +583,9 @@ export function ensureUniqueSlug(baseSlug: string): string {
 export function getAllArticleSlugs(): { slug: string; updatedAt: string }[] {
   const stmt = db.prepare(`
     SELECT slug, updatedAt FROM articles 
-    WHERE slug != 'subsidy-welfare' 
+    WHERE (status IS NULL OR status != 'DRAFT')
+      AND LENGTH(content) >= 1500
+      AND slug != 'subsidy-welfare' 
       AND slug NOT LIKE '%opinion%' 
       AND slug NOT LIKE '%column%'
       AND title NOT LIKE '%[칼럼]%'
@@ -743,33 +774,49 @@ export async function getArticlesAsync(options: GetArticlesOptions = {}): Promis
         let rows: unknown[] = [];
 
         if (category && category !== "all") {
-          const countRes = await sql`SELECT COUNT(*)::int as count FROM articles WHERE category = ${category}`;
+          const aliases = getCategoryAliases(category);
+          const countRes = await sql`
+            SELECT COUNT(*)::int as count 
+            FROM articles 
+            WHERE (status IS NULL OR status != 'DRAFT')
+              AND LENGTH(content) >= 1500
+              AND category = ANY(${aliases})
+          `;
           total = countRes[0]?.count || 0;
           rows = await sql`
             SELECT 
-              id, title, slug, content, summary, category,
+              id, title, slug, content, summary, category, status,
               meta_title as "metaTitle", meta_description as "metaDescription",
               thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
               cta_type as "ctaType", image_theme as "imageTheme",
               highlight_badge as "highlightBadge", card_title,
               created_at as "createdAt", updated_at as "updatedAt"
             FROM articles 
-            WHERE category = ${category}
+            WHERE (status IS NULL OR status != 'DRAFT')
+              AND LENGTH(content) >= 1500
+              AND category = ANY(${aliases})
             ORDER BY id DESC 
             LIMIT ${limit} OFFSET ${offset}
           `;
         } else {
-          const countRes = await sql`SELECT COUNT(*)::int as count FROM articles`;
+          const countRes = await sql`
+            SELECT COUNT(*)::int as count 
+            FROM articles 
+            WHERE (status IS NULL OR status != 'DRAFT')
+              AND LENGTH(content) >= 1500
+          `;
           total = countRes[0]?.count || 0;
           rows = await sql`
             SELECT 
-              id, title, slug, content, summary, category,
+              id, title, slug, content, summary, category, status,
               meta_title as "metaTitle", meta_description as "metaDescription",
               thumbnail_url as "thumbnailUrl", source_url as "sourceUrl",
               cta_type as "ctaType", image_theme as "imageTheme",
               highlight_badge as "highlightBadge", card_title,
               created_at as "createdAt", updated_at as "updatedAt"
             FROM articles 
+            WHERE (status IS NULL OR status != 'DRAFT')
+              AND LENGTH(content) >= 1500
             ORDER BY id DESC 
             LIMIT ${limit} OFFSET ${offset}
           `;
@@ -946,7 +993,9 @@ export async function getAllArticleSlugsAsync(): Promise<{ slug: string; updated
         const rows = await sql`
           SELECT slug, updated_at as "updatedAt" 
           FROM articles 
-          WHERE slug != 'subsidy-welfare' 
+          WHERE (status IS NULL OR status != 'DRAFT')
+            AND LENGTH(content) >= 1500
+            AND slug != 'subsidy-welfare' 
             AND slug NOT LIKE '%opinion%' 
             AND slug NOT LIKE '%column%'
             AND title NOT LIKE '%[칼럼]%'

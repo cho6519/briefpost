@@ -23,10 +23,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Brief Post - 공공.경제 정책 전문 브리핑",
+    default: "Brief Post - 소상공인 정책·지원금 실전 가이드 전문 브리핑",
     template: "%s | Brief Post",
   },
-  description: "정책, 경제, 테크 핵심 뉴스를 빠르게 전달하는 공공.경제 정책 전문 브리핑",
+  description: "소상공인 정책자금, 정부지원금, 세무·절세, 인건비·4대보험, 폐업·재기지원 실전 가이드 전문 브리핑",
   robots: {
     index: true,
     follow: true,
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Brief Post - 공공.경제 정책 전문 브리핑",
-    description: "정책, 경제, 테크 핵심 뉴스를 빠르게 전달하는 공공.경제 정책 전문 브리핑",
+    title: "Brief Post - 소상공인 정책·지원금 실전 가이드 전문 브리핑",
+    description: "소상공인 정책자금, 정부지원금, 세무·절세, 인건비·4대보험, 폐업·재기지원 실전 가이드 전문 브리핑",
     url: siteUrl,
     siteName: "Brief Post",
     locale: "ko_KR",
@@ -47,8 +47,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Brief Post - 공공.경제 정책 전문 브리핑",
-    description: "정책, 경제, 테크 핵심 뉴스를 빠르게 전달하는 공공.경제 정책 전문 브리핑",
+    title: "Brief Post - 소상공인 정책·지원금 실전 가이드 전문 브리핑",
+    description: "소상공인 정책자금, 정부지원금, 세무·절세, 인건비·4대보험, 폐업·재기지원 실전 가이드 전문 브리핑",
   },
   verification: {
     google: "kQuFAyO0YE_YE_v2Hn2MPjHdG6HkXW_lAGPs-E2g0So",
