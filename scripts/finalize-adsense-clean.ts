@@ -79,14 +79,13 @@ function classifyArticle(id: number, title: string, currentCategory: string, len
     t.includes("인류 멸종") ||
     t.includes("보건복지부") ||
     t.includes("확장재정 논란") ||
-    t.includes("주식시장") ||
-    t.includes("온투업")
+    t.includes("주식시장")
   ) {
     return { keep: false, reason: "비관련 일반/증시/IT/부동산/정책" };
   }
 
   // 3. 5대 핵심 카테고리 매핑
-  // 3-1. 폐업/재기지원
+  // 3-1. 폐업·재기지원
   if (
     t.includes("새출발기금") ||
     t.includes("희망리턴패키지") ||
@@ -95,10 +94,10 @@ function classifyArticle(id: number, title: string, currentCategory: string, len
     t.includes("채무조정") ||
     t.includes("철거비")
   ) {
-    return { keep: true, targetCategory: "폐업/재기지원", reason: "소상공인 폐업 및 재기지원" };
+    return { keep: true, targetCategory: "폐업·재기지원", reason: "소상공인 폐업 및 재기지원" };
   }
 
-  // 3-2. 인건비/4대보험
+  // 3-2. 인건비·4대보험
   if (
     t.includes("두루누리") ||
     t.includes("4대보험") ||
@@ -108,10 +107,10 @@ function classifyArticle(id: number, title: string, currentCategory: string, len
     t.includes("고용지원금") ||
     t.includes("인건비")
   ) {
-    return { keep: true, targetCategory: "인건비/4대보험", reason: "소상공인 인건비 및 4대보험" };
+    return { keep: true, targetCategory: "인건비·4대보험", reason: "소상공인 인건비 및 4대보험" };
   }
 
-  // 3-3. 세금/절세
+  // 3-3. 세금·절세
   if (
     t.includes("간이과세") ||
     t.includes("노란우산공제") ||
@@ -120,10 +119,10 @@ function classifyArticle(id: number, title: string, currentCategory: string, len
     t.includes("절세") ||
     t.includes("세무")
   ) {
-    return { keep: true, targetCategory: "세금/절세", reason: "소상공인 세무 및 절세" };
+    return { keep: true, targetCategory: "세금·절세", reason: "소상공인 세무 및 절세" };
   }
 
-  // 3-4. 정책자금
+  // 3-4. 정책자금·대출
   if (
     t.includes("정책자금") ||
     t.includes("대환대출") ||
@@ -133,12 +132,13 @@ function classifyArticle(id: number, title: string, currentCategory: string, len
     t.includes("이차보전") ||
     t.includes("저리 대출") ||
     t.includes("저리 융자") ||
-    t.includes("소상공인 금융")
+    t.includes("소상공인 금융") ||
+    t.includes("온투업")
   ) {
-    return { keep: true, targetCategory: "정책자금", reason: "소상공인 정책자금 및 대출" };
+    return { keep: true, targetCategory: "정책자금·대출", reason: "소상공인 정책자금 및 대출" };
   }
 
-  // 3-5. 지원금/바우처
+  // 3-5. 정부지원금·바우처
   if (
     t.includes("전기요금") ||
     t.includes("스마트상점") ||
@@ -153,7 +153,7 @@ function classifyArticle(id: number, title: string, currentCategory: string, len
     t.includes("지원사업") ||
     t.includes("온양온천시장")
   ) {
-    return { keep: true, targetCategory: "지원금/바우처", reason: "소상공인 지원금 및 바우처" };
+    return { keep: true, targetCategory: "정부지원금·바우처", reason: "소상공인 지원금 및 바우처" };
   }
 
   return { keep: false, reason: "5대 주제 미해당" };

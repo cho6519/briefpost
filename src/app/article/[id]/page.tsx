@@ -1,4 +1,4 @@
-import { redirect, notFound } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import { getArticleByIdAsync, getArticleBySlugAsync } from "@/lib/articles";
 
 interface ArticleIdProps {
@@ -16,10 +16,11 @@ export default async function ArticleIdRedirectPage({ params }: ArticleIdProps) 
     article = await getArticleBySlugAsync(id);
   }
 
-  if (!article) {
-    notFound();
+  // 비공개(DRAFT) 또는 미발행 글 외부 접속 시 404 방지 -> 메인 페이지('/')로 301/308 리디렉션
+  if (!article || article.status === "DRAFT" || article.status !== "PUBLISHED") {
+    permanentRedirect("/");
   }
 
   // 표준 기사 URL(/news/[slug])로 영구 리다이렉트
-  redirect(`/news/${article.slug}`);
+  permanentRedirect(`/news/${article.slug}`);
 }

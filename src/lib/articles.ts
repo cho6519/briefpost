@@ -44,11 +44,11 @@ export interface PaginatedArticles {
  * 5대 핵심 소상공인 전문 카테고리
  */
 export const PRIMARY_CATEGORIES = [
-  "정책자금",
-  "지원금/바우처",
-  "세금/절세",
-  "인건비/4대보험",
-  "폐업/재기지원",
+  "정책자금·대출",
+  "정부지원금·바우처",
+  "세금·절세",
+  "인건비·4대보험",
+  "폐업·재기지원",
 ] as const;
 
 /**
@@ -56,33 +56,48 @@ export const PRIMARY_CATEGORIES = [
  */
 export function getCategoryAliases(category: string): string[] {
   const norm = category.trim().replace(/\s+/g, "");
-  if (norm.includes("정책자금") || norm === "정책·지원금") {
+  if (norm.includes("정책자금") || norm.includes("대출") || norm === "정책·지원금") {
     return [
+      "정책자금·대출",
+      "정책자금/대출",
       "정책자금",
       "소상공인 정책자금",
       "소상공인 정책자금·직접/대리 대출",
-      "정책자금/대출",
-      "정책자금·대출",
+      "소상공인 대출",
       "정책·지원금",
     ];
   }
   if (norm.includes("지원금") || norm.includes("바우처")) {
     return [
+      "정부지원금·바우처",
+      "정부 지원금·바우처",
       "지원금/바우처",
       "지원금·바우처",
-      "정부 지원금·바우처",
-      "정부지원금·바우처",
       "지원금",
     ];
   }
-  if (norm.includes("세금") || norm.includes("절세")) {
-    return ["세금/절세", "세금·절세", "세무·절세"];
+  if (norm.includes("세금") || norm.includes("절세") || norm.includes("세무")) {
+    return [
+      "세금·절세",
+      "세금/절세",
+      "세무·절세",
+      "세무/절세",
+    ];
   }
   if (norm.includes("인건비") || norm.includes("4대보험") || norm.includes("보험료")) {
-    return ["인건비/4대보험", "인건비·4대보험", "고용·인건비"];
+    return [
+      "인건비·4대보험",
+      "인건비/4대보험",
+      "고용·인건비",
+    ];
   }
   if (norm.includes("폐업") || norm.includes("재기")) {
-    return ["폐업/재기지원", "폐업·재기지원", "재기지원", "폐업지원"];
+    return [
+      "폐업·재기지원",
+      "폐업/재기지원",
+      "재기지원",
+      "폐업지원",
+    ];
   }
   return [category];
 }
@@ -99,7 +114,7 @@ export function getArticles(options: GetArticlesOptions = {}): PaginatedArticles
   let total = 0;
   let articles: Article[] = [];
 
-  const baseFilter = "(status IS NULL OR status != 'DRAFT') AND LENGTH(content) >= 1500";
+  const baseFilter = "status = 'PUBLISHED' AND LENGTH(content) >= 1500";
 
   if (category && category !== "all") {
     const aliases = getCategoryAliases(category);
@@ -209,10 +224,10 @@ export function getArticleById(id: number | string): Article | null {
  * 동일 카테고리 내 관련 기사 3선 조회 (독자 체류 시간 극대화 및 이탈 방지)
  */
 export function getRelatedArticles(currentSlug: string, category: string, limit: number = 3): Article[] {
-  // 1. 같은 카테고리 내 현재 기사를 제외한 최신 기사 조회
+  // 1. 같은 카테고리 내 현재 기사를 제외한 최신 기사 조회 (PUBLISHED 및 고품질 필터링)
   const stmt = db.prepare(`
     SELECT * FROM articles 
-    WHERE category = ? AND slug != ? 
+    WHERE status = 'PUBLISHED' AND LENGTH(content) >= 1500 AND category = ? AND slug != ? 
     ORDER BY id DESC 
     LIMIT ?
   `);
@@ -225,7 +240,7 @@ export function getRelatedArticles(currentSlug: string, category: string, limit:
     const placeholders = existingSlugs.map(() => "?").join(",");
     const fallbackStmt = db.prepare(`
       SELECT * FROM articles 
-      WHERE slug NOT IN (${placeholders})
+      WHERE status = 'PUBLISHED' AND LENGTH(content) >= 1500 AND slug NOT IN (${placeholders})
       ORDER BY id DESC 
       LIMIT ?
     `);
@@ -583,7 +598,7 @@ export function ensureUniqueSlug(baseSlug: string): string {
 export function getAllArticleSlugs(): { slug: string; updatedAt: string }[] {
   const stmt = db.prepare(`
     SELECT slug, updatedAt FROM articles 
-    WHERE (status IS NULL OR status != 'DRAFT')
+    WHERE status = 'PUBLISHED'
       AND LENGTH(content) >= 1500
       AND slug != 'subsidy-welfare' 
       AND slug NOT LIKE '%opinion%' 
@@ -778,7 +793,7 @@ export async function getArticlesAsync(options: GetArticlesOptions = {}): Promis
           const countRes = await sql`
             SELECT COUNT(*)::int as count 
             FROM articles 
-            WHERE (status IS NULL OR status != 'DRAFT')
+            WHERE status = 'PUBLISHED'
               AND LENGTH(content) >= 1500
               AND category = ANY(${aliases})
           `;
@@ -792,7 +807,7 @@ export async function getArticlesAsync(options: GetArticlesOptions = {}): Promis
               highlight_badge as "highlightBadge", card_title,
               created_at as "createdAt", updated_at as "updatedAt"
             FROM articles 
-            WHERE (status IS NULL OR status != 'DRAFT')
+            WHERE status = 'PUBLISHED'
               AND LENGTH(content) >= 1500
               AND category = ANY(${aliases})
             ORDER BY id DESC 
@@ -802,7 +817,7 @@ export async function getArticlesAsync(options: GetArticlesOptions = {}): Promis
           const countRes = await sql`
             SELECT COUNT(*)::int as count 
             FROM articles 
-            WHERE (status IS NULL OR status != 'DRAFT')
+            WHERE status = 'PUBLISHED'
               AND LENGTH(content) >= 1500
           `;
           total = countRes[0]?.count || 0;
@@ -815,7 +830,7 @@ export async function getArticlesAsync(options: GetArticlesOptions = {}): Promis
               highlight_badge as "highlightBadge", card_title,
               created_at as "createdAt", updated_at as "updatedAt"
             FROM articles 
-            WHERE (status IS NULL OR status != 'DRAFT')
+            WHERE status = 'PUBLISHED'
               AND LENGTH(content) >= 1500
             ORDER BY id DESC 
             LIMIT ${limit} OFFSET ${offset}
@@ -913,7 +928,7 @@ export async function getRelatedArticlesAsync(
             highlight_badge as "highlightBadge", card_title,
             created_at as "createdAt", updated_at as "updatedAt"
           FROM articles 
-          WHERE category = ${category} AND slug != ${currentSlug}
+          WHERE status = 'PUBLISHED' AND LENGTH(content) >= 1500 AND category = ${category} AND slug != ${currentSlug}
           ORDER BY id DESC 
           LIMIT ${limit}
         `) as unknown as Article[];
@@ -930,7 +945,7 @@ export async function getRelatedArticlesAsync(
               highlight_badge as "highlightBadge", card_title,
               created_at as "createdAt", updated_at as "updatedAt"
             FROM articles 
-            WHERE NOT (slug = ANY(${excludedSlugs}))
+            WHERE status = 'PUBLISHED' AND LENGTH(content) >= 1500 AND NOT (slug = ANY(${excludedSlugs}))
             ORDER BY id DESC 
             LIMIT ${needed}
           `) as unknown as Article[];
@@ -993,7 +1008,7 @@ export async function getAllArticleSlugsAsync(): Promise<{ slug: string; updated
         const rows = await sql`
           SELECT slug, updated_at as "updatedAt" 
           FROM articles 
-          WHERE (status IS NULL OR status != 'DRAFT')
+          WHERE status = 'PUBLISHED'
             AND LENGTH(content) >= 1500
             AND slug != 'subsidy-welfare' 
             AND slug NOT LIKE '%opinion%' 

@@ -1,11 +1,14 @@
 import Link from "next/link";
+import { getAllCategories } from "@/lib/articles";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const categories = getAllCategories();
 
   return (
     <footer className="mt-20 border-t border-zinc-200 bg-white py-12 text-xs text-zinc-500 transition-colors">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        {/* 상단 1단: 브랜드 & 법적 안내 링크 */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-serif font-black text-xs shadow-xs shadow-blue-500/20">
@@ -41,7 +44,27 @@ export default function Footer() {
           </nav>
         </div>
 
-        <div className="mt-8 border-t border-zinc-100 pt-6 space-y-2.5 text-[11px] text-zinc-500">
+        {/* 중단 2단: 5대 핵심 카테고리 메뉴 네비게이션 */}
+        <div className="mt-6 border-t border-zinc-100 pt-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span className="text-[11px] font-bold text-zinc-700 tracking-tight">
+              5대 핵심 정책 분야
+            </span>
+            <nav aria-label="5대 핵심 카테고리" className="flex flex-wrap items-center gap-2 text-[11.5px]">
+              {categories.map((cat) => (
+                <Link
+                  key={cat}
+                  href={`/?category=${encodeURIComponent(cat)}`}
+                  className="rounded-md bg-zinc-50 border border-zinc-200/80 px-2.5 py-1 text-zinc-600 hover:text-blue-600 hover:bg-blue-50/60 hover:border-blue-200 transition-colors font-medium"
+                >
+                  {cat}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-zinc-100 pt-6 space-y-2.5 text-[11px] text-zinc-500">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <p>© {currentYear} Brief Post. All rights reserved.</p>
             <p className="text-zinc-600 font-medium">
@@ -55,7 +78,7 @@ export default function Footer() {
             </p>
           </div>
           <p className="text-[10.5px] text-zinc-400 leading-relaxed break-keep">
-            발행·편집: Brief Post 편집팀 | 청소년보호책임자: 편집팀장 | 본 사이트는 소상공인 정책자금, 정부지원금, 세무·절세, 인건비·4대보험, 폐업·재기지원 등 소상공인 생태계에 직결된 핵심 공공 정책과 실전 가이드를 신속·정확하게 전달하는 독립 소상공인 정책 전문 브리핑 미디어입니다.
+            발행·편집: Brief Post 편집팀 | 청소년보호책임자: 편집팀장 | 본 사이트는 소상공인 정책자금·대출, 정부지원금·바우처, 세금·절세, 인건비·4대보험, 폐업·재기지원 등 소상공인 생태계에 직결된 핵심 공공 정책과 실전 가이드를 신속·정확하게 전달하는 독립 소상공인 정책 전문 브리핑 미디어입니다.
           </p>
         </div>
       </div>

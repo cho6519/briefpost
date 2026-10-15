@@ -23,8 +23,8 @@ export interface CategoryQuotaSpec {
 export const QUOTA_CATEGORIES: CategoryQuotaSpec[] = [
   {
     id: "loan",
-    name: "정책자금/대출",
-    aliases: ["정책자금", "대출", "정책·지원금", "금융", "소상공인대출"],
+    name: "정책자금·대출",
+    aliases: ["정책자금·대출", "정책자금/대출", "정책자금", "대출", "정책·지원금", "금융", "소상공인대출"],
     seedKeywords: [
       "2026 소상공인 정책자금 직접대출 신청 자격",
       "2026 소상공인 저금리 대환대출 조건 및 한도",
@@ -34,8 +34,8 @@ export const QUOTA_CATEGORIES: CategoryQuotaSpec[] = [
   },
   {
     id: "subsidy",
-    name: "지원금/바우처",
-    aliases: ["지원금", "바우처", "보조금", "전기요금"],
+    name: "정부지원금·바우처",
+    aliases: ["정부지원금·바우처", "지원금/바우처", "지원금·바우처", "지원금", "바우처", "보조금", "전기요금"],
     seedKeywords: [
       "2026 소상공인 전기요금 특별지원 신청 방법 및 환급",
       "2026 소상공인 스마트상점 기술보급 바우처 지원",
@@ -45,8 +45,8 @@ export const QUOTA_CATEGORIES: CategoryQuotaSpec[] = [
   },
   {
     id: "tax",
-    name: "세금/절세",
-    aliases: ["세금", "절세", "노란우산", "부가세", "종합소득세"],
+    name: "세금·절세",
+    aliases: ["세금·절세", "세금/절세", "세무·절세", "세금", "절세", "노란우산", "부가세", "종합소득세"],
     seedKeywords: [
       "2026 소상공인 노란우산공제 소득공제 한도 및 복리이자",
       "2026 자영업자 부가가치세 매입세액공제 절세 전략",
@@ -56,8 +56,8 @@ export const QUOTA_CATEGORIES: CategoryQuotaSpec[] = [
   },
   {
     id: "labor",
-    name: "인건비/4대보험",
-    aliases: ["인건비", "4대보험", "두루누리", "고용보험", "일자리"],
+    name: "인건비·4대보험",
+    aliases: ["인건비·4대보험", "인건비/4대보험", "인건비", "4대보험", "두루누리", "고용보험", "일자리"],
     seedKeywords: [
       "2026 두루누리 사회보험료 80% 지원 신청 자격 및 방법",
       "2026 1인 자영업자 고용보험 및 산재보험료 환급 지원",
@@ -67,8 +67,8 @@ export const QUOTA_CATEGORIES: CategoryQuotaSpec[] = [
   },
   {
     id: "restart",
-    name: "폐업/재기지원",
-    aliases: ["폐업", "재기지원", "희망리턴패키지", "점포철거비", "철거비"],
+    name: "폐업·재기지원",
+    aliases: ["폐업·재기지원", "폐업/재기지원", "폐업", "재기지원", "희망리턴패키지", "점포철거비", "철거비"],
     seedKeywords: [
       "2026 희망리턴패키지 점포철거비 평당 지원금 신청 방법",
       "2026 폐업 소상공인 브릿지보증 및 채무조정 재기지원",

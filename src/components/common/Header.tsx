@@ -28,15 +28,6 @@ export default function Header() {
               </span>
             </div>
           </Link>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-zinc-800 transition-colors"
-            >
-              <span className="text-amber-400">⚡</span>
-              <span>파이프라인 관제</span>
-            </Link>
-          </div>
         </div>
 
         {/* 하단 2단: 제목 바로 아래에 배치되는 전폭 카테고리 메뉴바 */}

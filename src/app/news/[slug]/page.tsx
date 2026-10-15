@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import AdUnit from "@/components/ads/AdUnit";
@@ -96,16 +96,15 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     rawSlug.includes("opinion") ||
     decodedSlug.includes("opinion")
   ) {
-    notFound();
+    permanentRedirect("/");
   }
 
   // 디코딩된 슬러그 우선 조회 후 원본 슬러그 조회 (Neon / SQLite 듀얼 호환)
   const article = (await getArticleBySlugAsync(decodedSlug)) || (await getArticleBySlugAsync(rawSlug));
 
-  if (!article) {
-    return {
-      title: "기사를 찾을 수 없습니다",
-    };
+  // 비공개(DRAFT) 또는 미발행 글 외부 접속 시 404 방지 -> 메인 페이지('/')로 301/308 리디렉션
+  if (!article || article.status === "DRAFT" || article.status !== "PUBLISHED") {
+    permanentRedirect("/");
   }
 
   const title = article.metaTitle || article.title;
@@ -184,14 +183,15 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
     rawSlug.includes("opinion") ||
     decodedSlug.includes("opinion")
   ) {
-    notFound();
+    permanentRedirect("/");
   }
 
   // 디코딩된 슬러그 우선 조회 후 원본 슬러그 조회 (Neon / SQLite 듀얼 호환)
   const article = (await getArticleBySlugAsync(decodedSlug)) || (await getArticleBySlugAsync(rawSlug));
 
-  if (!article) {
-    notFound();
+  // 비공개(DRAFT) 또는 미발행 글 외부 접속 시 404 방지 -> 메인 페이지('/')로 301/308 리디렉션
+  if (!article || article.status === "DRAFT" || article.status !== "PUBLISHED") {
+    permanentRedirect("/");
   }
 
   // 마크다운 구조 무결성 보정
