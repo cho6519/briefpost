@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AgentPipeline } from "@/agents/pipeline";
 import { pipelineStore } from "@/agents/pipelineStore";
 import { verifyCronAuth } from "@/lib/cronAuth";
-import { isPublishingPaused } from "@/lib/emergencyStop";
+import { isPublishingPausedAsync } from "@/lib/emergencyStop";
 import { isNeonConfigured, getNeonSql } from "@/lib/neonDb";
 import getDatabase from "@/lib/db";
 
@@ -213,8 +213,8 @@ async function handlePublishCron(request: NextRequest) {
       return auth.response!;
     }
 
-    // 2. 전역 긴급 중지 검사
-    if (isPublishingPaused()) {
+    // 2. 전역 긴급 중지 검사 (Neon / SQLite 듀얼 비동기)
+    if (await isPublishingPausedAsync()) {
       console.warn("[VERCEL CRON] 전역 긴급 중지 상태로 실행 중단");
       return NextResponse.json(
         {
